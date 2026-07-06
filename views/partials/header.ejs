@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | CHC Rebanado Digital</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg main-navbar navbar-dark">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand brand" href="/dashboard">
+        <span class="brand-mark"><i class="bi bi-grid-1x2-fill"></i></span>
+        <span class="brand-text">
+          <span class="brand-title">CHC Rebanado Digital</span>
+          <span class="brand-subtitle">Operación visual de vales</span>
+        </span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto gap-lg-1 mt-3 mt-lg-0">
+          <% if (user) { %>
+          <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-house-door"></i>Dashboard</a></li>
+          <% if (['administrador','rebanado','cedis'].includes(user.role)) { %>
+          <li class="nav-item"><a class="nav-link" href="/vales/tablero"><i class="bi bi-kanban"></i>Tablero</a></li>
+          <% } %>
+          <% if (['administrador','cedis'].includes(user.role)) { %>
+          <li class="nav-item"><a class="nav-link" href="/vales/crear"><i class="bi bi-plus-square"></i>Crear vale</a></li>
+          <% } %>
+          <% if (['administrador','rebanado'].includes(user.role)) { %>
+          <li class="nav-item"><a class="nav-link" href="/inventario/registro"><i class="bi bi-archive"></i>Cierre de día</a></li>
+          <% } %>
+          <% if (['administrador','cedis'].includes(user.role)) { %>
+          <li class="nav-item"><a class="nav-link" href="/reportes"><i class="bi bi-bar-chart"></i>Reportes</a></li>
+          <% } %>
+          <% if (user.role === 'administrador') { %>
+          <li class="nav-item"><a class="nav-link" href="/usuarios"><i class="bi bi-people"></i>Usuarios</a></li>
+          <% } %>
+          <li class="nav-item"><a class="nav-link" href="/pantalla" target="_blank"><i class="bi bi-display"></i>Pantalla almacén</a></li>
+          <% } %>
+        </ul>
+        <ul class="navbar-nav align-items-lg-center gap-2 mt-3 mt-lg-0">
+          <% if (user) { %>
+          <li class="nav-item">
+            <span class="navbar-user-pill"><i class="bi bi-person-circle"></i><%= user.name %></span>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="/logout"><i class="bi bi-box-arrow-right"></i>Salir</a></li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <main class="container-fluid page-shell px-lg-4">
+    <% if (success_msg) { %>
+      <div class="alert alert-success d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill"></i><span><%= success_msg %></span></div>
+    <% } %>
+    <% if (error_msg) { %>
+      <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><span><%= error_msg %></span></div>
+    <% } %>

@@ -1,0 +1,183 @@
+<%- include('partials/header', { title: 'Dashboard', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+
+<div class="page-header">
+  <div class="row align-items-center g-3">
+    <div class="col-lg-8">
+      <div class="page-kicker">Panel general</div>
+      <h1 class="page-title">Resumen operativo de vales</h1>
+      <p class="page-subtitle">Consulta rápidamente el estado actual de la operación de rebanado y accede a las acciones más usadas.</p>
+    </div>
+    <div class="col-lg-4">
+      <div class="header-actions justify-content-lg-end">
+        <% if (['administrador','cedis'].includes(user.role)) { %>
+          <a href="/vales/crear" class="btn btn-primary"><i class="bi bi-plus-square me-1"></i>Nuevo vale</a>
+        <% } %>
+        <% if (['administrador','rebanado','cedis'].includes(user.role)) { %>
+          <a href="/vales/tablero" class="btn btn-soft"><i class="bi bi-kanban me-1"></i>Ver tablero</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-xl-2 col-md-4 col-6">
+    <div class="metric-card metric-pending">
+      <div class="metric-top">
+        <div>
+          <div class="metric-label">Pendientes</div>
+          <div class="metric-value"><%= summary.Pendiente %></div>
+        </div>
+        <span class="metric-icon"><i class="bi bi-hourglass-split"></i></span>
+      </div>
+      <div class="metric-caption">Vales por iniciar</div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-md-4 col-6">
+    <div class="metric-card metric-working">
+      <div class="metric-top">
+        <div>
+          <div class="metric-label">Rebanando</div>
+          <div class="metric-value"><%= summary.Rebanando %></div>
+        </div>
+        <span class="metric-icon"><i class="bi bi-gear-wide-connected"></i></span>
+      </div>
+      <div class="metric-caption">Vales en proceso</div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-md-4 col-6">
+    <div class="metric-card metric-ready">
+      <div class="metric-top">
+        <div>
+          <div class="metric-label">Listos</div>
+          <div class="metric-value"><%= summary.Listo %></div>
+        </div>
+        <span class="metric-icon"><i class="bi bi-check2-circle"></i></span>
+      </div>
+      <div class="metric-caption">Esperando entrega</div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-md-4 col-6">
+    <div class="metric-card metric-delivered">
+      <div class="metric-top">
+        <div>
+          <div class="metric-label">Entregados</div>
+          <div class="metric-value"><%= summary.Entregado %></div>
+        </div>
+        <span class="metric-icon"><i class="bi bi-truck"></i></span>
+      </div>
+      <div class="metric-caption">Vales concluidos</div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-md-4 col-6">
+    <div class="metric-card metric-cancelled">
+      <div class="metric-top">
+        <div>
+          <div class="metric-label">Cancelados</div>
+          <div class="metric-value"><%= summary.Cancelado %></div>
+        </div>
+        <span class="metric-icon"><i class="bi bi-x-circle"></i></span>
+      </div>
+      <div class="metric-caption">Vales descartados</div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-md-4 col-6">
+    <div class="metric-card metric-total">
+      <div class="metric-top">
+        <div>
+          <div class="metric-label">Total</div>
+          <div class="metric-value"><%= total %></div>
+        </div>
+        <span class="metric-icon"><i class="bi bi-stack"></i></span>
+      </div>
+      <div class="metric-caption">Vales registrados</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="module-card h-100">
+      <div class="mb-3">
+        <h2 class="section-title">Accesos rápidos</h2>
+        <p class="section-subtitle">Atajos para las pantallas más utilizadas en la operación.</p>
+      </div>
+      <div class="quick-grid">
+        <% if (['administrador','rebanado','cedis'].includes(user.role)) { %>
+        <a class="quick-action" href="/vales/tablero">
+          <span class="quick-action-icon"><i class="bi bi-kanban"></i></span>
+          <div>
+            <strong>Tablero visual</strong>
+            <div class="text-muted small">Seguimiento por estatus</div>
+          </div>
+        </a>
+        <% } %>
+        <% if (['administrador','cedis'].includes(user.role)) { %>
+        <a class="quick-action" href="/vales/crear">
+          <span class="quick-action-icon"><i class="bi bi-file-earmark-plus"></i></span>
+          <div>
+            <strong>Crear vale</strong>
+            <div class="text-muted small">Alta manual de solicitudes</div>
+          </div>
+        </a>
+        <a class="quick-action" href="/reportes">
+          <span class="quick-action-icon"><i class="bi bi-bar-chart-line"></i></span>
+          <div>
+            <strong>Reportes</strong>
+            <div class="text-muted small">Consulta y exportación</div>
+          </div>
+        </a>
+        <% } %>
+        <% if (['administrador','rebanado'].includes(user.role)) { %>
+        <a class="quick-action" href="/inventario/registro">
+          <span class="quick-action-icon"><i class="bi bi-archive"></i></span>
+          <div>
+            <strong>Cierre de día</strong>
+            <div class="text-muted small">Inventario y observaciones</div>
+          </div>
+        </a>
+        <% } %>
+        <% if (user.role === 'administrador') { %>
+        <a class="quick-action" href="/usuarios">
+          <span class="quick-action-icon"><i class="bi bi-people"></i></span>
+          <div>
+            <strong>Usuarios</strong>
+            <div class="text-muted small">Administración interna</div>
+          </div>
+        </a>
+        <% } %>
+        <a class="quick-action" href="/pantalla" target="_blank">
+          <span class="quick-action-icon"><i class="bi bi-display"></i></span>
+          <div>
+            <strong>Pantalla almacén</strong>
+            <div class="text-muted small">Vista para monitor o TV</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="module-card h-100">
+      <div class="mb-3">
+        <h2 class="section-title">Lectura rápida</h2>
+        <p class="section-subtitle">Interpretación sencilla del flujo de trabajo.</p>
+      </div>
+      <div class="d-grid gap-3">
+        <div class="info-pill">
+          <div class="info-pill-label">Flujo principal</div>
+          <div class="info-pill-value">Pendiente → Rebanando → Listo → Entregado</div>
+        </div>
+        <div class="info-pill">
+          <div class="info-pill-label">Atención operativa</div>
+          <div class="info-pill-value"><%= summary.Pendiente + summary.Rebanando %> vales requieren acción</div>
+        </div>
+        <div class="info-pill">
+          <div class="info-pill-label">Vista recomendada</div>
+          <div class="info-pill-value">Usar tablero y pantalla para seguimiento visual</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

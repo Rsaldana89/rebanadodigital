@@ -1,0 +1,49 @@
+<%- include('../partials/header', { title: 'Usuarios', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+
+<div class="page-header">
+  <div class="row align-items-center g-3">
+    <div class="col-lg-8">
+      <div class="page-kicker">Administración</div>
+      <h1 class="page-title">Usuarios del sistema</h1>
+      <p class="page-subtitle">Consulta y administra los accesos disponibles para la operación.</p>
+    </div>
+    <div class="col-lg-4">
+      <div class="header-actions justify-content-lg-end">
+        <a href="/usuarios/crear" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>Crear usuario</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content-card data-table-card">
+  <div class="table-responsive">
+    <table class="table table-modern align-middle">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Usuario</th>
+          <th>Rol</th>
+          <th>Activo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% usuarios.forEach(u => { %>
+          <tr>
+            <td><strong>#<%= u.id %></strong></td>
+            <td><%= u.name %></td>
+            <td><%= u.username %></td>
+            <td><span class="role-pill"><%= u.role %></span></td>
+            <td><span class="<%= u.active ? 'status-yes' : 'status-no' %>"><%= u.active ? 'Sí' : 'No' %></span></td>
+            <td>
+              <a href="/usuarios/<%= u.id %>/editar" class="btn btn-sm btn-soft"><i class="bi bi-pencil-square me-1"></i>Editar</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

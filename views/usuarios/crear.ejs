@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title: 'Crear usuario', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+
+<div class="page-header">
+  <div class="page-kicker">Administración</div>
+  <h1 class="page-title">Crear usuario</h1>
+  <p class="page-subtitle">Registra un nuevo acceso para el sistema.</p>
+</div>
+
+<div class="form-shell">
+  <form action="/usuarios/crear" method="post" class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input type="text" name="name" class="form-control" placeholder="Nombre completo" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Usuario</label>
+      <input type="text" name="username" class="form-control" placeholder="Usuario de acceso" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Contraseña</label>
+      <input type="text" name="password" class="form-control" placeholder="Contraseña" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Rol</label>
+      <select name="role" class="form-select" required>
+        <option value="administrador">Administrador</option>
+        <option value="cedis">CEDIS</option>
+        <option value="rebanado">Rebanado</option>
+        <option value="almacen">Almacén</option>
+      </select>
+    </div>
+    <div class="col-12">
+      <div class="form-check mt-2">
+        <input type="checkbox" name="active" value="1" class="form-check-input" id="activo" checked>
+        <label for="activo" class="form-check-label">Usuario activo</label>
+      </div>
+    </div>
+    <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar usuario</button>
+      <a href="/usuarios" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>
