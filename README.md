@@ -19,7 +19,8 @@ Esta revisión incorpora una interfaz visual inspirada en la identidad de Cremer
 
 ## Requisitos
 
-- Node.js 18 o superior
+- Node.js 22.x
+- npm 11.6.2 (Railpack lo instala mediante `packageManager`)
 - Servidor MySQL accesible (local o en la nube, compatible con Railway)
 
 ## Instalación local
@@ -29,7 +30,7 @@ Esta revisión incorpora una interfaz visual inspirada en la identidad de Cremer
 3. Instala las dependencias desde la raíz del proyecto:
 
    ```bash
-   npm install
+   npm ci
    ```
 
 4. Crea una base de datos nueva con el nombre que definiste en tu `.env`.  Ejecuta el script `schema.sql` dentro de la carpeta `database/` para crear las tablas necesarias y `seed.sql` para cargar los datos iniciales.  Puedes hacerlo con tu cliente favorito o desde la línea de comandos:
@@ -70,7 +71,7 @@ Esta aplicación está preparada para desplegarse en [Railway](https://railway.a
 - `PORT` (Railway asignará automáticamente un puerto; puedes usar la misma variable para que la aplicación lo detecte)
 - `SESSION_SECRET`
 
-Railway detectará el archivo `package.json` y ejecutará `npm start` por defecto. Asegúrate de que tu base de datos esté conectada y que hayas ejecutado los scripts `schema.sql` y `seed.sql` en la base de datos.
+Railway detectará `packageManager: npm@11.6.2`, instalará las dependencias con `npm ci` usando el `package-lock.json` y ejecutará `npm start`. El lock utiliza únicamente el registro público `registry.npmjs.org`. No configures `RAILPACK_INSTALL_CMD` con `npm install`. Asegúrate de que tu base de datos esté conectada y que hayas ejecutado los scripts `schema.sql` y `seed.sql`.
 
 ## Estructura del proyecto
 
