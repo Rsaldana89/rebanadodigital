@@ -2,7 +2,11 @@
 
 **CHC Rebanado Digital** es una aplicación web diseñada para apoyar al área de Rebanado y CEDIS en la creación, seguimiento y cierre de vales digitales de rebanado.  Se ha puesto un énfasis especial en el diseño visual para que la interfaz sea clara, atractiva y operativa desde computadoras de escritorio, tablets y pantallas de TV.
 
-## Versión institucional v1.2.0
+## Versión institucional v1.3.0
+
+### Arranque tolerante a MySQL
+
+El servidor web inicia aunque la base de datos todavía no esté configurada o disponible. El módulo de permisos reintenta la conexión en segundo plano y el endpoint `/health` informa si el servicio está operativo o en estado degradado.
 
 Esta revisión incorpora una interfaz visual inspirada en la identidad de Cremería Hermanos Coronel, con paleta vino, crema, dorado y carbón. El tablero mantiene controles táctiles, filtros por fecha y estado, vales atrasados visibles y una pantalla de almacén optimizada para monitor o TV.
 

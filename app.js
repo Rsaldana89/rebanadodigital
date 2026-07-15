@@ -70,6 +70,16 @@ app.use('/permisos', permissionRoutes);
 const { pantallaController } = require('./controllers/valeController');
 app.get('/pantalla', pantallaController);
 
+// Health check: Railway puede confirmar que el proceso sigue activo aunque MySQL aún no esté disponible.
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: app.locals.databaseReady ? 'ok' : 'degraded',
+    service: 'chc-rebanado-digital',
+    database: app.locals.databaseReady ? 'connected' : 'unavailable',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Página 404 simple
 app.use((req, res) => {
   res.status(404).render('404', { title: 'Página no encontrada' });
@@ -77,14 +87,58 @@ app.use((req, res) => {
 
 const port = process.env.PORT || 3000;
 
-permissionService.initializePermissions()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`Servidor ejecutándose en el puerto ${port}`);
-      console.log('Módulo de permisos inicializado correctamente');
-    });
-  })
-  .catch(err => {
-    console.error('No fue posible inicializar el módulo de permisos:', err);
-    process.exit(1);
-  });
+// Estado interno utilizado para diagnósticos y health checks.
+app.locals.databaseReady = false;
+app.locals.permissionInitializationAttempts = 0;
+
+let permissionInitializationInProgress = false;
+let permissionRetryTimer = null;
+
+function getPermissionRetryDelay(attempt) {
+  // Reintento progresivo: 10, 20, 40 y máximo 60 segundos.
+  return Math.min(10000 * (2 ** Math.max(attempt - 1, 0)), 60000);
+}
+
+async function initializePermissionsWithRetry() {
+  if (permissionInitializationInProgress || app.locals.databaseReady) return;
+
+  permissionInitializationInProgress = true;
+  app.locals.permissionInitializationAttempts += 1;
+
+  try {
+    await permissionService.initializePermissions();
+    app.locals.databaseReady = true;
+    app.locals.permissionInitializationAttempts = 0;
+    console.log('Módulo de permisos inicializado correctamente');
+  } catch (err) {
+    app.locals.databaseReady = false;
+
+    const attempt = app.locals.permissionInitializationAttempts;
+    const delay = getPermissionRetryDelay(attempt);
+    const reason = err?.code || err?.message || 'Error de conexión desconocido';
+
+    console.error(
+      `Base de datos no disponible (${reason}). ` +
+      `La aplicación seguirá activa y reintentará en ${Math.round(delay / 1000)} segundos.`
+    );
+
+    clearTimeout(permissionRetryTimer);
+    permissionRetryTimer = setTimeout(initializePermissionsWithRetry, delay);
+  } finally {
+    permissionInitializationInProgress = false;
+  }
+}
+
+const server = app.listen(port, () => {
+  console.log(`Servidor ejecutándose en el puerto ${port}`);
+  initializePermissionsWithRetry();
+});
+
+function shutdown(signal) {
+  console.log(`${signal} recibido. Cerrando servidor...`);
+  clearTimeout(permissionRetryTimer);
+  server.close(() => process.exit(0));
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
