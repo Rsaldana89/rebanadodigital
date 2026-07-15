@@ -7,41 +7,45 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/styles.css">
-  <script>
-    setTimeout(() => { window.location.reload(); }, 30000);
-  </script>
+  <link rel="stylesheet" href="/css/institutional.css">
+  <script>setTimeout(() => { window.location.reload(); }, 30000);</script>
 </head>
 <body class="tv-body">
+  <%
+    const counts = { Pendiente: 0, Rebanando: 0, Listo: 0, Entregado: 0, Cancelado: 0 };
+    vales.forEach(v => { counts[v.estado] = (counts[v.estado] || 0) + 1; });
+  %>
   <div class="container-fluid py-4 px-lg-4">
     <div class="tv-panel">
-      <div class="tv-header">
+      <div class="tv-header compact-tv-header">
         <div class="tv-title-wrap">
-          <span class="tv-brand-mark"><i class="bi bi-display"></i></span>
+          <span class="brand-monogram brand-monogram-lg">CHC</span>
           <div>
-            <h1 class="tv-title">CHC Rebanado Digital</h1>
-            <p class="tv-subtitle">Pantalla informativa de seguimiento de vales</p>
+            <h1 class="tv-title">Rebanado Digital</h1>
+            <p class="tv-subtitle">Cremería Hermanos Coronel · Almacén / CEDIS · vales con entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> + <strong><%= overdueCount %></strong> atrasado(s)<% } %></p>
           </div>
         </div>
-        <div class="tv-meta">
-          <div class="tv-meta-label">Actualización</div>
-          <div class="tv-meta-value"><%= fecha.toLocaleDateString() %></div>
-          <div class="tv-subtitle"><%= fecha.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) %></div>
+        <div class="tv-meta tv-clock-card">
+          <div class="tv-meta-label">Fecha de trabajo</div>
+          <div class="tv-meta-value"><%= filtroFechaDisplay %></div>
+          <div class="tv-current-time"><i class="bi bi-clock me-1"></i><%= horaActual %></div>
+          <div class="tv-subtitle">Actualiza cada 30 s</div>
         </div>
       </div>
 
-      <div class="info-strip mb-4">
-        <div class="info-pill">
-          <div class="info-pill-label">Total visibles</div>
-          <div class="info-pill-value"><%= vales.length %></div>
+      <% if (overdueCount > 0) { %>
+        <div class="overdue-banner overdue-banner-tv mb-4">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <div><strong><%= overdueCount %> vale(s)</strong> siguen pendientes con retraso de entrega.</div>
         </div>
-        <div class="info-pill">
-          <div class="info-pill-label">Estados</div>
-          <div class="info-pill-value">Pendiente · Rebanando · Listo · Entregado · Cancelado</div>
-        </div>
-        <div class="info-pill">
-          <div class="info-pill-label">Uso recomendado</div>
-          <div class="info-pill-value">Monitor o TV en área operativa</div>
-        </div>
+      <% } %>
+
+      <div class="tv-status-strip mb-4">
+        <div class="tv-status-box status-pending"><strong><%= counts.Pendiente %></strong><span>Pendientes</span></div>
+        <div class="tv-status-box status-working"><strong><%= counts.Rebanando %></strong><span>Rebanando</span></div>
+        <div class="tv-status-box status-ready"><strong><%= counts.Listo %></strong><span>Listos</span></div>
+        <div class="tv-status-box status-delivered"><strong><%= counts.Entregado %></strong><span>Entregados</span></div>
+        <div class="tv-status-box status-cancelled"><strong><%= counts.Cancelado %></strong><span>Cancelados</span></div>
       </div>
 
       <div class="tv-table-wrap">
@@ -60,36 +64,36 @@
             <% if (!vales.length) { %>
               <tr>
                 <td colspan="6">
-                  <div class="empty-state">
-                    <i class="bi bi-inbox"></i>
-                    <div>No hay vales para mostrar en este momento.</div>
-                  </div>
+                  <div class="empty-state"><i class="bi bi-inbox"></i><div>No hay vales programados ni atrasados visibles para <strong><%= filtroFechaDisplay %></strong>.</div></div>
                 </td>
               </tr>
             <% } %>
-            <% vales.forEach(v => { %>
-              <tr>
+            <% vales.forEach(v => {
+              const fechaEntrega = v.fecha_entrega_fmt || '';
+              const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
+              const atrasoTexto = v.days_late === 1 ? '1 día' : `${v.days_late} días`;
+            %>
+              <tr class="<%= v.is_overdue ? 'tv-row-overdue' : '' %>">
                 <td class="folio-cell"><%= v.folio %></td>
                 <td><%= v.cliente %></td>
                 <td><%= v.producto %></td>
                 <td>
-                  <span class="priority-badge <%= v.prioridad === 'Alta' ? 'priority-high' : v.prioridad === 'Normal' ? 'priority-normal' : 'priority-low' %>">
-                    <%= v.prioridad %>
-                  </span>
+                  <span class="priority-badge <%= v.prioridad === 'Alta' ? 'priority-high' : v.prioridad === 'Normal' ? 'priority-normal' : 'priority-low' %>"><%= v.prioridad %></span>
                 </td>
                 <td>
-                  <span class="status-chip <%= v.estado === 'Pendiente' ? 'status-pending' : v.estado === 'Rebanando' ? 'status-working' : v.estado === 'Listo' ? 'status-ready' : v.estado === 'Entregado' ? 'status-delivered' : 'status-cancelled' %>">
-                    <%= v.estado %>
-                  </span>
+                  <span class="status-chip <%= v.estado === 'Pendiente' ? 'status-pending' : v.estado === 'Rebanando' ? 'status-working' : v.estado === 'Listo' ? 'status-ready' : v.estado === 'Entregado' ? 'status-delivered' : 'status-cancelled' %>"><%= v.estado %></span>
                 </td>
-                <td><%= new Date(v.fecha_entrega).toISOString().substring(0,10) %></td>
+                <td>
+                  <div><%= fechaEntregaDisplay %></div>
+                  <% if (v.is_overdue) { %>
+                    <div class="mt-1"><span class="overdue-badge overdue-badge-small"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso · <%= atrasoTexto %></span></div>
+                  <% } %>
+                </td>
               </tr>
             <% }) %>
           </tbody>
         </table>
       </div>
-
-      <div class="text-end mt-2 text-muted small">Esta pantalla se actualiza automáticamente cada 30 segundos.</div>
     </div>
   </div>
 </body>

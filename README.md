@@ -2,6 +2,11 @@
 
 **CHC Rebanado Digital** es una aplicación web diseñada para apoyar al área de Rebanado y CEDIS en la creación, seguimiento y cierre de vales digitales de rebanado.  Se ha puesto un énfasis especial en el diseño visual para que la interfaz sea clara, atractiva y operativa desde computadoras de escritorio, tablets y pantallas de TV.
 
+## Versión institucional v1.2.0
+
+Esta revisión incorpora una interfaz visual inspirada en la identidad de Cremería Hermanos Coronel, con paleta vino, crema, dorado y carbón. El tablero mantiene controles táctiles, filtros por fecha y estado, vales atrasados visibles y una pantalla de almacén optimizada para monitor o TV.
+
+
 ## Tecnologías utilizadas
 
 - Node.js con Express.js
@@ -126,3 +131,35 @@ chc-rebanado-digital/
 - **Funcionalidad**: la aplicación incluye las operaciones básicas descritas en el documento de requisitos: creación y seguimiento de vales, cambio de estados, visualización de inventario de cierre de día, reportes simples y administración de usuarios.
 
 ¡Disfruta usando CHC Rebanado Digital!
+## Administración de permisos (v11)
+
+La aplicación incluye un panel en:
+
+```text
+/permisos
+```
+
+El módulo se inicializa automáticamente al arrancar la aplicación y crea, si no existen, las tablas:
+
+- `permission_catalog`
+- `role_permissions`
+- `user_permissions`
+
+La configuración recomendada incluida es:
+
+- **Administrador:** todos los permisos, bloqueados para evitar perder el control del sistema.
+- **CEDIS / Almacén:** administración operativa completa de vales, correcciones de estado, reportes e inventario.
+- **Rebanado:** consultar vales, pasar a Rebanando, pasar a Listo, regresar de Listo a Rebanando y cancelar vales activos.
+
+El panel permite:
+
+1. Modificar permisos generales por rol.
+2. Crear excepciones individuales por usuario usando `Heredar`, `Permitir` o `Bloquear`.
+3. Mostrar acciones deshabilitadas cuando el usuario no tenga permiso.
+4. Validar los permisos también en el servidor; no dependen únicamente de la interfaz.
+
+El script manual equivalente está en:
+
+```text
+database/migrations/002_permissions.sql
+```

@@ -1,60 +1,30 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %> | CHC Rebanado Digital</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-....." crossorigin="anonymous">
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/institutional.css">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/dashboard">CHC Rebanado Digital</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <% if (user) { %>
-            <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-            <% if (['administrador','rebanado','cedis'].includes(user.role)) { %>
-            <li class="nav-item"><a class="nav-link" href="/vales/tablero">Tablero</a></li>
-            <% } %>
-            <% if (['administrador','cedis'].includes(user.role)) { %>
-            <li class="nav-item"><a class="nav-link" href="/vales/crear">Crear vale</a></li>
-            <% } %>
-            <% if (['administrador','rebanado'].includes(user.role)) { %>
-            <li class="nav-item"><a class="nav-link" href="/inventario/registro">Cierre de día</a></li>
-            <% } %>
-            <% if (['administrador','cedis'].includes(user.role)) { %>
-            <li class="nav-item"><a class="nav-link" href="/reportes">Reportes</a></li>
-            <% } %>
-            <% if (user.role === 'administrador') { %>
-            <li class="nav-item"><a class="nav-link" href="/usuarios">Usuarios</a></li>
-            <% } %>
-            <li class="nav-item"><a class="nav-link" href="/pantalla" target="_blank">Pantalla almacén</a></li>
-          <% } %>
-        </ul>
-        <ul class="navbar-nav">
-          <% if (user) { %>
-          <li class="nav-item"><span class="navbar-text me-2">Hola, <%= user.name %></span></li>
-          <li class="nav-item"><a class="nav-link" href="/logout">Salir</a></li>
-          <% } %>
-        </ul>
-      </div>
+  <nav class="navbar navbar-expand-lg main-navbar">
+    <div class="container-fluid px-lg-4">
+      <a class="navbar-brand brand" href="/dashboard">
+        <span class="brand-monogram">CHC</span>
+        <span class="brand-text">
+          <span class="brand-title">Rebanado Digital</span>
+          <span class="brand-subtitle">Cremería Hermanos Coronel</span>
+        </span>
+      </a>
     </div>
   </nav>
-  <div class="container my-4">
-    <% if (success_msg) { %>
-      <div class="alert alert-success"><%= success_msg %></div>
-    <% } %>
-    <% if (error_msg) { %>
-      <div class="alert alert-danger"><%= error_msg %></div>
-    <% } %>
+  <main class="container-fluid page-shell px-lg-4">
     <%- body %>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-....." crossorigin="anonymous"></script>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

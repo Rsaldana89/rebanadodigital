@@ -2,6 +2,8 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const dotenv = require('dotenv');
+const { loadPermissions } = require('./middleware/permissions');
+const permissionService = require('./services/permissionService');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -36,6 +38,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Carga permisos efectivos por rol y excepciones del usuario.
+app.use(loadPermissions);
+
+// Ruta inicial: redirige al login o al dashboard
+app.get('/', (req, res) => {
+  if (req.session.user) {
+    return res.redirect('/dashboard');
+  }
+  return res.redirect('/login');
+});
+
 // Rutas
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -43,6 +56,7 @@ const valeRoutes = require('./routes/valeRoutes');
 const inventarioRoutes = require('./routes/inventarioRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const userRoutes = require('./routes/userRoutes');
+const permissionRoutes = require('./routes/permissionRoutes');
 
 app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
@@ -50,6 +64,7 @@ app.use('/vales', valeRoutes);
 app.use('/inventario', inventarioRoutes);
 app.use('/reportes', reportRoutes);
 app.use('/usuarios', userRoutes);
+app.use('/permisos', permissionRoutes);
 
 // Ruta para pantalla informativa accesible sin login
 const { pantallaController } = require('./controllers/valeController');
@@ -61,6 +76,15 @@ app.use((req, res) => {
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Servidor ejecutándose en el puerto ${port}`);
-});
+
+permissionService.initializePermissions()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Servidor ejecutándose en el puerto ${port}`);
+      console.log('Módulo de permisos inicializado correctamente');
+    });
+  })
+  .catch(err => {
+    console.error('No fue posible inicializar el módulo de permisos:', err);
+    process.exit(1);
+  });

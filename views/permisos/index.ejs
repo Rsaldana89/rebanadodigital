@@ -1,0 +1,109 @@
+<%- include('../partials/header', { title: 'Permisos', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+
+<div class="page-header">
+  <div class="row align-items-center g-3">
+    <div class="col-lg-8">
+      <div class="page-kicker">Administración</div>
+      <h1 class="page-title">Permisos del sistema</h1>
+      <p class="page-subtitle mb-0">Define la base por rol y usa excepciones sólo cuando un usuario necesite algo diferente.</p>
+    </div>
+  </div>
+</div>
+
+<div class="permission-guide mb-4">
+  <div><i class="bi bi-shield-check"></i><strong>Administrador</strong><span>Siempre conserva todos los permisos.</span></div>
+  <div><i class="bi bi-building"></i><strong>CEDIS / Almacén</strong><span>Administración operativa completa de vales.</span></div>
+  <div><i class="bi bi-gear"></i><strong>Rebanado</strong><span>Rebanando, Listo y Cancelado según el flujo.</span></div>
+</div>
+
+<div class="content-card mb-4">
+  <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+    <div>
+      <h2 class="section-title mb-1">Permisos por rol</h2>
+      <p class="section-subtitle mb-0">Los cambios se aplican a todos los usuarios del rol, salvo excepciones individuales.</p>
+    </div>
+  </div>
+
+  <form method="post" action="/permisos/roles">
+    <div class="table-responsive permission-table-wrap">
+      <table class="table table-modern permission-table align-middle">
+        <thead>
+          <tr>
+            <th>Permiso</th>
+            <th class="text-center">Administrador</th>
+            <th class="text-center">CEDIS</th>
+            <th class="text-center">Almacén</th>
+            <th class="text-center">Rebanado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% let currentCategory = ''; %>
+          <% permissions.forEach(permission => { %>
+            <% if (currentCategory !== permission.category) { currentCategory = permission.category; %>
+              <tr class="permission-category-row">
+                <td colspan="5"><%= permission.category %></td>
+              </tr>
+            <% } %>
+            <tr>
+              <td>
+                <div class="permission-name"><%= permission.name %></div>
+                <div class="permission-description"><%= permission.description %></div>
+              </td>
+              <td class="text-center">
+                <span class="permission-locked"><i class="bi bi-lock-fill"></i> Permitido</span>
+              </td>
+              <% ['cedis','almacen','rebanado'].forEach(role => { %>
+                <td class="text-center">
+                  <label class="permission-switch">
+                    <input type="checkbox" name="p__<%= role %>__<%= permission.code %>" <%= permission.roles[role] ? 'checked' : '' %>>
+                    <span class="permission-slider"></span>
+                  </label>
+                </td>
+              <% }) %>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-end mt-3">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar permisos por rol</button>
+    </div>
+  </form>
+</div>
+
+<div class="content-card">
+  <div class="mb-3">
+    <h2 class="section-title mb-1">Excepciones por usuario</h2>
+    <p class="section-subtitle mb-0">Úsalas sólo cuando una persona necesite permisos distintos a su rol.</p>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-modern align-middle">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Rol</th>
+          <th>Activo</th>
+          <th class="text-end">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% usuarios.forEach(usuario => { %>
+          <tr>
+            <td><strong><%= usuario.name %></strong><div class="small text-muted"><%= usuario.username %></div></td>
+            <td><span class="role-pill"><%= usuario.role %></span></td>
+            <td><span class="<%= usuario.active ? 'status-yes' : 'status-no' %>"><%= usuario.active ? 'Sí' : 'No' %></span></td>
+            <td class="text-end">
+              <% if (usuario.role === 'administrador') { %>
+                <span class="permission-locked"><i class="bi bi-lock-fill"></i> Control total</span>
+              <% } else { %>
+                <a href="/permisos/usuario/<%= usuario.id %>" class="btn btn-soft btn-sm"><i class="bi bi-person-gear me-1"></i>Personalizar</a>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

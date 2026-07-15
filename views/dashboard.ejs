@@ -1,96 +1,97 @@
-<%- include('partials/header', { title: 'Dashboard', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+<%- include('partials/header', { title: 'Inicio', user: user, success_msg: success_msg, error_msg: error_msg }) %>
 
 <div class="page-header">
   <div class="row align-items-center g-3">
-    <div class="col-lg-8">
-      <div class="page-kicker">Panel general</div>
-      <h1 class="page-title">Resumen operativo de vales</h1>
-      <p class="page-subtitle">Consulta rápidamente el estado actual de la operación de rebanado y accede a las acciones más usadas.</p>
+    <div class="col-lg-7">
+      <div class="page-kicker"><%= overdueCount > 0 ? 'Operación de hoy + atrasados' : 'Operación de hoy' %></div>
+      <h1 class="page-title">Resumen de vales</h1>
+      <p class="page-subtitle mb-0">
+        Fecha de trabajo: <strong><%= fechaTrabajoDisplay %></strong>
+        <% if (overdueCount > 0) { %> · <strong><%= overdueCount %></strong> con retraso<% } %>
+      </p>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-5">
       <div class="header-actions justify-content-lg-end">
-        <% if (['administrador','cedis'].includes(user.role)) { %>
-          <a href="/vales/crear" class="btn btn-primary"><i class="bi bi-plus-square me-1"></i>Nuevo vale</a>
+        <div class="work-date-card compact-date-card">
+          <span class="work-date-label"><i class="bi bi-calendar3 me-1"></i>Fecha y hora</span>
+          <strong><%= fechaTrabajoDisplay %></strong>
+          <small><i class="bi bi-clock me-1"></i><%= horaActual %></small>
+        </div>
+        <% if (can('vales.create')) { %>
+          <a href="/vales/crear" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo vale</a>
         <% } %>
-        <% if (['administrador','rebanado','cedis'].includes(user.role)) { %>
-          <a href="/vales/tablero" class="btn btn-soft"><i class="bi bi-kanban me-1"></i>Ver tablero</a>
+        <% if (can('vales.view')) { %>
+          <a href="/vales/tablero?fecha=<%= fechaTrabajo %>" class="btn btn-soft"><i class="bi bi-kanban me-1"></i>Ver vales</a>
         <% } %>
       </div>
     </div>
   </div>
 </div>
 
+<% if (overdueCount > 0) { %>
+  <div class="overdue-banner mb-3">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div><strong><%= overdueCount %> vale(s) con retraso de entrega.</strong> Se muestran junto con el trabajo de hoy hasta concluirlos.</div>
+  </div>
+<% } %>
+
 <div class="row g-3 mb-4">
   <div class="col-xl-2 col-md-4 col-6">
-    <div class="metric-card metric-pending">
-      <div class="metric-top">
-        <div>
-          <div class="metric-label">Pendientes</div>
-          <div class="metric-value"><%= summary.Pendiente %></div>
+    <a href="/vales/tablero?fecha=<%= fechaTrabajo %>#Pendiente" class="text-decoration-none d-block h-100">
+      <div class="metric-card metric-pending h-100">
+        <div class="metric-top">
+          <div><div class="metric-label">Pendientes</div><div class="metric-value"><%= summary.Pendiente %></div></div>
+          <span class="metric-icon"><i class="bi bi-hourglass-split"></i></span>
         </div>
-        <span class="metric-icon"><i class="bi bi-hourglass-split"></i></span>
       </div>
-      <div class="metric-caption">Vales por iniciar</div>
-    </div>
+    </a>
   </div>
   <div class="col-xl-2 col-md-4 col-6">
-    <div class="metric-card metric-working">
-      <div class="metric-top">
-        <div>
-          <div class="metric-label">Rebanando</div>
-          <div class="metric-value"><%= summary.Rebanando %></div>
+    <a href="/vales/tablero?fecha=<%= fechaTrabajo %>#Rebanando" class="text-decoration-none d-block h-100">
+      <div class="metric-card metric-working h-100">
+        <div class="metric-top">
+          <div><div class="metric-label">Rebanando</div><div class="metric-value"><%= summary.Rebanando %></div></div>
+          <span class="metric-icon"><i class="bi bi-gear-wide-connected"></i></span>
         </div>
-        <span class="metric-icon"><i class="bi bi-gear-wide-connected"></i></span>
       </div>
-      <div class="metric-caption">Vales en proceso</div>
-    </div>
+    </a>
   </div>
   <div class="col-xl-2 col-md-4 col-6">
-    <div class="metric-card metric-ready">
-      <div class="metric-top">
-        <div>
-          <div class="metric-label">Listos</div>
-          <div class="metric-value"><%= summary.Listo %></div>
+    <a href="/vales/tablero?fecha=<%= fechaTrabajo %>#Listo" class="text-decoration-none d-block h-100">
+      <div class="metric-card metric-ready h-100">
+        <div class="metric-top">
+          <div><div class="metric-label">Listos</div><div class="metric-value"><%= summary.Listo %></div></div>
+          <span class="metric-icon"><i class="bi bi-check2-circle"></i></span>
         </div>
-        <span class="metric-icon"><i class="bi bi-check2-circle"></i></span>
       </div>
-      <div class="metric-caption">Esperando entrega</div>
-    </div>
+    </a>
   </div>
   <div class="col-xl-2 col-md-4 col-6">
-    <div class="metric-card metric-delivered">
-      <div class="metric-top">
-        <div>
-          <div class="metric-label">Entregados</div>
-          <div class="metric-value"><%= summary.Entregado %></div>
+    <a href="/vales/tablero?fecha=<%= fechaTrabajo %>#Entregado" class="text-decoration-none d-block h-100">
+      <div class="metric-card metric-delivered h-100">
+        <div class="metric-top">
+          <div><div class="metric-label">Entregados</div><div class="metric-value"><%= summary.Entregado %></div></div>
+          <span class="metric-icon"><i class="bi bi-truck"></i></span>
         </div>
-        <span class="metric-icon"><i class="bi bi-truck"></i></span>
       </div>
-      <div class="metric-caption">Vales concluidos</div>
-    </div>
+    </a>
   </div>
   <div class="col-xl-2 col-md-4 col-6">
-    <div class="metric-card metric-cancelled">
-      <div class="metric-top">
-        <div>
-          <div class="metric-label">Cancelados</div>
-          <div class="metric-value"><%= summary.Cancelado %></div>
+    <a href="/vales/tablero?fecha=<%= fechaTrabajo %>#Cancelado" class="text-decoration-none d-block h-100">
+      <div class="metric-card metric-cancelled h-100">
+        <div class="metric-top">
+          <div><div class="metric-label">Cancelados</div><div class="metric-value"><%= summary.Cancelado %></div></div>
+          <span class="metric-icon"><i class="bi bi-x-circle"></i></span>
         </div>
-        <span class="metric-icon"><i class="bi bi-x-circle"></i></span>
       </div>
-      <div class="metric-caption">Vales descartados</div>
-    </div>
+    </a>
   </div>
   <div class="col-xl-2 col-md-4 col-6">
-    <div class="metric-card metric-total">
+    <div class="metric-card metric-total h-100">
       <div class="metric-top">
-        <div>
-          <div class="metric-label">Total</div>
-          <div class="metric-value"><%= total %></div>
-        </div>
+        <div><div class="metric-label">Total visible</div><div class="metric-value"><%= total %></div></div>
         <span class="metric-icon"><i class="bi bi-stack"></i></span>
       </div>
-      <div class="metric-caption">Vales registrados</div>
     </div>
   </div>
 </div>
@@ -98,83 +99,70 @@
 <div class="row g-4">
   <div class="col-lg-8">
     <div class="module-card h-100">
-      <div class="mb-3">
-        <h2 class="section-title">Accesos rápidos</h2>
-        <p class="section-subtitle">Atajos para las pantallas más utilizadas en la operación.</p>
+      <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
+        <h2 class="section-title mb-0">Accesos directos</h2>
+        <span class="small text-muted">Acciones principales</span>
       </div>
-      <div class="quick-grid">
-        <% if (['administrador','rebanado','cedis'].includes(user.role)) { %>
-        <a class="quick-action" href="/vales/tablero">
-          <span class="quick-action-icon"><i class="bi bi-kanban"></i></span>
-          <div>
-            <strong>Tablero visual</strong>
-            <div class="text-muted small">Seguimiento por estatus</div>
-          </div>
-        </a>
+      <div class="quick-grid quick-grid-touch">
+        <% if (can('vales.view')) { %>
+          <a class="quick-action" href="/vales/tablero?fecha=<%= fechaTrabajo %>">
+            <span class="quick-action-icon"><i class="bi bi-kanban"></i></span>
+            <div><strong>Administrar vales</strong><div class="text-muted small">Seguimiento y cambio de estado</div></div>
+          </a>
         <% } %>
-        <% if (['administrador','cedis'].includes(user.role)) { %>
-        <a class="quick-action" href="/vales/crear">
-          <span class="quick-action-icon"><i class="bi bi-file-earmark-plus"></i></span>
-          <div>
-            <strong>Crear vale</strong>
-            <div class="text-muted small">Alta manual de solicitudes</div>
-          </div>
-        </a>
-        <a class="quick-action" href="/reportes">
-          <span class="quick-action-icon"><i class="bi bi-bar-chart-line"></i></span>
-          <div>
-            <strong>Reportes</strong>
-            <div class="text-muted small">Consulta y exportación</div>
-          </div>
-        </a>
+        <% if (can('vales.create')) { %>
+          <a class="quick-action" href="/vales/crear">
+            <span class="quick-action-icon"><i class="bi bi-file-earmark-plus"></i></span>
+            <div><strong>Crear vale</strong><div class="text-muted small">Captura manual</div></div>
+          </a>
         <% } %>
-        <% if (['administrador','rebanado'].includes(user.role)) { %>
-        <a class="quick-action" href="/inventario/registro">
-          <span class="quick-action-icon"><i class="bi bi-archive"></i></span>
-          <div>
-            <strong>Cierre de día</strong>
-            <div class="text-muted small">Inventario y observaciones</div>
-          </div>
-        </a>
+        <% if (can('reportes.view')) { %>
+          <a class="quick-action" href="/reportes">
+            <span class="quick-action-icon"><i class="bi bi-bar-chart-line"></i></span>
+            <div><strong>Consultar reportes</strong><div class="text-muted small">Filtrar y exportar</div></div>
+          </a>
         <% } %>
-        <% if (user.role === 'administrador') { %>
-        <a class="quick-action" href="/usuarios">
-          <span class="quick-action-icon"><i class="bi bi-people"></i></span>
-          <div>
-            <strong>Usuarios</strong>
-            <div class="text-muted small">Administración interna</div>
-          </div>
-        </a>
+        <% if (can('inventario.manage')) { %>
+          <a class="quick-action" href="/inventario/registro">
+            <span class="quick-action-icon"><i class="bi bi-archive"></i></span>
+            <div><strong>Cierre de día</strong><div class="text-muted small">Inventario, sobrante y merma</div></div>
+          </a>
         <% } %>
-        <a class="quick-action" href="/pantalla" target="_blank">
+        <% if (can('users.manage')) { %>
+          <a class="quick-action" href="/usuarios">
+            <span class="quick-action-icon"><i class="bi bi-people"></i></span>
+            <div><strong>Usuarios</strong><div class="text-muted small">Accesos y roles</div></div>
+          </a>
+        <% } %>
+        <% if (can('permissions.manage')) { %>
+          <a class="quick-action" href="/permisos">
+            <span class="quick-action-icon"><i class="bi bi-shield-lock"></i></span>
+            <div><strong>Permisos</strong><div class="text-muted small">Roles y excepciones</div></div>
+          </a>
+        <% } %>
+        <a class="quick-action" href="/pantalla?fecha=<%= fechaTrabajo %>" target="_blank">
           <span class="quick-action-icon"><i class="bi bi-display"></i></span>
-          <div>
-            <strong>Pantalla almacén</strong>
-            <div class="text-muted small">Vista para monitor o TV</div>
-          </div>
+          <div><strong>Pantalla almacén</strong><div class="text-muted small">Vista para monitor o TV</div></div>
         </a>
       </div>
     </div>
   </div>
+
   <div class="col-lg-4">
     <div class="module-card h-100">
-      <div class="mb-3">
-        <h2 class="section-title">Lectura rápida</h2>
-        <p class="section-subtitle">Interpretación sencilla del flujo de trabajo.</p>
+      <h2 class="section-title mb-3">Flujo de trabajo</h2>
+      <div class="flow-line mb-4">
+        <span>Pendiente</span><i class="bi bi-arrow-right"></i>
+        <span>Rebanando</span><i class="bi bi-arrow-right"></i>
+        <span>Listo</span><i class="bi bi-arrow-right"></i>
+        <span>Entregado</span>
       </div>
-      <div class="d-grid gap-3">
-        <div class="info-pill">
-          <div class="info-pill-label">Flujo principal</div>
-          <div class="info-pill-value">Pendiente → Rebanando → Listo → Entregado</div>
-        </div>
-        <div class="info-pill">
-          <div class="info-pill-label">Atención operativa</div>
-          <div class="info-pill-value"><%= summary.Pendiente + summary.Rebanando %> vales requieren acción</div>
-        </div>
-        <div class="info-pill">
-          <div class="info-pill-label">Vista recomendada</div>
-          <div class="info-pill-value">Usar tablero y pantalla para seguimiento visual</div>
-        </div>
+      <div class="info-pill compact-pill mb-3">
+        <div class="info-pill-label">Requieren atención</div>
+        <div class="info-pill-value"><%= summary.Pendiente + summary.Rebanando %> vale(s)</div>
+      </div>
+      <div class="mini-stat-row">
+        <span class="mini-stat-chip mini-stat-overdue"><i class="bi bi-exclamation-triangle me-1"></i>Atrasados: <strong><%= overdueCount %></strong></span>
       </div>
     </div>
   </div>

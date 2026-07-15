@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/auth');
-const rolesAllowed = require('../middleware/roles');
+const { requirePermission } = require('../middleware/permissions');
 const reportController = require('../controllers/reportController');
 
-router.get('/', ensureAuthenticated, rolesAllowed('administrador','cedis'), reportController.listar);
+router.get('/', ensureAuthenticated, requirePermission('reportes.view'), reportController.listar);
 
 module.exports = router;

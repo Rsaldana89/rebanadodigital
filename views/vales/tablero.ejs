@@ -1,10 +1,11 @@
-<%- include('../partials/header', { title: 'Tablero de vales', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+<%- include('../partials/header', { title: 'Vales', user: user, success_msg: success_msg, error_msg: error_msg }) %>
 
 <%
   const estadoInfo = {
-    Pendiente: { cls: 'pending', icon: 'bi-hourglass-split' },
-    Rebanando: { cls: 'working', icon: 'bi-gear-wide-connected' },
-    Listo: { cls: 'ready', icon: 'bi-check2-circle' },
+    Todos: { cls: 'all', icon: 'bi-grid-1x2' },
+    Pendiente: { cls: 'pending', icon: 'bi-hourglass-split', accion: 'Iniciar rebanado', siguiente: 'Rebanando', btn: 'btn-primary', btnIcon: 'bi-play-circle' },
+    Rebanando: { cls: 'working', icon: 'bi-gear-wide-connected', accion: 'Marcar listo', siguiente: 'Listo', btn: 'btn-success', btnIcon: 'bi-check2-circle' },
+    Listo: { cls: 'ready', icon: 'bi-check2-circle', accion: 'Entregar', siguiente: 'Entregado', btn: 'btn-secondary', btnIcon: 'bi-truck' },
     Entregado: { cls: 'delivered', icon: 'bi-truck' },
     Cancelado: { cls: 'cancelled', icon: 'bi-x-circle' }
   };
@@ -14,114 +15,190 @@
     Baja: { cls: 'low', icon: 'bi-arrow-down-circle' }
   };
   const estadosOrden = ['Pendiente','Rebanando','Listo','Entregado','Cancelado'];
+  const flujoVale = [
+    { nombre: 'Pendiente', icono: 'bi-hourglass-split' },
+    { nombre: 'Rebanando', icono: 'bi-gear-wide-connected' },
+    { nombre: 'Listo', icono: 'bi-check2-circle' },
+    { nombre: 'Entregado', icono: 'bi-truck' }
+  ];
+  const allVales = estadosOrden.flatMap(est => (estados[est] || []));
+  const activos = (estados.Pendiente.length || 0) + (estados.Rebanando.length || 0) + (estados.Listo.length || 0);
+  const returnUrl = `/vales/tablero?fecha=${encodeURIComponent(filtroFecha)}`;
 %>
 
 <div class="page-header">
   <div class="row align-items-center g-3">
-    <div class="col-lg-8">
-      <div class="page-kicker">Operación</div>
-      <h1 class="page-title">Tablero de vales</h1>
-      <p class="page-subtitle">Visualiza el flujo de trabajo por etapas y actualiza el estado de cada vale de forma rápida.</p>
+    <div class="col-xl-7">
+      <div class="page-kicker"><%= overdueCount > 0 ? 'Trabajo del día + atrasados' : 'Trabajo del día' %></div>
+      <h1 class="page-title">Vales de rebanado</h1>
+      <p class="page-subtitle mb-0">Filtra por estado, busca un vale y avanza el flujo con botones táctiles.</p>
     </div>
-    <div class="col-lg-4">
-      <div class="header-actions justify-content-lg-end">
-        <a href="/vales/crear" class="btn btn-primary"><i class="bi bi-plus-square me-1"></i>Nuevo vale</a>
+    <div class="col-xl-5">
+      <div class="header-actions justify-content-xl-end">
+        <div class="work-date-card compact-date-card">
+          <span class="work-date-label"><i class="bi bi-calendar3 me-1"></i>Fecha y hora</span>
+          <strong><%= filtroFechaDisplay %></strong>
+          <small><i class="bi bi-clock me-1"></i><%= horaActual %></small>
+        </div>
+        <% if (['administrador','cedis'].includes(user.role)) { %>
+          <a href="/vales/crear" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo vale</a>
+        <% } %>
+        <a href="/pantalla?fecha=<%= filtroFecha %>" target="_blank" class="btn btn-soft"><i class="bi bi-display me-1"></i>Pantalla</a>
       </div>
     </div>
   </div>
 </div>
 
-<div class="kanban-grid">
+<% if (overdueCount > 0) { %>
+  <div class="overdue-banner mb-3">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div><strong><%= overdueCount %> vale(s) con retraso.</strong> Permanecerán visibles hasta entregarse o cancelarse.</div>
+  </div>
+<% } %>
+
+<div class="ops-date-toolbar mb-3">
+  <form method="get" action="/vales/tablero" class="ops-date-form">
+    <label for="fecha" class="form-label mb-0">Fecha de entrega</label>
+    <input type="date" id="fecha" name="fecha" value="<%= filtroFecha %>" class="form-control">
+    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Aplicar</button>
+    <a href="/vales/tablero" class="btn btn-soft"><i class="bi bi-calendar-check me-1"></i>Hoy</a>
+  </form>
+  <div class="ops-date-note">
+    <strong><span id="visibleOpsCount"><%= allVales.length %></span></strong> vale(s) · <strong id="currentFilterLabel">Todos</strong>
+  </div>
+</div>
+
+<div class="ops-summary-grid ops-summary-grid-six mb-3" role="group" aria-label="Filtrar vales por estado">
+  <button class="ops-status-card ops-status-all active" type="button" data-filter-status="Todos" aria-pressed="true">
+    <span class="ops-status-icon"><i class="bi bi-grid-1x2"></i></span>
+    <span class="ops-status-text"><strong><%= allVales.length %></strong><small>Todos</small></span>
+  </button>
   <% estadosOrden.forEach(function(est){ const info = estadoInfo[est]; %>
-    <section class="kanban-column column-<%= info.cls %>">
-      <div class="kanban-column-head">
-        <div class="column-title-group">
-          <span class="column-icon"><i class="bi <%= info.icon %>"></i></span>
-          <div>
-            <h2 class="h6 mb-0 fw-bold"><%= est %></h2>
-            <small class="text-muted">Seguimiento de vales</small>
-          </div>
-        </div>
-        <span class="column-count"><%= estados[est].length %></span>
-      </div>
-
-      <div class="kanban-cards">
-        <% if (!estados[est].length) { %>
-          <div class="empty-state">
-            <i class="bi bi-inbox"></i>
-            <div>No hay vales en este estatus.</div>
-          </div>
-        <% } %>
-
-        <% estados[est].forEach(function(vale){
-          const e = estadoInfo[vale.estado] || estadoInfo.Pendiente;
-          const p = prioridadInfo[vale.prioridad] || prioridadInfo.Normal;
-        %>
-          <article class="vale-card vale-accent-<%= e.cls %>">
-            <div class="vale-top">
-              <div>
-                <p class="vale-folio"><%= vale.folio %></p>
-                <div class="vale-client"><i class="bi bi-person-workspace me-1"></i><%= vale.cliente %></div>
-              </div>
-              <span class="priority-badge priority-<%= p.cls %>"><i class="bi <%= p.icon %> me-1"></i><%= vale.prioridad %></span>
-            </div>
-
-            <div class="vale-main">
-              <div class="vale-product"><i class="bi bi-box-seam me-1"></i><%= vale.producto %></div>
-              <div class="text-muted small">SKU: <strong><%= vale.sku %></strong></div>
-            </div>
-
-            <div class="vale-meta">
-              <div class="meta-tile">
-                <div class="meta-label">Cantidad</div>
-                <div class="meta-value"><%= vale.cantidad %> · <%= vale.presentacion %></div>
-              </div>
-              <div class="meta-tile">
-                <div class="meta-label">Rebanado</div>
-                <div class="meta-value"><%= vale.tipo_rebanado %></div>
-              </div>
-              <div class="meta-tile">
-                <div class="meta-label">Entrega</div>
-                <div class="meta-value"><%= new Date(vale.fecha_entrega).toISOString().substring(0,10) %></div>
-              </div>
-              <div class="meta-tile">
-                <div class="meta-label">Estado</div>
-                <div class="meta-value"><span class="status-chip status-<%= e.cls %>"><%= vale.estado %></span></div>
-              </div>
-            </div>
-
-            <% if (vale.observaciones) { %>
-              <div class="vale-note"><i class="bi bi-chat-left-text me-1"></i><%= vale.observaciones %></div>
-            <% } %>
-
-            <div class="card-actions">
-              <% if (vale.estado === 'Pendiente') { %>
-                <form method="post" action="/vales/<%= vale.id %>/estado">
-                  <input type="hidden" name="nuevo_estado" value="Rebanando">
-                  <button type="submit" class="btn btn-primary btn-sm w-100 btn-action"><i class="bi bi-play-circle"></i>Marcar como Rebanando</button>
-                </form>
-                <form method="post" action="/vales/<%= vale.id %>/estado">
-                  <input type="hidden" name="nuevo_estado" value="Cancelado">
-                  <button type="submit" class="btn btn-outline-danger btn-sm w-100 btn-action"><i class="bi bi-x-circle"></i>Cancelar</button>
-                </form>
-              <% } else if (vale.estado === 'Rebanando') { %>
-                <form method="post" action="/vales/<%= vale.id %>/estado">
-                  <input type="hidden" name="nuevo_estado" value="Listo">
-                  <button type="submit" class="btn btn-success btn-sm w-100 btn-action"><i class="bi bi-check2-circle"></i>Marcar como Listo</button>
-                </form>
-              <% } else if (vale.estado === 'Listo') { %>
-                <form method="post" action="/vales/<%= vale.id %>/estado">
-                  <input type="hidden" name="nuevo_estado" value="Entregado">
-                  <button type="submit" class="btn btn-secondary btn-sm w-100 btn-action"><i class="bi bi-truck"></i>Marcar como Entregado</button>
-                </form>
-              <% } %>
-              <a href="/vales/<%= vale.id %>" class="btn btn-soft btn-sm w-100 btn-action"><i class="bi bi-eye"></i>Ver detalle</a>
-            </div>
-          </article>
-        <% }) %>
-      </div>
-    </section>
+    <button id="<%= est %>" class="ops-status-card ops-status-<%= info.cls %>" type="button" data-filter-status="<%= est %>" aria-pressed="false">
+      <span class="ops-status-icon"><i class="bi <%= info.icon %>"></i></span>
+      <span class="ops-status-text"><strong><%= estados[est].length %></strong><small><%= est %></small></span>
+    </button>
   <% }) %>
 </div>
+
+<div class="ops-toolbar-simple mb-3">
+  <div class="ops-search ops-search-wide">
+    <i class="bi bi-search"></i>
+    <input type="search" id="opsSearch" placeholder="Buscar folio, cliente, producto o SKU" aria-label="Buscar vales">
+  </div>
+  <div class="ops-inline-info">
+    <span class="ops-inline-pill"><i class="bi bi-lightning-charge me-1"></i><strong><%= activos %></strong> activos</span>
+    <span class="ops-inline-pill overdue-pill"><i class="bi bi-exclamation-triangle me-1"></i><strong><%= overdueCount %></strong> atrasados</span>
+  </div>
+</div>
+
+<section class="ops-list" id="opsList">
+  <% if (!allVales.length) { %>
+    <div class="empty-state empty-state-card">
+      <i class="bi bi-inbox"></i>
+      <div>No hay vales programados ni atrasados visibles para <strong><%= filtroFechaDisplay %></strong>.</div>
+    </div>
+  <% } %>
+
+  <% allVales.forEach(function(vale){
+    const e = estadoInfo[vale.estado] || estadoInfo.Pendiente;
+    const p = prioridadInfo[vale.prioridad] || prioridadInfo.Normal;
+    const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '');
+    const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
+    const atrasoTexto = vale.days_late === 1 ? '1 día' : `${vale.days_late} días`;
+    const searchText = `${vale.folio} ${vale.cliente} ${vale.producto} ${vale.sku} ${vale.prioridad} ${vale.estado} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
+  %>
+    <article class="op-vale-card op-vale-<%= e.cls %> <%= vale.is_overdue ? 'op-vale-overdue' : '' %>" data-status="<%= vale.estado %>" data-search="<%= searchText %>">
+      <div class="op-vale-left">
+        <div class="op-vale-mainline">
+          <span class="op-folio"><%= vale.folio %></span>
+          <span class="priority-badge priority-<%= p.cls %>"><i class="bi <%= p.icon %> me-1"></i><%= vale.prioridad %></span>
+          <span class="status-chip status-<%= e.cls %>"><i class="bi <%= e.icon %> me-1"></i><%= vale.estado %></span>
+          <% if (vale.is_overdue) { %>
+            <span class="overdue-badge"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso de entrega · <%= atrasoTexto %></span>
+          <% } %>
+        </div>
+
+        <div class="op-client"><i class="bi bi-person-workspace me-1"></i><%= vale.cliente %></div>
+
+        <div class="op-product-row">
+          <div class="op-product"><i class="bi bi-box-seam me-1"></i><%= vale.producto %></div>
+          <div class="op-muted">SKU: <strong><%= vale.sku %></strong></div>
+        </div>
+
+        <div class="op-facts op-facts-clean">
+          <span><i class="bi bi-calculator me-1"></i><strong><%= vale.cantidad %></strong> · <%= vale.presentacion %></span>
+          <span><i class="bi bi-sliders me-1"></i><%= vale.tipo_rebanado %></span>
+          <span><i class="bi bi-calendar-event me-1"></i>Entrega: <strong><%= fechaEntregaDisplay %></strong></span>
+        </div>
+
+        <%
+          const pasoActual = flujoVale.findIndex(paso => paso.nombre === vale.estado);
+          const flujoCancelado = vale.estado === 'Cancelado';
+        %>
+        <div class="vale-flow-wrap" aria-label="Flujo del vale: Pendiente, Rebanando, Listo y Entregado">
+          <div class="vale-flow <%= flujoCancelado ? 'vale-flow-cancelled' : '' %>">
+            <% flujoVale.forEach((paso, indice) => {
+              const completado = !flujoCancelado && pasoActual > indice;
+              const activo = !flujoCancelado && pasoActual === indice;
+              const clasePaso = completado ? 'is-complete' : activo ? 'is-active' : 'is-upcoming';
+            %>
+              <div class="vale-flow-step <%= clasePaso %>">
+                <span class="vale-flow-dot">
+                  <i class="bi <%= completado ? 'bi-check-lg' : paso.icono %>"></i>
+                </span>
+                <span class="vale-flow-label"><%= paso.nombre %></span>
+              </div>
+              <% if (indice < flujoVale.length - 1) { %>
+                <span class="vale-flow-line <%= !flujoCancelado && pasoActual > indice ? 'is-complete' : '' %>"></span>
+              <% } %>
+            <% }) %>
+          </div>
+        </div>
+
+        <% if (vale.observaciones) { %>
+          <div class="op-note"><i class="bi bi-chat-left-text me-1"></i><%= vale.observaciones %></div>
+        <% } %>
+      </div>
+
+      <div class="op-actions op-actions-touch">
+        <% if (e.siguiente) {
+             const canAdvance = (vale.allowed_states || []).includes(e.siguiente);
+        %>
+          <form method="post" action="/vales/<%= vale.id %>/estado">
+            <input type="hidden" name="return_url" value="<%= returnUrl %>">
+            <input type="hidden" name="nuevo_estado" value="<%= e.siguiente %>">
+            <button type="submit"
+                    class="btn <%= e.btn %> btn-lg w-100 btn-action touch-btn"
+                    <%= canAdvance ? '' : 'disabled' %>
+                    title="<%= canAdvance ? e.accion : 'No tienes permiso para esta acción' %>">
+              <i class="bi <%= canAdvance ? e.btnIcon : 'bi-lock-fill' %>"></i><%= e.accion %>
+            </button>
+          </form>
+        <% } %>
+        <% if (!['Entregado','Cancelado'].includes(vale.estado)) {
+             const canCancel = (vale.allowed_states || []).includes('Cancelado');
+        %>
+          <form method="post" action="/vales/<%= vale.id %>/estado" data-confirm="¿Cancelar este vale?">
+            <input type="hidden" name="return_url" value="<%= returnUrl %>">
+            <input type="hidden" name="nuevo_estado" value="Cancelado">
+            <button type="submit"
+                    class="btn btn-outline-danger w-100 btn-action touch-btn btn-cancel-subtle"
+                    <%= canCancel ? '' : 'disabled' %>
+                    title="<%= canCancel ? 'Cancelar vale' : 'No tienes permiso para cancelar' %>">
+              <i class="bi <%= canCancel ? 'bi-x-circle' : 'bi-lock-fill' %>"></i>Cancelar
+            </button>
+          </form>
+        <% } %>
+        <a href="/vales/<%= vale.id %>" class="btn btn-soft w-100 btn-action touch-btn"><i class="bi bi-eye"></i>Detalle</a>
+      </div>
+    </article>
+  <% }) %>
+
+  <div id="opsEmptyFilter" class="empty-state empty-state-card d-none">
+    <i class="bi bi-search"></i>
+    <div>No hay vales que coincidan con el filtro.</div>
+  </div>
+</section>
 
 <%- include('../partials/footer') %>

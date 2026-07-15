@@ -34,14 +34,19 @@
           <h2 class="section-title mb-1">Información del vale</h2>
           <p class="section-subtitle">Datos principales de la solicitud.</p>
         </div>
-        <span class="status-chip status-<%= estadoCls %>"><%= vale.estado %></span>
+        <div class="d-flex flex-wrap gap-2 justify-content-end">
+          <span class="status-chip status-<%= estadoCls %>"><%= vale.estado %></span>
+          <% if (vale.is_overdue) { %>
+            <span class="overdue-badge"><i class="bi bi-exclamation-triangle-fill me-1"></i>Con retraso de entrega · <%= vale.days_late === 1 ? '1 día' : vale.days_late + ' días' %></span>
+          <% } %>
+        </div>
       </div>
 
       <div class="detail-grid">
         <div class="detail-item"><div class="detail-label">Folio</div><div class="detail-value"><%= vale.folio %></div></div>
         <div class="detail-item"><div class="detail-label">Origen</div><div class="detail-value"><%= vale.origen %></div></div>
         <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value"><%= vale.cliente %></div></div>
-        <div class="detail-item"><div class="detail-label">Fecha de entrega</div><div class="detail-value"><%= new Date(vale.fecha_entrega).toISOString().substring(0,10) %></div></div>
+        <div class="detail-item"><div class="detail-label">Fecha de entrega</div><div class="detail-value"><%= (vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '')) %></div></div>
         <div class="detail-item"><div class="detail-label">Prioridad</div><div class="detail-value"><%= vale.prioridad %></div></div>
         <div class="detail-item"><div class="detail-label">SKU</div><div class="detail-value"><%= vale.sku %></div></div>
         <div class="detail-item"><div class="detail-label">Producto</div><div class="detail-value"><%= vale.producto %></div></div>
@@ -57,18 +62,54 @@
     <div class="content-card mb-4">
       <h2 class="section-title mb-1">Cambiar estado</h2>
       <p class="section-subtitle mb-3">Actualiza el avance del vale según la operación.</p>
-      <form action="/vales/<%= vale.id %>/estado" method="post" class="row g-2">
-        <div class="col-12">
-          <select name="nuevo_estado" class="form-select">
-            <% ['Pendiente','Rebanando','Listo','Entregado','Cancelado'].forEach(function(est){ %>
-              <option value="<%= est %>" <%= est === vale.estado ? 'selected' : '' %>><%= est %></option>
-            <% }) %>
-          </select>
-        </div>
-        <div class="col-12">
-          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-arrow-repeat me-1"></i>Actualizar estado</button>
-        </div>
-      </form>
+
+      <div class="current-state-box mb-3">
+        <div class="current-state-label">Estado actual</div>
+        <span class="status-chip status-<%= estadoCls %>"><%= vale.estado %></span>
+      </div>
+
+      <div class="state-actions-grid">
+        <% const iconMap = { Pendiente: 'bi-hourglass-split', Rebanando: 'bi-gear-wide-connected', Listo: 'bi-check2-circle', Entregado: 'bi-truck' }; %>
+        <% ['Pendiente','Rebanando','Listo','Entregado'].forEach(function(est){
+             const estCls = estadoMap[est] || 'pending';
+             const isCurrent = est === vale.estado;
+             const isAllowed = (vale.allowed_states || []).includes(est);
+             const disabled = isCurrent || !isAllowed;
+        %>
+          <form action="/vales/<%= vale.id %>/estado" method="post" class="state-action-form">
+            <input type="hidden" name="nuevo_estado" value="<%= est %>">
+            <button type="submit"
+                    class="btn btn-state-option btn-state-<%= estCls %> w-100 <%= isCurrent ? 'is-current' : '' %>"
+                    <%= disabled ? 'disabled' : '' %>
+                    title="<%= isCurrent ? 'Estado actual' : (!isAllowed ? 'No tienes permiso para marcar este estado' : 'Cambiar a ' + est) %>">
+              <span class="btn-state-main">
+                <i class="bi <%= isCurrent ? 'bi-check-circle-fill' : (!isAllowed ? 'bi-lock-fill' : iconMap[est]) %>"></i>
+                <span>
+                  <strong><%= est %></strong>
+                  <small><%= isCurrent ? 'Estado actual' : (!isAllowed ? 'No permitido para tu usuario' : 'Marcar como ' + est.toLowerCase()) %></small>
+                </span>
+              </span>
+            </button>
+          </form>
+        <% }) %>
+
+        <% const canCancel = (vale.allowed_states || []).includes('Cancelado'); %>
+        <form action="/vales/<%= vale.id %>/estado" method="post" class="state-action-form" data-confirm="¿Deseas cancelar este vale?">
+          <input type="hidden" name="nuevo_estado" value="Cancelado">
+          <button type="submit"
+                  class="btn btn-state-cancel w-100 <%= vale.estado === 'Cancelado' ? 'is-current' : '' %>"
+                  <%= (!canCancel || vale.estado === 'Cancelado') ? 'disabled' : '' %>
+                  title="<%= vale.estado === 'Cancelado' ? 'Estado actual' : (!canCancel ? 'No tienes permiso para cancelar este vale' : 'Cancelar vale') %>">
+            <span class="btn-state-main">
+              <i class="bi <%= vale.estado === 'Cancelado' ? 'bi-check-circle-fill' : (!canCancel ? 'bi-lock-fill' : 'bi-x-circle') %>"></i>
+              <span>
+                <strong>Cancelado</strong>
+                <small><%= vale.estado === 'Cancelado' ? 'Estado actual' : (!canCancel ? 'No permitido para tu usuario' : 'Cancelar el vale') %></small>
+              </span>
+            </span>
+          </button>
+        </form>
+      </div>
     </div>
 
     <div class="content-card">
