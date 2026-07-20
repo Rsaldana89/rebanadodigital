@@ -129,3 +129,19 @@ document.addEventListener('DOMContentLoaded', () => {
     applyOpsFilter(validStatuses.includes(hashStatus) ? hashStatus : 'Todos');
   }
 });
+
+// Mensajes compactos del modo operativo: se ocultan sin interrumpir el trabajo.
+document.querySelectorAll('[data-auto-dismiss]').forEach(alert => {
+  const delay = Number(alert.dataset.autoDismiss) || 2600;
+  window.setTimeout(() => {
+    alert.classList.add('is-hiding');
+    window.setTimeout(() => alert.remove(), 220);
+  }, delay);
+});
+
+// Cierra el menú de acciones de un vale al tocar fuera de él.
+document.addEventListener('click', event => {
+  document.querySelectorAll('.operator-more-menu[open]').forEach(menu => {
+    if (!menu.contains(event.target)) menu.removeAttribute('open');
+  });
+});

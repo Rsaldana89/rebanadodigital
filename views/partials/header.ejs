@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/css/institutional.css">
 </head>
-<body>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
   <nav class="navbar navbar-expand-lg main-navbar">
     <div class="container-fluid px-lg-4">
       <a class="navbar-brand brand" href="/dashboard">
@@ -66,7 +66,7 @@
 
   <main class="container-fluid page-shell px-lg-4">
     <% if (success_msg) { %>
-      <div class="alert alert-success d-flex align-items-center gap-2" role="status">
+      <div class="alert alert-success d-flex align-items-center gap-2 <%= typeof compactAlerts !== 'undefined' && compactAlerts ? 'operator-feedback-alert' : '' %>" role="status" <%= typeof compactAlerts !== 'undefined' && compactAlerts ? 'data-auto-dismiss="2600"' : '' %>>
         <i class="bi bi-check-circle-fill"></i><span><%= success_msg %></span>
       </div>
     <% } %>

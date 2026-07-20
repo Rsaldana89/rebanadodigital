@@ -22,7 +22,14 @@ exports.login = async (req, res) => {
         role: user.role
       };
       req.session.success_msg = `Bienvenido, ${user.name}`;
-      return res.redirect('/dashboard');
+
+      // Rebanado inicia directamente en el tablero operativo.
+      // Los demás roles conservan el inicio como página principal.
+      const landingPage = user.role === 'rebanado'
+        ? '/vales/tablero'
+        : '/dashboard';
+
+      return res.redirect(landingPage);
     }
     req.session.error_msg = 'Credenciales incorrectas';
     return res.redirect('/login');

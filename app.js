@@ -44,7 +44,11 @@ app.use(loadPermissions);
 // Ruta inicial: redirige al login o al dashboard
 app.get('/', (req, res) => {
   if (req.session.user) {
-    return res.redirect('/dashboard');
+    return res.redirect(
+      req.session.user.role === 'rebanado'
+        ? '/vales/tablero'
+        : '/dashboard'
+    );
   }
   return res.redirect('/login');
 });
