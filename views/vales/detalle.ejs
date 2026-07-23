@@ -9,17 +9,23 @@
     Cancelado: 'cancelled'
   };
   const estadoCls = estadoMap[vale.estado] || 'pending';
+  const canEditVale = typeof can === 'function' && can('vales.edit');
+  const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '');
+  const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
 %>
 
 <div class="page-header">
   <div class="row align-items-center g-3">
     <div class="col-lg-8">
-      <div class="page-kicker">Seguimiento</div>
-      <h1 class="page-title">Detalle del vale <%= vale.folio %></h1>
-      <p class="page-subtitle">Consulta la información completa del vale y su historial de cambios.</p>
+      <div class="page-kicker">Comanda de rebanado</div>
+      <h1 class="page-title">Vale <%= vale.folio %></h1>
+      <p class="page-subtitle">Un solo vale para el cliente, con todos los productos de su pedido.</p>
     </div>
     <div class="col-lg-4">
       <div class="header-actions justify-content-lg-end">
+        <% if (canEditVale) { %>
+          <a href="/vales/<%= vale.id %>/editar" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>Editar comanda</a>
+        <% } %>
         <a href="/vales/tablero" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Regresar</a>
       </div>
     </div>
@@ -28,40 +34,70 @@
 
 <div class="row g-4">
   <div class="col-lg-7">
-    <div class="content-card">
+    <div class="content-card mb-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
-          <h2 class="section-title mb-1">Información del vale</h2>
-          <p class="section-subtitle">Datos principales de la solicitud.</p>
+          <h2 class="section-title mb-1">Datos del pedido</h2>
+          <p class="section-subtitle"><%= vale.total_productos || 0 %> producto(s) integran esta comanda.</p>
         </div>
         <div class="d-flex flex-wrap gap-2 justify-content-end">
           <span class="status-chip status-<%= estadoCls %>"><%= vale.estado %></span>
           <% if (vale.is_overdue) { %>
-            <span class="overdue-badge"><i class="bi bi-exclamation-triangle-fill me-1"></i>Con retraso de entrega · <%= vale.days_late === 1 ? '1 día' : vale.days_late + ' días' %></span>
+            <span class="overdue-badge"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso · <%= vale.days_late === 1 ? '1 día' : vale.days_late + ' días' %></span>
           <% } %>
         </div>
       </div>
 
-      <div class="detail-grid">
+      <div class="detail-grid command-detail-grid">
         <div class="detail-item"><div class="detail-label">Folio</div><div class="detail-value"><%= vale.folio %></div></div>
+        <div class="detail-item"><div class="detail-label">Número de pedido</div><div class="detail-value"><%= vale.numero_pedido || 'Sin referencia' %></div></div>
         <div class="detail-item"><div class="detail-label">Origen</div><div class="detail-value"><%= vale.origen %></div></div>
         <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value"><%= vale.cliente %></div></div>
-        <div class="detail-item"><div class="detail-label">Fecha de entrega</div><div class="detail-value"><%= (vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '')) %></div></div>
+        <div class="detail-item"><div class="detail-label">Fecha de entrega</div><div class="detail-value"><%= fechaEntregaDisplay %></div></div>
         <div class="detail-item"><div class="detail-label">Prioridad</div><div class="detail-value"><%= vale.prioridad %></div></div>
-        <div class="detail-item"><div class="detail-label">SKU</div><div class="detail-value"><%= vale.sku %></div></div>
-        <div class="detail-item"><div class="detail-label">Producto</div><div class="detail-value"><%= vale.producto %></div></div>
-        <div class="detail-item"><div class="detail-label">Cantidad</div><div class="detail-value"><%= vale.cantidad %> · <%= vale.presentacion %></div></div>
-        <div class="detail-item"><div class="detail-label">Tipo de rebanado</div><div class="detail-value"><%= vale.tipo_rebanado %></div></div>
         <div class="detail-item"><div class="detail-label">Creado por</div><div class="detail-value"><%= vale.creador || vale.creado_por || 'N/D' %></div></div>
-        <div class="detail-item" style="grid-column: 1 / -1;"><div class="detail-label">Observaciones</div><div class="detail-value"><%= vale.observaciones || 'Sin observaciones' %></div></div>
+        <div class="detail-item" style="grid-column: 1 / -1;"><div class="detail-label">Observaciones generales</div><div class="detail-value"><%= vale.observaciones || 'Sin observaciones' %></div></div>
       </div>
+    </div>
+
+    <div class="content-card command-detail-products-card">
+      <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
+        <div>
+          <h2 class="section-title mb-1">Productos a rebanar</h2>
+          <p class="section-subtitle mb-0">Detalle completo de la comanda.</p>
+        </div>
+        <span class="command-products-total"><i class="bi bi-box-seam"></i><strong><%= vale.total_productos || 0 %></strong> producto(s)</span>
+      </div>
+
+      <% if (!(vale.productos || []).length) { %>
+        <div class="empty-state py-3"><i class="bi bi-inbox"></i><div>No hay productos registrados.</div></div>
+      <% } else { %>
+        <div class="command-detail-products">
+          <% vale.productos.forEach((item, index) => { %>
+            <article class="command-detail-product">
+              <div class="command-detail-product-index"><%= index + 1 %></div>
+              <div class="command-detail-product-main">
+                <div class="command-detail-product-title"><%= item.producto %></div>
+                <div class="command-detail-product-meta">
+                  <span>SKU <strong><%= item.sku %></strong></span>
+                  <span><strong><%= item.cantidad %></strong> <%= item.presentacion %></span>
+                  <span>Rebanado <strong><%= item.tipo_rebanado %></strong></span>
+                </div>
+                <% if (item.observaciones) { %>
+                  <div class="command-detail-product-note"><i class="bi bi-chat-left-text"></i><%= item.observaciones %></div>
+                <% } %>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
     </div>
   </div>
 
   <div class="col-lg-5">
     <div class="content-card mb-4">
       <h2 class="section-title mb-1">Cambiar estado</h2>
-      <p class="section-subtitle mb-3">Actualiza el avance del vale según la operación.</p>
+      <p class="section-subtitle mb-3">El estado se aplica a toda la comanda y a todos sus productos.</p>
 
       <div class="current-state-box mb-3">
         <div class="current-state-label">Estado actual</div>
@@ -86,7 +122,7 @@
                 <i class="bi <%= isCurrent ? 'bi-check-circle-fill' : (!isAllowed ? 'bi-lock-fill' : iconMap[est]) %>"></i>
                 <span>
                   <strong><%= est %></strong>
-                  <small><%= isCurrent ? 'Estado actual' : (!isAllowed ? 'No permitido para tu usuario' : 'Marcar como ' + est.toLowerCase()) %></small>
+                  <small><%= isCurrent ? 'Estado actual' : (!isAllowed ? 'No permitido para tu usuario' : 'Aplicar a toda la comanda') %></small>
                 </span>
               </span>
             </button>
@@ -94,7 +130,7 @@
         <% }) %>
 
         <% const canCancel = (vale.allowed_states || []).includes('Cancelado'); %>
-        <form action="/vales/<%= vale.id %>/estado" method="post" class="state-action-form" data-confirm="¿Deseas cancelar este vale?">
+        <form action="/vales/<%= vale.id %>/estado" method="post" class="state-action-form" data-confirm="¿Deseas cancelar este vale completo?">
           <input type="hidden" name="nuevo_estado" value="Cancelado">
           <button type="submit"
                   class="btn btn-state-cancel w-100 <%= vale.estado === 'Cancelado' ? 'is-current' : '' %>"
@@ -104,7 +140,7 @@
               <i class="bi <%= vale.estado === 'Cancelado' ? 'bi-check-circle-fill' : (!canCancel ? 'bi-lock-fill' : 'bi-x-circle') %>"></i>
               <span>
                 <strong>Cancelado</strong>
-                <small><%= vale.estado === 'Cancelado' ? 'Estado actual' : (!canCancel ? 'No permitido para tu usuario' : 'Cancelar el vale') %></small>
+                <small><%= vale.estado === 'Cancelado' ? 'Estado actual' : (!canCancel ? 'No permitido para tu usuario' : 'Cancelar toda la comanda') %></small>
               </span>
             </span>
           </button>
@@ -126,13 +162,13 @@
             <li class="timeline-item">
               <span class="timeline-icon"><i class="bi bi-arrow-left-right"></i></span>
               <div class="timeline-text">
-                <div class="fw-bold text-capitalize"><%= item.action %></div>
-                <div class="small text-muted mb-1">De <strong><%= item.estado_anterior || 'N/D' %></strong> a <strong><%= item.estado_nuevo || 'N/D' %></strong></div>
-                <div class="small"><strong>Por:</strong> <%= item.usuario %></div>
-                <div class="small text-muted"><%= new Date(item.created_at).toISOString().slice(0,16).replace('T',' ') %></div>
-                <% if (item.descripcion) { %>
-                  <div class="small mt-1"><%= item.descripcion %></div>
+                <div class="fw-bold"><%= String(item.action || '').replaceAll('_', ' ') %></div>
+                <% if (item.estado_anterior || item.estado_nuevo) { %>
+                  <div class="small text-muted mb-1">De <strong><%= item.estado_anterior || 'N/D' %></strong> a <strong><%= item.estado_nuevo || 'N/D' %></strong></div>
                 <% } %>
+                <div class="small"><strong>Por:</strong> <%= item.usuario || 'N/D' %></div>
+                <div class="small text-muted"><%= new Date(item.created_at).toISOString().slice(0,16).replace('T',' ') %></div>
+                <% if (item.descripcion) { %><div class="small mt-1"><%= item.descripcion %></div><% } %>
               </div>
             </li>
           <% }) %>

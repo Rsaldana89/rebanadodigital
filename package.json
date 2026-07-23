@@ -1,6 +1,6 @@
 {
   "name": "chc-rebanado-digital",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "description": "Sistema web institucional CHC para creación, seguimiento y control táctil de vales de rebanado",
   "main": "app.js",
   "packageManager": "npm@11.6.2",

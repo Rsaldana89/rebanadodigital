@@ -1,22 +1,23 @@
 <%
-  const isRebanado = user && user.role === 'rebanado';
-  const operatorSuccessMsg = isRebanado && /^Bienvenido/i.test(success_msg || '') ? null : success_msg;
+  const compactSuccessMsg = /^Bienvenido/i.test(success_msg || '') ? null : success_msg;
+  const canCreateVale = typeof can === 'function' && can('vales.create');
+  const canEditVale = typeof can === 'function' && can('vales.edit');
 %>
 <%- include('../partials/header', {
   title: 'Vales',
   user: user,
-  success_msg: operatorSuccessMsg,
+  success_msg: compactSuccessMsg,
   error_msg: error_msg,
-  compactAlerts: isRebanado,
-  bodyClass: `tablero-dark-body${isRebanado ? ' tablero-operator-body' : ''}`
+  compactAlerts: true,
+  bodyClass: 'tablero-dark-body tablero-operator-body'
 }) %>
 
 <%
   const estadoInfo = {
     Todos: { cls: 'all', icon: 'bi-grid-1x2' },
-    Pendiente: { cls: 'pending', icon: 'bi-hourglass-split', accion: 'Iniciar rebanado', accionCorta: 'Iniciar', siguiente: 'Rebanando', btn: 'btn-primary', btnIcon: 'bi-play-circle' },
-    Rebanando: { cls: 'working', icon: 'bi-gear-wide-connected', accion: 'Marcar listo', accionCorta: 'Marcar listo', siguiente: 'Listo', btn: 'btn-success', btnIcon: 'bi-check2-circle' },
-    Listo: { cls: 'ready', icon: 'bi-check2-circle', accion: 'Entregar', accionCorta: 'Entregar', siguiente: 'Entregado', btn: 'btn-secondary', btnIcon: 'bi-truck' },
+    Pendiente: { cls: 'pending', icon: 'bi-hourglass-split', accion: 'Iniciar rebanado', accionCorta: 'Iniciar', siguiente: 'Rebanando', btnIcon: 'bi-play-circle' },
+    Rebanando: { cls: 'working', icon: 'bi-gear-wide-connected', accion: 'Marcar listo', accionCorta: 'Marcar listo', siguiente: 'Listo', btnIcon: 'bi-check2-circle' },
+    Listo: { cls: 'ready', icon: 'bi-check2-circle', accion: 'Entregar', accionCorta: 'Entregar', siguiente: 'Entregado', btnIcon: 'bi-truck' },
     Entregado: { cls: 'delivered', icon: 'bi-truck' },
     Cancelado: { cls: 'cancelled', icon: 'bi-x-circle' }
   };
@@ -26,134 +27,68 @@
     Baja: { cls: 'low', icon: 'bi-arrow-down-circle' }
   };
   const estadosOrden = ['Pendiente','Rebanando','Listo','Entregado','Cancelado'];
-  const flujoVale = [
-    { nombre: 'Pendiente', icono: 'bi-hourglass-split' },
-    { nombre: 'Rebanando', icono: 'bi-gear-wide-connected' },
-    { nombre: 'Listo', icono: 'bi-check2-circle' },
-    { nombre: 'Entregado', icono: 'bi-truck' }
-  ];
   const allVales = estadosOrden.flatMap(est => (estados[est] || []));
   const activos = (estados.Pendiente.length || 0) + (estados.Rebanando.length || 0) + (estados.Listo.length || 0);
   const returnUrl = `/vales/tablero?fecha=${encodeURIComponent(filtroFecha)}`;
 %>
 
-<% if (isRebanado) { %>
-  <section class="operator-commandbar" aria-labelledby="operatorBoardTitle">
-    <div class="operator-command-main">
-      <div class="operator-kicker">Operación de rebanado</div>
-      <div class="operator-title-line">
-        <h1 id="operatorBoardTitle">Vales de rebanado</h1>
-        <span class="operator-total"><strong><%= activos %></strong> activos</span>
-        <% if (overdueCount > 0) { %>
-          <span class="operator-overdue"><i class="bi bi-exclamation-triangle-fill"></i><strong><%= overdueCount %></strong> atrasado<%= overdueCount === 1 ? '' : 's' %></span>
-        <% } %>
-      </div>
-      <div class="operator-date-line">
-        <i class="bi bi-calendar3"></i><span><%= filtroFechaDisplay %></span>
-        <span class="operator-date-separator">·</span>
-        <i class="bi bi-clock"></i><span><%= horaActual %></span>
-      </div>
+<section class="operator-commandbar" aria-labelledby="operatorBoardTitle">
+  <div class="operator-command-main">
+    <div class="operator-kicker">Comandas de rebanado</div>
+    <div class="operator-title-line">
+      <h1 id="operatorBoardTitle">Vales por pedido</h1>
+      <span class="operator-total"><strong><%= activos %></strong> activos</span>
+      <% if (overdueCount > 0) { %>
+        <span class="operator-overdue"><i class="bi bi-exclamation-triangle-fill"></i><strong><%= overdueCount %></strong> atrasado<%= overdueCount === 1 ? '' : 's' %></span>
+      <% } %>
     </div>
+    <div class="operator-date-line">
+      <i class="bi bi-calendar3"></i><span><%= filtroFechaDisplay %></span>
+      <span class="operator-date-separator">·</span>
+      <i class="bi bi-clock"></i><span><%= horaActual %></span>
+    </div>
+  </div>
+
+  <div class="operator-command-actions">
+    <% if (canCreateVale) { %>
+      <a href="/vales/crear" class="operator-screen-link operator-new-link" title="Crear una nueva comanda">
+        <i class="bi bi-plus-lg"></i><span>Nuevo vale</span>
+      </a>
+    <% } %>
     <a href="/pantalla?fecha=<%= filtroFecha %>" target="_blank" class="operator-screen-link" title="Abrir pantalla de almacén">
       <i class="bi bi-display"></i><span>Pantalla</span>
     </a>
-  </section>
-
-  <section class="operator-tools" aria-label="Filtros del tablero">
-    <div class="operator-tools-top">
-      <form method="get" action="/vales/tablero" class="operator-date-form">
-        <label for="fecha" class="visually-hidden">Fecha de entrega</label>
-        <span class="operator-control-label"><i class="bi bi-calendar-event"></i>Entrega</span>
-        <input type="date" id="fecha" name="fecha" value="<%= filtroFecha %>" class="form-control">
-        <button type="submit" class="operator-icon-button" title="Aplicar fecha" aria-label="Aplicar fecha"><i class="bi bi-arrow-right"></i></button>
-        <a href="/vales/tablero" class="operator-today-link">Hoy</a>
-      </form>
-
-      <div class="ops-search operator-search">
-        <i class="bi bi-search"></i>
-        <input type="search" id="opsSearch" placeholder="Buscar folio, cliente, producto o SKU" aria-label="Buscar vales">
-      </div>
-    </div>
-
-    <div class="operator-filter-row" role="group" aria-label="Filtrar vales por estado">
-      <button class="operator-filter-pill is-all active" type="button" data-filter-status="Todos" aria-pressed="true">
-        <span>Todos</span><strong><%= allVales.length %></strong>
-      </button>
-      <% estadosOrden.forEach(function(est){ const info = estadoInfo[est]; %>
-        <button id="<%= est %>" class="operator-filter-pill is-<%= info.cls %>" type="button" data-filter-status="<%= est %>" aria-pressed="false">
-          <span><%= est %></span><strong><%= estados[est].length %></strong>
-        </button>
-      <% }) %>
-      <span class="operator-visible-count"><strong id="visibleOpsCount"><%= allVales.length %></strong> visibles · <span id="currentFilterLabel">Todos</span></span>
-    </div>
-  </section>
-<% } else { %>
-  <div class="page-header">
-    <div class="row align-items-center g-3">
-      <div class="col-xl-7">
-        <div class="page-kicker"><%= overdueCount > 0 ? 'Trabajo del día + atrasados' : 'Trabajo del día' %></div>
-        <h1 class="page-title">Vales de rebanado</h1>
-        <p class="page-subtitle mb-0">Consulta y actualiza los vales del día desde una vista compacta para tablet.</p>
-      </div>
-      <div class="col-xl-5">
-        <div class="header-actions justify-content-xl-end">
-          <div class="work-date-card compact-date-card">
-            <span class="work-date-label"><i class="bi bi-calendar3 me-1"></i>Fecha y hora</span>
-            <strong><%= filtroFechaDisplay %></strong>
-            <small><i class="bi bi-clock me-1"></i><%= horaActual %></small>
-          </div>
-          <% if (['administrador','cedis'].includes(user.role)) { %>
-            <a href="/vales/crear" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo vale</a>
-          <% } %>
-          <a href="/pantalla?fecha=<%= filtroFecha %>" target="_blank" class="btn btn-soft"><i class="bi bi-display me-1"></i>Pantalla</a>
-        </div>
-      </div>
-    </div>
   </div>
+</section>
 
-  <% if (overdueCount > 0) { %>
-    <div class="overdue-banner mb-3">
-      <i class="bi bi-exclamation-triangle-fill"></i>
-      <div><strong><%= overdueCount %> vale(s) con retraso.</strong> Permanecerán visibles hasta entregarse o cancelarse.</div>
-    </div>
-  <% } %>
-
-  <div class="ops-date-toolbar mb-3">
-    <form method="get" action="/vales/tablero" class="ops-date-form">
-      <label for="fecha" class="form-label mb-0">Fecha de entrega</label>
+<section class="operator-tools" aria-label="Filtros del tablero">
+  <div class="operator-tools-top">
+    <form method="get" action="/vales/tablero" class="operator-date-form">
+      <label for="fecha" class="visually-hidden">Fecha de entrega</label>
+      <span class="operator-control-label"><i class="bi bi-calendar-event"></i>Entrega</span>
       <input type="date" id="fecha" name="fecha" value="<%= filtroFecha %>" class="form-control">
-      <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Aplicar</button>
-      <a href="/vales/tablero" class="btn btn-soft"><i class="bi bi-calendar-check me-1"></i>Hoy</a>
+      <button type="submit" class="operator-icon-button" title="Aplicar fecha" aria-label="Aplicar fecha"><i class="bi bi-arrow-right"></i></button>
+      <a href="/vales/tablero" class="operator-today-link">Hoy</a>
     </form>
-    <div class="ops-date-note">
-      <strong><span id="visibleOpsCount"><%= allVales.length %></span></strong> vale(s) · <strong id="currentFilterLabel">Todos</strong>
+
+    <div class="ops-search operator-search">
+      <i class="bi bi-search"></i>
+      <input type="search" id="opsSearch" placeholder="Buscar folio, pedido, cliente, producto o SKU" aria-label="Buscar vales">
     </div>
   </div>
 
-  <div class="ops-summary-grid ops-summary-grid-six mb-3" role="group" aria-label="Filtrar vales por estado">
-    <button class="ops-status-card ops-status-all active" type="button" data-filter-status="Todos" aria-pressed="true">
-      <span class="ops-status-icon"><i class="bi bi-grid-1x2"></i></span>
-      <span class="ops-status-text"><strong><%= allVales.length %></strong><small>Todos</small></span>
+  <div class="operator-filter-row" role="group" aria-label="Filtrar vales por estado">
+    <button class="operator-filter-pill is-all active" type="button" data-filter-status="Todos" aria-pressed="true">
+      <span>Todos</span><strong><%= allVales.length %></strong>
     </button>
     <% estadosOrden.forEach(function(est){ const info = estadoInfo[est]; %>
-      <button id="<%= est %>" class="ops-status-card ops-status-<%= info.cls %>" type="button" data-filter-status="<%= est %>" aria-pressed="false">
-        <span class="ops-status-icon"><i class="bi <%= info.icon %>"></i></span>
-        <span class="ops-status-text"><strong><%= estados[est].length %></strong><small><%= est %></small></span>
+      <button id="<%= est %>" class="operator-filter-pill is-<%= info.cls %>" type="button" data-filter-status="<%= est %>" aria-pressed="false">
+        <span><%= est %></span><strong><%= estados[est].length %></strong>
       </button>
     <% }) %>
+    <span class="operator-visible-count"><strong id="visibleOpsCount"><%= allVales.length %></strong> visibles · <span id="currentFilterLabel">Todos</span></span>
   </div>
-
-  <div class="ops-toolbar-simple mb-3">
-    <div class="ops-search ops-search-wide">
-      <i class="bi bi-search"></i>
-      <input type="search" id="opsSearch" placeholder="Buscar folio, cliente, producto o SKU" aria-label="Buscar vales">
-    </div>
-    <div class="ops-inline-info">
-      <span class="ops-inline-pill"><i class="bi bi-lightning-charge me-1"></i><strong><%= activos %></strong> activos</span>
-      <span class="ops-inline-pill overdue-pill"><i class="bi bi-exclamation-triangle me-1"></i><strong><%= overdueCount %></strong> atrasados</span>
-    </div>
-  </div>
-<% } %>
+</section>
 
 <section class="ops-list" id="opsList">
   <% if (!allVales.length) { %>
@@ -169,157 +104,94 @@
     const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '');
     const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
     const atrasoTexto = vale.days_late === 1 ? '1 día' : `${vale.days_late} días`;
-    const searchText = `${vale.folio} ${vale.cliente} ${vale.producto} ${vale.sku} ${vale.prioridad} ${vale.estado} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
+    const searchText = `${vale.folio} ${vale.numero_pedido || ''} ${vale.cliente} ${vale.productos_busqueda || ''} ${vale.prioridad} ${vale.estado} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
     const allowedStates = vale.allowed_states || [];
     const canAdvance = e.siguiente ? allowedStates.includes(e.siguiente) : false;
     const canCancel = !['Entregado','Cancelado'].includes(vale.estado) && allowedStates.includes('Cancelado');
+    const showMoreMenu = canCancel || canEditVale;
   %>
-    <article class="op-vale-card op-vale-<%= e.cls %> <%= vale.is_overdue ? 'op-vale-overdue' : '' %> <%= isRebanado ? 'op-vale-operator' : '' %>" data-status="<%= vale.estado %>" data-search="<%= searchText %>">
-      <% if (isRebanado) { %>
-        <div class="operator-card-head">
-          <div class="operator-card-title">
-            <span class="op-folio"><%= vale.folio %></span>
-            <span class="status-chip status-<%= e.cls %>"><i class="bi <%= e.icon %>"></i><%= vale.estado %></span>
-          </div>
-          <div class="operator-card-flags">
-            <span class="operator-priority priority-<%= p.cls %>" title="Prioridad <%= vale.prioridad %>"><i class="bi <%= p.icon %>"></i><%= vale.prioridad %></span>
-            <% if (vale.is_overdue) { %>
-              <span class="operator-late"><i class="bi bi-exclamation-triangle-fill"></i><%= atrasoTexto %> tarde</span>
-            <% } %>
-          </div>
+    <article class="op-vale-card op-vale-<%= e.cls %> <%= vale.is_overdue ? 'op-vale-overdue' : '' %> op-vale-operator command-ticket" data-status="<%= vale.estado %>" data-search="<%= searchText %>">
+      <div class="operator-card-head">
+        <div class="operator-card-title">
+          <span class="op-folio"><%= vale.folio %></span>
+          <% if (vale.numero_pedido) { %><span class="command-order-number">Pedido <%= vale.numero_pedido %></span><% } %>
+          <span class="status-chip status-<%= e.cls %>"><i class="bi <%= e.icon %>"></i><%= vale.estado %></span>
         </div>
+        <div class="operator-card-flags">
+          <span class="operator-priority priority-<%= p.cls %>" title="Prioridad <%= vale.prioridad %>"><i class="bi <%= p.icon %>"></i><%= vale.prioridad %></span>
+          <% if (vale.is_overdue) { %>
+            <span class="operator-late"><i class="bi bi-exclamation-triangle-fill"></i><%= atrasoTexto %> tarde</span>
+          <% } %>
+        </div>
+      </div>
 
-        <div class="operator-card-content">
-          <div class="operator-client"><i class="bi bi-person-workspace"></i><span><%= vale.cliente %></span></div>
-          <div class="operator-product"><i class="bi bi-box-seam"></i><strong><%= vale.producto %></strong></div>
-          <div class="operator-sku">SKU <strong><%= vale.sku %></strong></div>
+      <div class="operator-card-content">
+        <div class="operator-client command-client"><i class="bi bi-person-workspace"></i><strong><%= vale.cliente %></strong></div>
 
-          <div class="operator-facts" aria-label="Datos del vale">
-            <span><strong><%= vale.cantidad %></strong> <%= vale.presentacion %></span>
-            <span><%= vale.tipo_rebanado %></span>
-            <span>Entrega <strong><%= fechaEntregaDisplay %></strong></span>
-          </div>
-
-          <% if (vale.observaciones) { %>
-            <div class="operator-note" title="<%= vale.observaciones %>"><i class="bi bi-chat-left-text"></i><span><%= vale.observaciones %></span></div>
+        <div class="command-product-list" aria-label="Productos de la comanda">
+          <% (vale.productos || []).forEach(function(item, productIndex){ %>
+            <div class="command-product-line">
+              <span class="command-product-qty"><strong><%= item.cantidad %></strong> <%= item.presentacion %></span>
+              <span class="command-product-name"><%= item.producto %></span>
+              <span class="command-product-cut"><%= item.tipo_rebanado %></span>
+              <span class="command-product-sku"><%= item.sku %></span>
+              <% if (item.observaciones) { %><span class="command-product-note" title="<%= item.observaciones %>"><i class="bi bi-chat-left-text"></i><%= item.observaciones %></span><% } %>
+            </div>
+          <% }) %>
+          <% if (!(vale.productos || []).length) { %>
+            <div class="command-product-line command-product-missing"><i class="bi bi-exclamation-triangle"></i>Sin productos registrados</div>
           <% } %>
         </div>
 
-        <div class="operator-card-actions">
-          <% if (e.siguiente && canAdvance) { %>
-            <form method="post" action="/vales/<%= vale.id %>/estado" class="operator-primary-form">
-              <input type="hidden" name="return_url" value="<%= returnUrl %>">
-              <input type="hidden" name="nuevo_estado" value="<%= e.siguiente %>">
-              <button type="submit" class="operator-primary-action state-<%= e.cls %>">
-                <i class="bi <%= e.btnIcon %>"></i><span><%= e.accionCorta || e.accion %></span>
-              </button>
-            </form>
-          <% } else if (vale.estado === 'Listo') { %>
-            <div class="operator-ready-state"><i class="bi bi-check2-circle"></i><span>Listo para entrega</span></div>
-          <% } else if (e.siguiente) { %>
-            <div class="operator-locked-state" title="No tienes permiso para esta acción"><i class="bi bi-lock-fill"></i><span>Acción restringida</span></div>
-          <% } else { %>
-            <div class="operator-finished-state"><i class="bi <%= e.icon %>"></i><span><%= vale.estado %></span></div>
-          <% } %>
+        <div class="operator-facts command-facts" aria-label="Datos del vale">
+          <span><strong><%= vale.total_productos || 0 %></strong> producto<%= vale.total_productos === 1 ? '' : 's' %></span>
+          <span>Entrega <strong><%= fechaEntregaDisplay %></strong></span>
+        </div>
 
-          <a href="/vales/<%= vale.id %>" class="operator-detail-action" title="Ver detalle" aria-label="Ver detalle del vale <%= vale.folio %>">
-            <i class="bi bi-eye"></i><span>Detalle</span>
-          </a>
+        <% if (vale.observaciones) { %>
+          <div class="operator-note" title="<%= vale.observaciones %>"><i class="bi bi-chat-left-text"></i><span><%= vale.observaciones %></span></div>
+        <% } %>
+      </div>
 
-          <% if (canCancel) { %>
-            <details class="operator-more-menu">
-              <summary title="Más acciones" aria-label="Más acciones"><i class="bi bi-three-dots-vertical"></i></summary>
-              <div class="operator-more-panel">
-                <form method="post" action="/vales/<%= vale.id %>/estado" data-confirm="¿Cancelar este vale?">
+      <div class="operator-card-actions">
+        <% if (e.siguiente && canAdvance) { %>
+          <form method="post" action="/vales/<%= vale.id %>/estado" class="operator-primary-form">
+            <input type="hidden" name="return_url" value="<%= returnUrl %>">
+            <input type="hidden" name="nuevo_estado" value="<%= e.siguiente %>">
+            <button type="submit" class="operator-primary-action state-<%= e.cls %>">
+              <i class="bi <%= e.btnIcon %>"></i><span><%= e.accionCorta || e.accion %></span>
+            </button>
+          </form>
+        <% } else if (vale.estado === 'Listo') { %>
+          <div class="operator-ready-state"><i class="bi bi-check2-circle"></i><span>Listo para entrega</span></div>
+        <% } else if (e.siguiente) { %>
+          <div class="operator-locked-state" title="No tienes permiso para esta acción"><i class="bi bi-lock-fill"></i><span>Acción restringida</span></div>
+        <% } else { %>
+          <div class="operator-finished-state"><i class="bi <%= e.icon %>"></i><span><%= vale.estado %></span></div>
+        <% } %>
+
+        <a href="/vales/<%= vale.id %>" class="operator-detail-action" title="Ver comanda completa" aria-label="Ver detalle del vale <%= vale.folio %>">
+          <i class="bi bi-eye"></i><span>Detalle</span>
+        </a>
+
+        <% if (showMoreMenu) { %>
+          <details class="operator-more-menu">
+            <summary title="Más acciones" aria-label="Más acciones"><i class="bi bi-three-dots-vertical"></i></summary>
+            <div class="operator-more-panel command-more-panel">
+              <% if (canEditVale) { %>
+                <a href="/vales/<%= vale.id %>/editar"><i class="bi bi-pencil-square"></i>Editar comanda</a>
+              <% } %>
+              <% if (canCancel) { %>
+                <form method="post" action="/vales/<%= vale.id %>/estado" data-confirm="¿Cancelar este vale completo?">
                   <input type="hidden" name="return_url" value="<%= returnUrl %>">
                   <input type="hidden" name="nuevo_estado" value="Cancelado">
                   <button type="submit"><i class="bi bi-x-circle"></i>Cancelar vale</button>
                 </form>
-              </div>
-            </details>
-          <% } %>
-        </div>
-      <% } else { %>
-        <div class="op-vale-left">
-          <div class="op-vale-mainline">
-            <span class="op-folio"><%= vale.folio %></span>
-            <span class="priority-badge priority-<%= p.cls %>"><i class="bi <%= p.icon %> me-1"></i><%= vale.prioridad %></span>
-            <span class="status-chip status-<%= e.cls %>"><i class="bi <%= e.icon %> me-1"></i><%= vale.estado %></span>
-            <% if (vale.is_overdue) { %>
-              <span class="overdue-badge"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso de entrega · <%= atrasoTexto %></span>
-            <% } %>
-          </div>
-
-          <div class="op-client"><i class="bi bi-person-workspace me-1"></i><%= vale.cliente %></div>
-
-          <div class="op-product-row">
-            <div class="op-product"><i class="bi bi-box-seam me-1"></i><%= vale.producto %></div>
-            <div class="op-muted">SKU: <strong><%= vale.sku %></strong></div>
-          </div>
-
-          <div class="op-facts op-facts-clean">
-            <span><i class="bi bi-calculator me-1"></i><strong><%= vale.cantidad %></strong> · <%= vale.presentacion %></span>
-            <span><i class="bi bi-sliders me-1"></i><%= vale.tipo_rebanado %></span>
-            <span><i class="bi bi-calendar-event me-1"></i>Entrega: <strong><%= fechaEntregaDisplay %></strong></span>
-          </div>
-
-          <%
-            const pasoActual = flujoVale.findIndex(paso => paso.nombre === vale.estado);
-            const flujoCancelado = vale.estado === 'Cancelado';
-          %>
-          <div class="vale-flow-wrap" aria-label="Flujo del vale: Pendiente, Rebanando, Listo y Entregado">
-            <div class="vale-flow <%= flujoCancelado ? 'vale-flow-cancelled' : '' %>">
-              <% flujoVale.forEach((paso, indice) => {
-                const completado = !flujoCancelado && pasoActual > indice;
-                const activo = !flujoCancelado && pasoActual === indice;
-                const clasePaso = completado ? 'is-complete' : activo ? 'is-active' : 'is-upcoming';
-              %>
-                <div class="vale-flow-step <%= clasePaso %>">
-                  <span class="vale-flow-dot">
-                    <i class="bi <%= completado ? 'bi-check-lg' : paso.icono %>"></i>
-                  </span>
-                  <span class="vale-flow-label"><%= paso.nombre %></span>
-                </div>
-                <% if (indice < flujoVale.length - 1) { %>
-                  <span class="vale-flow-line <%= !flujoCancelado && pasoActual > indice ? 'is-complete' : '' %>"></span>
-                <% } %>
-              <% }) %>
+              <% } %>
             </div>
-          </div>
-
-          <% if (vale.observaciones) { %>
-            <div class="op-note"><i class="bi bi-chat-left-text me-1"></i><%= vale.observaciones %></div>
-          <% } %>
-        </div>
-
-        <div class="op-actions op-actions-touch">
-          <% if (e.siguiente) { %>
-            <form method="post" action="/vales/<%= vale.id %>/estado">
-              <input type="hidden" name="return_url" value="<%= returnUrl %>">
-              <input type="hidden" name="nuevo_estado" value="<%= e.siguiente %>">
-              <button type="submit"
-                      class="btn <%= e.btn %> btn-lg w-100 btn-action touch-btn"
-                      <%= canAdvance ? '' : 'disabled' %>
-                      title="<%= canAdvance ? e.accion : 'No tienes permiso para esta acción' %>">
-                <i class="bi <%= canAdvance ? e.btnIcon : 'bi-lock-fill' %>"></i><%= e.accion %>
-              </button>
-            </form>
-          <% } %>
-          <% if (!['Entregado','Cancelado'].includes(vale.estado)) { %>
-            <form method="post" action="/vales/<%= vale.id %>/estado" data-confirm="¿Cancelar este vale?">
-              <input type="hidden" name="return_url" value="<%= returnUrl %>">
-              <input type="hidden" name="nuevo_estado" value="Cancelado">
-              <button type="submit"
-                      class="btn btn-outline-danger w-100 btn-action touch-btn btn-cancel-subtle"
-                      <%= canCancel ? '' : 'disabled' %>
-                      title="<%= canCancel ? 'Cancelar vale' : 'No tienes permiso para cancelar' %>">
-                <i class="bi <%= canCancel ? 'bi-x-circle' : 'bi-lock-fill' %>"></i>Cancelar
-              </button>
-            </form>
-          <% } %>
-          <a href="/vales/<%= vale.id %>" class="btn btn-soft w-100 btn-action touch-btn"><i class="bi bi-eye"></i>Detalle</a>
-        </div>
-      <% } %>
+          </details>
+        <% } %>
+      </div>
     </article>
   <% }) %>
 

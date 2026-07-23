@@ -22,7 +22,7 @@
           <span class="brand-monogram brand-monogram-lg">CHC</span>
           <div>
             <h1 class="tv-title">Rebanado Digital</h1>
-            <p class="tv-subtitle">Cremería Hermanos Coronel · Almacén / CEDIS · vales con entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> + <strong><%= overdueCount %></strong> atrasado(s)<% } %></p>
+            <p class="tv-subtitle">Comandas por cliente · entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> + <strong><%= overdueCount %></strong> atrasada(s)<% } %></p>
           </div>
         </div>
         <div class="tv-meta tv-clock-card">
@@ -36,7 +36,7 @@
       <% if (overdueCount > 0) { %>
         <div class="overdue-banner overdue-banner-tv mb-4">
           <i class="bi bi-exclamation-triangle-fill"></i>
-          <div><strong><%= overdueCount %> vale(s)</strong> siguen pendientes con retraso de entrega.</div>
+          <div><strong><%= overdueCount %> comanda(s)</strong> siguen pendientes con retraso de entrega.</div>
         </div>
       <% } %>
 
@@ -49,12 +49,12 @@
       </div>
 
       <div class="tv-table-wrap">
-        <table class="table-tv">
+        <table class="table-tv command-tv-table">
           <thead>
             <tr>
-              <th>Folio</th>
+              <th>Vale / Pedido</th>
               <th>Cliente</th>
-              <th>Producto</th>
+              <th>Productos</th>
               <th>Prioridad</th>
               <th>Estado</th>
               <th>Entrega</th>
@@ -74,9 +74,19 @@
               const atrasoTexto = v.days_late === 1 ? '1 día' : `${v.days_late} días`;
             %>
               <tr class="<%= v.is_overdue ? 'tv-row-overdue' : '' %>">
-                <td class="folio-cell"><%= v.folio %></td>
-                <td><%= v.cliente %></td>
-                <td><%= v.producto %></td>
+                <td class="folio-cell">
+                  <div><%= v.folio %></div>
+                  <% if (v.numero_pedido) { %><small>Pedido <%= v.numero_pedido %></small><% } %>
+                </td>
+                <td><strong><%= v.cliente %></strong></td>
+                <td>
+                  <div class="tv-command-products">
+                    <% (v.productos || []).forEach(item => { %>
+                      <div><strong><%= item.cantidad %> <%= item.presentacion %></strong> · <%= item.producto %> · <span><%= item.tipo_rebanado %></span></div>
+                    <% }) %>
+                    <% if (!(v.productos || []).length) { %><div>Sin productos</div><% } %>
+                  </div>
+                </td>
                 <td>
                   <span class="priority-badge <%= v.prioridad === 'Alta' ? 'priority-high' : v.prioridad === 'Normal' ? 'priority-normal' : 'priority-low' %>"><%= v.prioridad %></span>
                 </td>

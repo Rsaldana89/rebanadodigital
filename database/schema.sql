@@ -1,4 +1,5 @@
 -- Esquema de base de datos para CHC Rebanado Digital
+-- V17: un vale representa un pedido/cliente y puede contener múltiples productos.
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -15,22 +16,39 @@ CREATE TABLE IF NOT EXISTS vales (
   id INT AUTO_INCREMENT PRIMARY KEY,
   folio VARCHAR(50) NOT NULL,
   origen ENUM('Manual','Siclik','Excel') NOT NULL DEFAULT 'Manual',
+  numero_pedido VARCHAR(80) NULL,
   cliente VARCHAR(100) NOT NULL,
   fecha_entrega DATE NOT NULL,
   prioridad ENUM('Alta','Normal','Baja') NOT NULL DEFAULT 'Normal',
-  sku VARCHAR(100) NOT NULL,
-  producto VARCHAR(100) NOT NULL,
-  cantidad DECIMAL(10,2) NOT NULL,
-  presentacion VARCHAR(50) NOT NULL,
-  tipo_rebanado ENUM('Estándar','Grueso','Otro') NOT NULL DEFAULT 'Estándar',
   observaciones TEXT,
   estado ENUM('Pendiente','Rebanando','Listo','Entregado','Cancelado') NOT NULL DEFAULT 'Pendiente',
   created_by INT,
   updated_by INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_vales_folio (folio),
+  KEY idx_vales_fecha_estado (fecha_entrega, estado),
+  KEY idx_vales_cliente (cliente),
   FOREIGN KEY (created_by) REFERENCES users(id),
   FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS vale_productos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  vale_id INT NOT NULL,
+  sku VARCHAR(100) NOT NULL,
+  producto VARCHAR(150) NOT NULL,
+  cantidad DECIMAL(10,2) NOT NULL,
+  presentacion VARCHAR(50) NOT NULL,
+  tipo_rebanado ENUM('Estándar','Grueso','Otro') NOT NULL DEFAULT 'Estándar',
+  observaciones TEXT,
+  orden INT NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_vale_productos_vale (vale_id, orden),
+  KEY idx_vale_productos_sku (sku),
+  CONSTRAINT fk_vale_productos_vale
+    FOREIGN KEY (vale_id) REFERENCES vales(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS vale_history (
@@ -71,7 +89,7 @@ CREATE TABLE IF NOT EXISTS user_history (
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (changed_by) REFERENCES users(id)
 );
--- Permisos por rol y excepciones por usuario (v11)
+
 CREATE TABLE IF NOT EXISTS permission_catalog (
   code VARCHAR(80) PRIMARY KEY,
   category VARCHAR(50) NOT NULL,

@@ -2437,3 +2437,435 @@ body.tablero-operator-body .op-vale-operator .status-chip {
     grid-column: 2;
   }
 }
+
+/* =========================================================
+   V16 · Tablero compacto unificado para todos los roles
+   ========================================================= */
+.operator-command-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.operator-new-link {
+  color: #fff;
+  border-color: var(--chc-wine);
+  background: linear-gradient(145deg, var(--chc-wine), var(--chc-wine-dark));
+}
+
+.operator-new-link:hover {
+  color: #fff;
+  border-color: var(--chc-wine-dark);
+  background: var(--chc-wine-dark);
+}
+
+@media (max-width: 767.98px) {
+  .operator-command-actions {
+    flex-wrap: nowrap;
+  }
+
+  .operator-command-actions .operator-screen-link span {
+    display: none;
+  }
+
+  .operator-command-actions .operator-screen-link {
+    width: 42px;
+    min-width: 42px;
+    padding-inline: 0;
+  }
+}
+
+/* =========================================================
+   V17 · Comandas con múltiples productos por vale
+   ========================================================= */
+.command-ticket .operator-card-content {
+  padding-top: 0.52rem;
+}
+
+.command-order-number {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 0.22rem 0.42rem;
+  color: #6d514f;
+  border: 1px solid #dfceca;
+  border-radius: 999px;
+  background: #f8efed;
+  font-size: 0.66rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.command-client {
+  margin-bottom: 0.46rem;
+  color: #3c302a;
+  font-size: 0.88rem;
+}
+
+.command-product-list {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.command-product-line {
+  display: grid;
+  grid-template-columns: minmax(74px, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.28rem 0.5rem;
+  min-width: 0;
+  padding: 0.4rem 0.46rem;
+  border: 1px solid #eadfd4;
+  border-radius: 9px;
+  background: #fffaf4;
+  color: #4e433c;
+  font-size: 0.72rem;
+  line-height: 1.18;
+}
+
+.command-product-qty {
+  color: var(--chc-wine-dark);
+  white-space: nowrap;
+}
+
+.command-product-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #2f2722;
+  font-size: 0.77rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-product-cut {
+  padding: 0.18rem 0.34rem;
+  color: #6d5d52;
+  border-radius: 999px;
+  background: #f0e8df;
+  font-size: 0.63rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.command-product-sku {
+  grid-column: 2;
+  color: #93867b;
+  font-size: 0.61rem;
+  font-weight: 680;
+}
+
+.command-product-note {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-width: 0;
+  padding-top: 0.23rem;
+  color: #76675d;
+  border-top: 1px dashed #e7dacf;
+  font-size: 0.65rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-product-missing {
+  display: flex;
+  grid-template-columns: none;
+  color: #8b552e;
+  border-color: #e6c7ae;
+  background: #fff4e9;
+}
+
+.command-facts {
+  margin-top: 0.48rem;
+}
+
+.command-more-panel a,
+.command-more-panel button {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  width: 100%;
+  padding: 0.55rem 0.62rem;
+  border: 0;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-align: left;
+  text-decoration: none;
+}
+
+.command-more-panel a {
+  color: #544940;
+  background: #f8f3ed;
+}
+
+.command-more-panel a:hover {
+  color: var(--chc-wine);
+  background: #f2e7e4;
+}
+
+.command-more-panel form + form,
+.command-more-panel a + form {
+  margin-top: 0.24rem;
+}
+
+/* Formulario tipo comanda */
+.command-form-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.command-form-header .page-subtitle {
+  max-width: 760px;
+}
+
+.command-order-section,
+.command-products-section {
+  background: #fffdf9;
+}
+
+.command-product-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  min-height: 42px;
+  padding: 0.55rem 0.7rem;
+  color: #5a4d44;
+  border: 1px solid #ded1c5;
+  border-radius: 10px;
+  background: #f8f2eb;
+}
+
+.command-product-counter strong {
+  color: var(--chc-wine);
+  font-size: 1.1rem;
+}
+
+.command-products-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.command-add-product {
+  flex: 0 0 auto;
+}
+
+.command-products-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.command-product-editor {
+  overflow: hidden;
+  border: 1px solid #dfd2c6;
+  border-left: 4px solid var(--chc-wine);
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(48, 24, 18, 0.05);
+}
+
+.command-product-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.48rem 0.65rem;
+  border-bottom: 1px solid #ece2d8;
+  background: #faf5ef;
+}
+
+.command-product-editor > .row {
+  padding: 0.72rem;
+  margin: 0;
+}
+
+.command-product-number {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #675a51;
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.command-product-number strong {
+  display: inline-grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  color: #fff;
+  border-radius: 50%;
+  background: var(--chc-wine);
+  font-size: 0.75rem;
+}
+
+.command-remove-product {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.32rem 0.48rem;
+  color: #9a4242;
+  border: 1px solid #e4c1c1;
+  border-radius: 8px;
+  background: #fff6f6;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.command-remove-product:disabled {
+  color: #a79c94;
+  border-color: #e0d8d1;
+  background: #f2efec;
+  cursor: not-allowed;
+}
+
+.command-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-bottom: 1rem;
+}
+
+/* Detalle de la comanda */
+.command-products-total {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.42rem 0.62rem;
+  color: #5d5047;
+  border: 1px solid #ded1c5;
+  border-radius: 999px;
+  background: #faf5ef;
+  font-size: 0.76rem;
+}
+
+.command-detail-products {
+  display: grid;
+  gap: 0.58rem;
+}
+
+.command-detail-product {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.68rem;
+  border: 1px solid #e5d9ce;
+  border-radius: 11px;
+  background: #fffaf5;
+}
+
+.command-detail-product-index {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  border-radius: 9px;
+  background: var(--chc-wine);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.command-detail-product-title {
+  color: #2f2722;
+  font-size: 0.93rem;
+  font-weight: 850;
+}
+
+.command-detail-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem 0.9rem;
+  margin-top: 0.25rem;
+  color: #6d6057;
+  font-size: 0.72rem;
+}
+
+.command-detail-product-note {
+  display: flex;
+  align-items: center;
+  gap: 0.32rem;
+  margin-top: 0.38rem;
+  padding-top: 0.34rem;
+  color: #75675e;
+  border-top: 1px dashed #e4d7cc;
+  font-size: 0.7rem;
+}
+
+/* Pantalla y reportes */
+.tv-command-products {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 320px;
+}
+
+.tv-command-products div {
+  padding: 0.16rem 0;
+  border-bottom: 1px solid rgba(110, 82, 67, 0.13);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.tv-command-products div:last-child {
+  border-bottom: 0;
+}
+
+.tv-command-products span {
+  color: #765e52;
+  font-weight: 700;
+}
+
+.command-tv-table .folio-cell small {
+  display: block;
+  margin-top: 0.18rem;
+  color: #8b776c;
+  font-size: 0.68rem;
+}
+
+.report-products-summary {
+  display: grid;
+  gap: 0.13rem;
+  min-width: 180px;
+  font-size: 0.72rem;
+}
+
+.report-products-summary span {
+  color: #6f6259;
+}
+
+@media (max-width: 767.98px) {
+  .command-products-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .command-add-product {
+    width: 100%;
+  }
+
+  .command-product-line {
+    grid-template-columns: minmax(70px, auto) minmax(0, 1fr);
+  }
+
+  .command-product-cut {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .command-product-sku {
+    grid-column: 2;
+  }
+
+  .command-product-note {
+    grid-column: 1 / -1;
+  }
+}

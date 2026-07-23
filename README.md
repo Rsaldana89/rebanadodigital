@@ -1,170 +1,128 @@
 # CHC Rebanado Digital
 
-**CHC Rebanado Digital** es una aplicación web diseñada para apoyar al área de Rebanado y CEDIS en la creación, seguimiento y cierre de vales digitales de rebanado.  Se ha puesto un énfasis especial en el diseño visual para que la interfaz sea clara, atractiva y operativa desde computadoras de escritorio, tablets y pantallas de TV.
+Aplicación web Node.js, Express, EJS y MySQL para crear, visualizar y dar seguimiento a comandas de rebanado desde computadoras, tablets y pantallas de almacén.
 
-## Versión institucional v1.3.0
+## Versión 1.7.0: un vale por pedido
 
-### Arranque tolerante a MySQL
+A partir de esta versión:
 
-El servidor web inicia aunque la base de datos todavía no esté configurada o disponible. El módulo de permisos reintenta la conexión en segundo plano y el endpoint `/health` informa si el servicio está operativo o en estado degradado.
+- Un vale representa un pedido o cliente.
+- Un vale puede contener uno o varios productos.
+- El estado se controla para toda la comanda: Pendiente, Rebanando, Listo, Entregado o Cancelado.
+- Cada producto conserva SKU, cantidad, presentación, tipo de rebanado e indicaciones particulares.
+- CEDIS, Almacén y Administrador pueden corregir los datos y productos mediante el permiso `vales.edit`.
+- Rebanado consulta y procesa la comanda completa sin editar su contenido.
 
-Esta revisión incorpora una interfaz visual inspirada en la identidad de Cremería Hermanos Coronel, con paleta vino, crema, dorado y carbón. El tablero mantiene controles táctiles, filtros por fecha y estado, vales atrasados visibles y una pantalla de almacén optimizada para monitor o TV.
+La estructura principal es:
 
+```text
+vales
+  └── vale_productos (uno o varios)
+```
 
-## Tecnologías utilizadas
+## Actualización desde una versión anterior
 
-- Node.js con Express.js
-- Motor de vistas EJS
-- MySQL (utilizando el paquete `mysql2`)
-- HTML5, CSS3 y JavaScript (vanilla)
-- Bootstrap para algunos componentes de interfaz
-- Sesiones con `express-session`
-- Variables de entorno con `dotenv`
+Antes de iniciar la versión 1.7.0 sobre una base existente, genera un respaldo y ejecuta:
+
+```text
+database/migrations/2026-07-23_multi_producto_por_vale.sql
+```
+
+La migración:
+
+1. Agrega `numero_pedido` a `vales`.
+2. Crea `vale_productos`.
+3. Convierte el producto anterior de cada vale en su primer renglón de producto.
+4. Retira de `vales` las columnas antiguas de producto.
+5. Conserva folios, clientes, estados, fechas, historial y usuarios.
+
+No ejecutes `database/schema.sql` sobre una base con información para actualizarla; `schema.sql` es para instalaciones nuevas.
 
 ## Requisitos
 
 - Node.js 22.x
-- npm 11.6.2 (Railpack lo instala mediante `packageManager`)
-- Servidor MySQL accesible (local o en la nube, compatible con Railway)
+- npm 11.6.2
+- MySQL 8
 
-## Instalación local
+## Instalación local nueva
 
-1. **Clona o descarga** este repositorio. El proyecto se encuentra en el directorio `chc-rebanado-digital`.
-2. Copia el archivo `.env.example` a `.env` y completa los datos de conexión a tu base de datos y la clave de sesión.
-3. Instala las dependencias desde la raíz del proyecto:
+1. Copia `.env.example` como `.env` y configura la conexión.
+2. Ejecuta `database/schema.sql`.
+3. Opcionalmente ejecuta `database/seed.sql`.
+4. Instala e inicia:
 
-   ```bash
-   npm ci
-   ```
-
-4. Crea una base de datos nueva con el nombre que definiste en tu `.env`.  Ejecuta el script `schema.sql` dentro de la carpeta `database/` para crear las tablas necesarias y `seed.sql` para cargar los datos iniciales.  Puedes hacerlo con tu cliente favorito o desde la línea de comandos:
-
-   ```bash
-   mysql -u usuario -p --host=host --port=puerto nombre_bd < database/schema.sql
-   mysql -u usuario -p --host=host --port=puerto nombre_bd < database/seed.sql
-   ```
-
-5. Inicia la aplicación:
-
-   ```bash
-   npm start
-   ```
-
-6. Abre tu navegador en `http://localhost:3000` (o el puerto que hayas configurado). Deberías ver la pantalla de inicio de sesión.
-
-## Uso de prueba
-
-Se incluyen varios usuarios de ejemplo en el archivo `seed.sql` para facilitar las pruebas iniciales.  Todos ellos tienen contraseñas en texto plano (solo para esta versión piloto).  Los usuarios son:
-
-| Rol         | Usuario   | Contraseña |
-|-------------|-----------|------------|
-| Administrador | admin     | admin123   |
-| CEDIS       | cedis     | cedis123   |
-| Rebanado    | rebanado  | rebanado123|
-| Almacén     | almacen   | almacen123 |
-
-## Despliegue en Railway
-
-Esta aplicación está preparada para desplegarse en [Railway](https://railway.app).  Debes crear un proyecto en Railway, añadir un plugin de MySQL y configurar las variables de entorno del mismo modo que en tu entorno local. Las variables mínimas son:
-
-- `DB_HOST`
-- `DB_USER`
-- `DB_PASSWORD`
-- `DB_NAME`
-- `DB_PORT`
-- `PORT` (Railway asignará automáticamente un puerto; puedes usar la misma variable para que la aplicación lo detecte)
-- `SESSION_SECRET`
-
-Railway detectará `packageManager: npm@11.6.2`, instalará las dependencias con `npm ci` usando el `package-lock.json` y ejecutará `npm start`. El lock utiliza únicamente el registro público `registry.npmjs.org`. No configures `RAILPACK_INSTALL_CMD` con `npm install`. Asegúrate de que tu base de datos esté conectada y que hayas ejecutado los scripts `schema.sql` y `seed.sql`.
-
-## Estructura del proyecto
-
-```
-chc-rebanado-digital/
-├── app.js               # Archivo principal de la aplicación
-├── package.json         # Definición de dependencias y scripts
-├── .env.example         # Variables de entorno de ejemplo
-├── config/              # Configuración de la base de datos
-│   └── db.js
-├── routes/              # Definición de rutas
-│   ├── authRoutes.js
-│   ├── dashboardRoutes.js
-│   ├── valeRoutes.js
-│   ├── inventarioRoutes.js
-│   ├── reportRoutes.js
-│   └── userRoutes.js
-├── controllers/         # Lógica de negocio por ruta
-│   ├── authController.js
-│   ├── dashboardController.js
-│   ├── valeController.js
-│   ├── inventarioController.js
-│   ├── reportController.js
-│   └── userController.js
-├── middleware/          # Middleware de autenticación y roles
-│   ├── auth.js
-│   └── roles.js
-├── views/               # Plantillas EJS
-│   ├── layout.ejs
-│   ├── login.ejs
-│   ├── dashboard.ejs
-│   └── vales/           # Plantillas para vales
-│       ├── tablero.ejs
-│       ├── crear.ejs
-│       └── detalle.ejs
-│   ├── inventario/
-│   │   └── registro.ejs
-│   ├── reportes/
-│   │   └── lista.ejs
-│   └── usuarios/
-│       ├── lista.ejs
-│       ├── crear.ejs
-│       └── editar.ejs
-├── public/              # Archivos estáticos
-│   ├── css/
-│   │   └── styles.css
-│   └── js/
-│       └── app.js
-└── database/
-    ├── schema.sql       # Esquema de la base de datos
-    └── seed.sql         # Datos de prueba
+```bash
+npm ci
+npm run dev
 ```
 
-## Notas importantes
+Para ejecución normal:
 
-- **Seguridad**: esta primera versión se ha diseñado para pruebas internas y por ello **las contraseñas se almacenan en texto plano**. Para una versión productiva se recomienda implementar hashing (por ejemplo con bcrypt) y reforzar la seguridad de sesiones.
-- **Estilo y diseño**: la interfaz se ha construido con un enfoque visual tipo tablero operativo.  Se han utilizado colores suaves y componentes grandes para facilitar la lectura en pantallas de TV y tablets.
-- **Funcionalidad**: la aplicación incluye las operaciones básicas descritas en el documento de requisitos: creación y seguimiento de vales, cambio de estados, visualización de inventario de cierre de día, reportes simples y administración de usuarios.
+```bash
+npm start
+```
 
-¡Disfruta usando CHC Rebanado Digital!
-## Administración de permisos (v11)
+## Usuarios de prueba del seed
 
-La aplicación incluye un panel en:
+| Rol | Usuario | Contraseña |
+|---|---|---|
+| Administrador | admin | admin123 |
+| CEDIS | cedis | cedis123 |
+| Rebanado | rebanado | rebanado123 |
+| Almacén | almacen | almacen123 |
+
+Las contraseñas se mantienen en texto plano porque esta versión piloto fue solicitada así. Deben cambiarse antes de una operación formal.
+
+## Variables de entorno
+
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=tu_clave
+DB_NAME=chc_rebanado
+SESSION_SECRET=una_clave_larga
+PORT=3000
+NODE_ENV=development
+```
+
+En Railway, `PORT` es proporcionado automáticamente. La aplicación conserva el arranque tolerante: el servidor permanece activo y reintenta conectar con MySQL si la base no está disponible temporalmente.
+
+## Flujo operativo
 
 ```text
-/permisos
+CEDIS / Almacén crea una comanda con todos los productos
+                         ↓
+Rebanado inicia el vale completo
+                         ↓
+Rebanado marca toda la comanda como Lista
+                         ↓
+CEDIS / Almacén confirma la entrega
 ```
 
-El módulo se inicializa automáticamente al arrancar la aplicación y crea, si no existen, las tablas:
+CEDIS y Almacén pueden regresar estados y corregir productos cuando sus permisos lo permitan. Rebanado puede trabajar con Rebanando, Listo y Cancelado según la matriz configurada.
 
-- `permission_catalog`
-- `role_permissions`
-- `user_permissions`
-
-La configuración recomendada incluida es:
-
-- **Administrador:** todos los permisos, bloqueados para evitar perder el control del sistema.
-- **CEDIS / Almacén:** administración operativa completa de vales, correcciones de estado, reportes e inventario.
-- **Rebanado:** consultar vales, pasar a Rebanando, pasar a Listo, regresar de Listo a Rebanando y cancelar vales activos.
-
-El panel permite:
-
-1. Modificar permisos generales por rol.
-2. Crear excepciones individuales por usuario usando `Heredar`, `Permitir` o `Bloquear`.
-3. Mostrar acciones deshabilitadas cuando el usuario no tenga permiso.
-4. Validar los permisos también en el servidor; no dependen únicamente de la interfaz.
-
-El script manual equivalente está en:
+## Archivos principales
 
 ```text
-database/migrations/002_permissions.sql
+controllers/valeController.js
+views/vales/formulario.ejs
+views/vales/tablero.ejs
+views/vales/detalle.ejs
+views/pantalla.ejs
+database/schema.sql
+database/seed.sql
+database/migrations/2026-07-23_multi_producto_por_vale.sql
 ```
+
+## Railway
+
+El proyecto fija:
+
+```text
+Node 22.x
+npm 11.6.2
+npm ci
+```
+
+Después de subir el código, aplica primero la migración en MySQL y luego redespliega la aplicación. El endpoint `/health` informa si la base está conectada.

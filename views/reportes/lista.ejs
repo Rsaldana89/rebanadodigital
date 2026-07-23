@@ -5,7 +5,7 @@
     <div class="col-lg-8">
       <div class="page-kicker">Consulta</div>
       <h1 class="page-title">Reportes de vales</h1>
-      <p class="page-subtitle">Filtra la información operativa y, si lo necesitas, exporta a CSV.</p>
+      <p class="page-subtitle">Cada resultado representa un pedido; el CSV incluye un renglón por producto.</p>
     </div>
   </div>
 </div>
@@ -15,12 +15,9 @@
     <div class="col-md-3">
       <label class="form-label">Estado</label>
       <select name="estado" class="form-select">
-        <option value="Todos" <%= filtros.estado === 'Todos' ? 'selected' : '' %>>Todos</option>
-        <option value="Pendiente" <%= filtros.estado === 'Pendiente' ? 'selected' : '' %>>Pendiente</option>
-        <option value="Rebanando" <%= filtros.estado === 'Rebanando' ? 'selected' : '' %>>Rebanando</option>
-        <option value="Listo" <%= filtros.estado === 'Listo' ? 'selected' : '' %>>Listo</option>
-        <option value="Entregado" <%= filtros.estado === 'Entregado' ? 'selected' : '' %>>Entregado</option>
-        <option value="Cancelado" <%= filtros.estado === 'Cancelado' ? 'selected' : '' %>>Cancelado</option>
+        <% ['Todos','Pendiente','Rebanando','Listo','Entregado','Cancelado'].forEach(option => { %>
+          <option value="<%= option %>" <%= filtros.estado === option ? 'selected' : '' %>><%= option %></option>
+        <% }) %>
       </select>
     </div>
     <div class="col-md-3">
@@ -33,7 +30,7 @@
     </div>
     <div class="col-md-3 d-flex align-items-end gap-2 flex-wrap">
       <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1"></i>Filtrar</button>
-      <button class="btn btn-soft" type="submit" name="exportar" value="csv"><i class="bi bi-download me-1"></i>Exportar CSV</button>
+      <button class="btn btn-soft" type="submit" name="exportar" value="csv"><i class="bi bi-download me-1"></i>Exportar productos</button>
     </div>
   </form>
 </div>
@@ -42,42 +39,45 @@
   <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
     <div>
       <h2 class="section-title mb-1">Resultados</h2>
-      <p class="section-subtitle"><%= vales.length %> registro(s) encontrado(s).</p>
+      <p class="section-subtitle"><%= vales.length %> vale(s) encontrado(s).</p>
     </div>
   </div>
   <div class="table-responsive">
-    <table class="table table-modern align-middle">
+    <table class="table table-modern align-middle command-report-table">
       <thead>
         <tr>
-          <th>Folio</th>
+          <th>Folio / Pedido</th>
           <th>Cliente</th>
-          <th>Producto</th>
-          <th>Cantidad</th>
+          <th>Productos</th>
           <th>Prioridad</th>
           <th>Estado</th>
           <th>Entrega</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         <% if (!vales.length) { %>
           <tr>
             <td colspan="7">
-              <div class="empty-state py-3">
-                <i class="bi bi-inbox"></i>
-                <div>No hay registros para los filtros seleccionados.</div>
-              </div>
+              <div class="empty-state py-3"><i class="bi bi-inbox"></i><div>No hay registros para los filtros seleccionados.</div></div>
             </td>
           </tr>
         <% } %>
         <% vales.forEach(v => { %>
           <tr>
-            <td><strong><%= v.folio %></strong></td>
+            <td><strong><%= v.folio %></strong><% if (v.numero_pedido) { %><div class="small text-muted">Pedido <%= v.numero_pedido %></div><% } %></td>
             <td><%= v.cliente %></td>
-            <td><%= v.producto %></td>
-            <td><%= v.cantidad %></td>
+            <td>
+              <div class="report-products-summary">
+                <strong><%= v.total_productos || 0 %> producto(s)</strong>
+                <% (v.productos || []).slice(0, 3).forEach(item => { %><span><%= item.producto %></span><% }) %>
+                <% if ((v.productos || []).length > 3) { %><span>+ <%= v.productos.length - 3 %> más</span><% } %>
+              </div>
+            </td>
             <td><%= v.prioridad %></td>
             <td><%= v.estado %></td>
-            <td><%= v.fecha_entrega_fmt || (v.fecha_entrega ? new Date(v.fecha_entrega).toISOString().substring(0,10) : '') %></td>
+            <td><%= v.fecha_entrega_fmt || '' %></td>
+            <td><a href="/vales/<%= v.id %>" class="btn btn-sm btn-soft">Detalle</a></td>
           </tr>
         <% }) %>
       </tbody>

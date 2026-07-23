@@ -1,0 +1,164 @@
+<%- include('../partials/header', { title: modo === 'editar' ? 'Editar vale' : 'Crear vale', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+
+<%
+  const isEdit = modo === 'editar';
+  const formAction = isEdit ? `/vales/${vale.id}/editar` : '/vales/crear';
+  const rows = productos && productos.length ? productos : [{ sku: '', producto: '', cantidad: '', presentacion: '', tipo_rebanado: 'Estándar', observaciones: '' }];
+%>
+
+<div class="page-header command-form-header">
+  <div class="row align-items-center g-3">
+    <div class="col-lg-8">
+      <div class="page-kicker"><%= isEdit ? 'Corrección de comanda' : 'Nueva comanda' %></div>
+      <h1 class="page-title"><%= isEdit ? `Editar vale ${vale.folio}` : 'Crear vale de rebanado' %></h1>
+      <p class="page-subtitle mb-0">Un vale corresponde a un cliente o pedido y reúne todos los productos que deben rebanarse.</p>
+    </div>
+    <div class="col-lg-4">
+      <div class="header-actions justify-content-lg-end">
+        <a href="<%= isEdit ? `/vales/${vale.id}` : '/vales/tablero' %>" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<form action="<%= formAction %>" method="post" id="valeCommandForm" class="command-form-shell">
+  <section class="form-section command-order-section">
+    <div class="form-section-title"><i class="bi bi-receipt-cutoff"></i>Datos del pedido</div>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Origen</label>
+        <select name="origen" class="form-select" required>
+          <% ['Manual','Siclik','Excel'].forEach(option => { %>
+            <option value="<%= option %>" <%= vale.origen === option ? 'selected' : '' %>><%= option %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Número de pedido</label>
+        <input type="text" name="numero_pedido" value="<%= vale.numero_pedido || '' %>" class="form-control" placeholder="Opcional, ej. 125804">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Cliente / Ruta</label>
+        <input type="text" name="cliente" value="<%= vale.cliente || '' %>" class="form-control" placeholder="Nombre del cliente o ruta" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Fecha de entrega</label>
+        <input type="date" name="fecha_entrega" value="<%= vale.fecha_entrega || '' %>" class="form-control" data-default-today required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Prioridad</label>
+        <select name="prioridad" class="form-select" required>
+          <% ['Alta','Normal','Baja'].forEach(option => { %>
+            <option value="<%= option %>" <%= vale.prioridad === option ? 'selected' : '' %>><%= option %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Productos en la comanda</label>
+        <div class="command-product-counter"><i class="bi bi-box-seam"></i><strong id="productCount"><%= rows.length %></strong><span>producto(s)</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section command-products-section">
+    <div class="command-products-heading">
+      <div>
+        <div class="form-section-title mb-1"><i class="bi bi-list-check"></i>Productos a rebanar</div>
+        <p class="section-subtitle mb-0">Captura cada producto como un renglón de la misma comanda.</p>
+      </div>
+      <button type="button" class="btn btn-primary command-add-product" data-add-product><i class="bi bi-plus-lg me-1"></i>Agregar producto</button>
+    </div>
+
+    <div id="commandProductsList" class="command-products-list">
+      <% rows.forEach((item, index) => { %>
+        <article class="command-product-editor" data-product-row>
+          <div class="command-product-editor-head">
+            <div class="command-product-number"><span>Producto</span><strong data-product-number><%= index + 1 %></strong></div>
+            <button type="button" class="command-remove-product" data-remove-product title="Quitar producto" aria-label="Quitar producto"><i class="bi bi-trash3"></i><span>Quitar</span></button>
+          </div>
+          <div class="row g-2">
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">SKU</label>
+              <input type="text" name="sku[]" value="<%= item.sku || '' %>" class="form-control" placeholder="Código" required>
+            </div>
+            <div class="col-lg-4 col-md-8">
+              <label class="form-label">Producto</label>
+              <input type="text" name="producto[]" value="<%= item.producto || '' %>" class="form-control" placeholder="Nombre del producto" required>
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">Cantidad</label>
+              <input type="number" step="0.01" min="0.01" name="cantidad[]" value="<%= item.cantidad !== undefined && item.cantidad !== null ? item.cantidad : '' %>" class="form-control" placeholder="0.00" required>
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">Presentación</label>
+              <input type="text" name="presentacion[]" value="<%= item.presentacion || '' %>" class="form-control" placeholder="500 g, 1 kg" required>
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">Rebanado</label>
+              <select name="tipo_rebanado[]" class="form-select" required>
+                <% ['Estándar','Grueso','Otro'].forEach(option => { %>
+                  <option value="<%= option %>" <%= (item.tipo_rebanado || 'Estándar') === option ? 'selected' : '' %>><%= option %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Indicaciones del producto <span class="text-muted fw-normal">(opcional)</span></label>
+              <input type="text" name="producto_observaciones[]" value="<%= item.observaciones || '' %>" class="form-control" placeholder="Ej. Empacar separado, sin intercalar, corte especial">
+            </div>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <div class="form-section-title"><i class="bi bi-chat-left-text"></i>Observaciones generales</div>
+    <textarea name="observaciones" class="form-control" rows="3" placeholder="Indicaciones que aplican a todo el pedido."><%= vale.observaciones || '' %></textarea>
+  </section>
+
+  <div class="command-form-actions">
+    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2-circle me-1"></i><%= isEdit ? 'Guardar correcciones' : 'Crear vale con productos' %></button>
+    <a href="<%= isEdit ? `/vales/${vale.id}` : '/vales/tablero' %>" class="btn btn-soft btn-lg"><i class="bi bi-x-lg me-1"></i>Cancelar</a>
+  </div>
+</form>
+
+<template id="commandProductTemplate">
+  <article class="command-product-editor" data-product-row>
+    <div class="command-product-editor-head">
+      <div class="command-product-number"><span>Producto</span><strong data-product-number>1</strong></div>
+      <button type="button" class="command-remove-product" data-remove-product title="Quitar producto" aria-label="Quitar producto"><i class="bi bi-trash3"></i><span>Quitar</span></button>
+    </div>
+    <div class="row g-2">
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label">SKU</label>
+        <input type="text" name="sku[]" class="form-control" placeholder="Código" required>
+      </div>
+      <div class="col-lg-4 col-md-8">
+        <label class="form-label">Producto</label>
+        <input type="text" name="producto[]" class="form-control" placeholder="Nombre del producto" required>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label">Cantidad</label>
+        <input type="number" step="0.01" min="0.01" name="cantidad[]" class="form-control" placeholder="0.00" required>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label">Presentación</label>
+        <input type="text" name="presentacion[]" class="form-control" placeholder="500 g, 1 kg" required>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label">Rebanado</label>
+        <select name="tipo_rebanado[]" class="form-select" required>
+          <option value="Estándar" selected>Estándar</option>
+          <option value="Grueso">Grueso</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Indicaciones del producto <span class="text-muted fw-normal">(opcional)</span></label>
+        <input type="text" name="producto_observaciones[]" class="form-control" placeholder="Ej. Empacar separado, sin intercalar, corte especial">
+      </div>
+    </div>
+  </article>
+</template>
+
+<%- include('../partials/footer') %>

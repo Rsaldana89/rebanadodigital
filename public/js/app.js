@@ -128,6 +128,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const validStatuses = ['Pendiente', 'Rebanando', 'Listo', 'Entregado', 'Cancelado'];
     applyOpsFilter(validStatuses.includes(hashStatus) ? hashStatus : 'Todos');
   }
+
+  // Formulario de comanda: agrega o retira productos sin recargar la página.
+  const productsList = document.getElementById('commandProductsList');
+  const productTemplate = document.getElementById('commandProductTemplate');
+  const addProductButton = document.querySelector('[data-add-product]');
+  const productCount = document.getElementById('productCount');
+
+  function refreshProductRows() {
+    if (!productsList) return;
+    const rows = Array.from(productsList.querySelectorAll('[data-product-row]'));
+    rows.forEach((row, index) => {
+      const number = row.querySelector('[data-product-number]');
+      if (number) number.textContent = String(index + 1);
+      const remove = row.querySelector('[data-remove-product]');
+      if (remove) {
+        remove.disabled = rows.length === 1;
+        remove.title = rows.length === 1 ? 'La comanda debe conservar al menos un producto' : 'Quitar producto';
+      }
+    });
+    if (productCount) productCount.textContent = String(rows.length);
+  }
+
+  function bindRemoveButton(button) {
+    button.addEventListener('click', () => {
+      const rows = productsList?.querySelectorAll('[data-product-row]') || [];
+      if (rows.length <= 1) return;
+      button.closest('[data-product-row]')?.remove();
+      refreshProductRows();
+    });
+  }
+
+  if (productsList) {
+    productsList.querySelectorAll('[data-remove-product]').forEach(bindRemoveButton);
+    refreshProductRows();
+  }
+
+  if (addProductButton && productsList && productTemplate) {
+    addProductButton.addEventListener('click', () => {
+      const fragment = productTemplate.content.cloneNode(true);
+      const row = fragment.querySelector('[data-product-row]');
+      const removeButton = fragment.querySelector('[data-remove-product]');
+      if (removeButton) bindRemoveButton(removeButton);
+      productsList.appendChild(fragment);
+      refreshProductRows();
+      row?.querySelector('input[name="sku[]"]')?.focus();
+    });
+  }
 });
 
 // Mensajes compactos del modo operativo: se ocultan sin interrumpir el trabajo.
