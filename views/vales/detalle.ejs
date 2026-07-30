@@ -12,6 +12,7 @@
   const canEditVale = typeof can === 'function' && can('vales.edit');
   const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '');
   const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
+  const entregaDisplay = String(vale.entrega_dias_texto || '').trim() || fechaEntregaDisplay;
 %>
 
 <div class="page-header">
@@ -42,6 +43,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2 justify-content-end">
           <span class="status-chip status-<%= estadoCls %>"><%= vale.estado %></span>
+          <% if (vale.external_key) { %><span class="integration-source-badge"><i class="bi bi-cloud-arrow-down-fill"></i>SAP/Siclik</span><% } %>
           <% if (vale.is_overdue) { %>
             <span class="overdue-badge"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso · <%= vale.days_late === 1 ? '1 día' : vale.days_late + ' días' %></span>
           <% } %>
@@ -53,9 +55,17 @@
         <div class="detail-item"><div class="detail-label">Número de pedido</div><div class="detail-value"><%= vale.numero_pedido || 'Sin referencia' %></div></div>
         <div class="detail-item"><div class="detail-label">Origen</div><div class="detail-value"><%= vale.origen %></div></div>
         <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value"><%= vale.cliente %></div></div>
-        <div class="detail-item"><div class="detail-label">Fecha de entrega</div><div class="detail-value"><%= fechaEntregaDisplay %></div></div>
+        <% if (vale.cliente_codigo) { %><div class="detail-item"><div class="detail-label">Código de cliente</div><div class="detail-value"><%= vale.cliente_codigo %></div></div><% } %>
+        <div class="detail-item"><div class="detail-label"><%= vale.external_key ? 'Entrega indicada por Siclik' : 'Fecha de entrega' %></div><div class="detail-value"><%= entregaDisplay %></div></div>
+        <% if (vale.external_key && vale.entrega_fecha_inicio_fmt && vale.entrega_fecha_fin_fmt) { %><div class="detail-item"><div class="detail-label">Rango interpretado</div><div class="detail-value"><%= vale.entrega_fecha_inicio_fmt.split('-').reverse().join('/') %><%= vale.entrega_fecha_fin_fmt !== vale.entrega_fecha_inicio_fmt ? ' al ' + vale.entrega_fecha_fin_fmt.split('-').reverse().join('/') : '' %></div></div><% } %>
         <div class="detail-item"><div class="detail-label">Prioridad</div><div class="detail-value"><%= vale.prioridad %></div></div>
-        <div class="detail-item"><div class="detail-label">Creado por</div><div class="detail-value"><%= vale.creador || vale.creado_por || 'N/D' %></div></div>
+        <div class="detail-item"><div class="detail-label">Creado por</div><div class="detail-value"><%= vale.creador || vale.creado_por || (vale.external_key ? 'CORONELBOT' : 'N/D') %></div></div>
+        <% if (vale.sap_docentry) { %><div class="detail-item"><div class="detail-label">SAP DocEntry / DocNum</div><div class="detail-value"><%= vale.sap_docentry %> / <%= vale.sap_docnum || 'N/D' %></div></div><% } %>
+        <% if (vale.entrega_horario) { %><div class="detail-item"><div class="detail-label">Horario de entrega</div><div class="detail-value"><%= vale.entrega_horario %></div></div><% } %>
+        <% if (vale.entrega_nombre) { %><div class="detail-item"><div class="detail-label">Contacto de entrega</div><div class="detail-value"><%= vale.entrega_nombre %></div></div><% } %>
+        <% if (vale.numero_traslado) { %><div class="detail-item"><div class="detail-label">Número de traslado</div><div class="detail-value"><%= vale.numero_traslado %></div></div><% } %>
+        <% if (vale.entrega_epp) { %><div class="detail-item" style="grid-column: 1 / -1;"><div class="detail-label">EPP requerido</div><div class="detail-value"><%= vale.entrega_epp %></div></div><% } %>
+        <% if (vale.comentario_entrega) { %><div class="detail-item" style="grid-column: 1 / -1;"><div class="detail-label">Comentario de entrega</div><div class="detail-value"><%= vale.comentario_entrega %></div></div><% } %>
         <div class="detail-item" style="grid-column: 1 / -1;"><div class="detail-label">Observaciones generales</div><div class="detail-value"><%= vale.observaciones || 'Sin observaciones' %></div></div>
       </div>
     </div>
@@ -82,6 +92,8 @@
                   <span>SKU <strong><%= item.sku %></strong></span>
                   <span><strong><%= item.cantidad %></strong> <%= item.presentacion %></span>
                   <span>Rebanado <strong><%= item.tipo_rebanado %></strong></span>
+                  <% if (item.almacen) { %><span>Almacén <strong><%= item.almacen %></strong></span><% } %>
+                  <% if (item.sap_line_num !== null && item.sap_line_num !== undefined) { %><span>Línea SAP <strong><%= item.sap_line_num %></strong></span><% } %>
                 </div>
                 <% if (item.observaciones) { %>
                   <div class="command-detail-product-note"><i class="bi bi-chat-left-text"></i><%= item.observaciones %></div>

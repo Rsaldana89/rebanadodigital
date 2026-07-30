@@ -44,7 +44,10 @@ async function attachProducts(vales) {
 exports.listar = async (req, res) => {
   const { estado, fecha_inicio, fecha_fin, exportar } = req.query;
   try {
-    let query = `SELECT v.*, DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt
+    let query = `SELECT v.*,
+                        DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
+                        DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
+                        DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt
                  FROM vales v
                  WHERE 1 = 1`;
     const params = [];
@@ -54,15 +57,15 @@ exports.listar = async (req, res) => {
       params.push(estado);
     }
     if (fecha_inicio) {
-      query += ' AND v.fecha_entrega >= ?';
+      query += ' AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) >= ?';
       params.push(fecha_inicio);
     }
     if (fecha_fin) {
-      query += ' AND v.fecha_entrega <= ?';
+      query += ' AND COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) <= ?';
       params.push(fecha_fin);
     }
 
-    query += ' ORDER BY v.fecha_entrega DESC, v.created_at DESC';
+    query += ' ORDER BY COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) DESC, v.created_at DESC';
     const [rows] = await db.query(query, params);
     const vales = await attachProducts(rows);
 
@@ -83,7 +86,7 @@ exports.listar = async (req, res) => {
             indicaciones_producto: '',
             prioridad: vale.prioridad,
             estado: vale.estado,
-            fecha_entrega: vale.fecha_entrega_fmt || '',
+            fecha_entrega: vale.entrega_dias_texto || vale.fecha_entrega_fmt || '',
             observaciones_generales: vale.observaciones || ''
           });
           return;
@@ -102,7 +105,7 @@ exports.listar = async (req, res) => {
             indicaciones_producto: product.observaciones || '',
             prioridad: vale.prioridad,
             estado: vale.estado,
-            fecha_entrega: vale.fecha_entrega_fmt || '',
+            fecha_entrega: vale.entrega_dias_texto || vale.fecha_entrega_fmt || '',
             observaciones_generales: vale.observaciones || ''
           });
         });

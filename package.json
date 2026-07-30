@@ -1,6 +1,6 @@
 {
   "name": "chc-rebanado-digital",
-  "version": "1.7.0",
+  "version": "1.7.2",
   "description": "Sistema web institucional CHC para creación, seguimiento y control táctil de vales de rebanado",
   "main": "app.js",
   "packageManager": "npm@11.6.2",
@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "test": "node tests/integrationHelpers.test.js && node tests/valeDeliveryService.test.js && node tests/settingsService.mock.test.js && node tests/syncService.mock.test.js"
   },
   "dependencies": {
     "express": "^4.19.2",

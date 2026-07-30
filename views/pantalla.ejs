@@ -69,8 +69,7 @@
               </tr>
             <% } %>
             <% vales.forEach(v => {
-              const fechaEntrega = v.fecha_entrega_fmt || '';
-              const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
+              const entregaDisplay = v.entrega_display || '';
               const atrasoTexto = v.days_late === 1 ? '1 día' : `${v.days_late} días`;
             %>
               <tr class="<%= v.is_overdue ? 'tv-row-overdue' : '' %>">
@@ -94,7 +93,8 @@
                   <span class="status-chip <%= v.estado === 'Pendiente' ? 'status-pending' : v.estado === 'Rebanando' ? 'status-working' : v.estado === 'Listo' ? 'status-ready' : v.estado === 'Entregado' ? 'status-delivered' : 'status-cancelled' %>"><%= v.estado %></span>
                 </td>
                 <td>
-                  <div><%= fechaEntregaDisplay %></div>
+                  <div class="tv-delivery-value"><%= entregaDisplay %></div>
+                  <% if (v.entrega_es_rango) { %><div class="tv-delivery-range-note">Rango Siclik</div><% } %>
                   <% if (v.is_overdue) { %>
                     <div class="mt-1"><span class="overdue-badge overdue-badge-small"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso · <%= atrasoTexto %></span></div>
                   <% } %>

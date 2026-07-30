@@ -14,7 +14,7 @@ const PERMISSIONS = [
   { code: 'inventario.manage', category: 'Módulos', name: 'Cierre de día', description: 'Registrar inventario, sobrantes y merma.', sort: 100 },
   { code: 'reportes.view', category: 'Módulos', name: 'Reportes', description: 'Consultar y exportar reportes de vales.', sort: 110 },
   { code: 'users.manage', category: 'Administración', name: 'Administrar usuarios', description: 'Crear, editar y activar usuarios.', sort: 120 },
-  { code: 'permissions.manage', category: 'Administración', name: 'Administrar permisos', description: 'Modificar permisos por rol y excepciones por usuario.', sort: 130 }
+  { code: 'permissions.manage', category: 'Administración', name: 'Administrar permisos y configuración', description: 'Modificar permisos por rol, excepciones por usuario y parámetros administrativos.', sort: 130 }
 ];
 
 const ROLES = ['administrador', 'cedis', 'almacen', 'rebanado'];

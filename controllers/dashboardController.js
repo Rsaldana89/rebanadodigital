@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const syncService = require('../services/rebanadoSyncService');
 
 function getMexicoDateParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -29,8 +30,10 @@ exports.index = async (req, res) => {
     const [counts] = await db.query(
       `SELECT estado, COUNT(*) AS total
        FROM vales
-       WHERE DATE(fecha_entrega) = ?
-          OR (DATE(fecha_entrega) < ? AND estado IN ('Pendiente', 'Rebanando', 'Listo'))
+       WHERE (? BETWEEN COALESCE(entrega_fecha_inicio, fecha_entrega)
+                    AND COALESCE(entrega_fecha_fin, entrega_fecha_inicio, fecha_entrega))
+          OR (COALESCE(entrega_fecha_fin, entrega_fecha_inicio, fecha_entrega) < ?
+              AND estado IN ('Pendiente', 'Rebanando', 'Listo'))
        GROUP BY estado`,
       [fechaTrabajo, fechaTrabajo]
     );
@@ -38,7 +41,7 @@ exports.index = async (req, res) => {
     const [overdueRows] = await db.query(
       `SELECT COUNT(*) AS total
        FROM vales
-       WHERE DATE(fecha_entrega) < ?
+       WHERE COALESCE(entrega_fecha_fin, entrega_fecha_inicio, fecha_entrega) < ?
          AND estado IN ('Pendiente', 'Rebanando', 'Listo')`,
       [fechaTrabajo]
     );
@@ -57,6 +60,9 @@ exports.index = async (req, res) => {
 
     const total = Object.values(summary).reduce((a, b) => a + b, 0);
     const overdueCount = overdueRows[0]?.total || 0;
+    const syncStatus = ['administrador', 'cedis'].includes(req.session.user.role)
+      ? await syncService.getStatusForUi()
+      : null;
 
     res.render('dashboard', {
       title: 'Dashboard',
@@ -65,7 +71,8 @@ exports.index = async (req, res) => {
       overdueCount,
       fechaTrabajo,
       fechaTrabajoDisplay: fechaTrabajo.split('-').reverse().join('/'),
-      horaActual: now.displayTime
+      horaActual: now.displayTime,
+      syncStatus
     });
   } catch (err) {
     console.error(err);

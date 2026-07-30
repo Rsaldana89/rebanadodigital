@@ -1,11 +1,11 @@
-<%- include('../partials/header', { title: 'Permisos', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+<%- include('../partials/header', { title: 'Permisos y configuración', user: user, success_msg: success_msg, error_msg: error_msg }) %>
 
 <div class="page-header">
   <div class="row align-items-center g-3">
     <div class="col-lg-8">
       <div class="page-kicker">Administración</div>
-      <h1 class="page-title">Permisos del sistema</h1>
-      <p class="page-subtitle mb-0">Define la base por rol y usa excepciones sólo cuando un usuario necesite algo diferente.</p>
+      <h1 class="page-title">Permisos y configuración</h1>
+      <p class="page-subtitle mb-0">Administra accesos y parámetros generales de operación.</p>
     </div>
   </div>
 </div>
@@ -15,6 +15,50 @@
   <div><i class="bi bi-building"></i><strong>CEDIS / Almacén</strong><span>Administración operativa completa de vales.</span></div>
   <div><i class="bi bi-gear"></i><strong>Rebanado</strong><span>Rebanando, Listo y Cancelado según el flujo.</span></div>
 </div>
+
+<% if (isAdministrator && syncSettings) {
+  const lastContactText = syncStatus && syncStatus.lastContactAt
+    ? new Date(syncStatus.lastContactAt).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' })
+    : 'Sin contacto registrado';
+  const currentState = syncStatus && !syncStatus.stale ? 'OK' : 'ALERTA';
+%>
+  <div id="configuracion-sincronizacion" class="content-card mb-4 sync-config-card">
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+      <div>
+        <div class="page-kicker">Configuración administrativa</div>
+        <h2 class="section-title mb-1">Alertas de sincronización CORONELBOT</h2>
+        <p class="section-subtitle mb-0">Define cuánto tiempo puede pasar sin heartbeat antes de mostrar una alerta. Para una tarea cada 4 horas se recomiendan 6 horas de tolerancia.</p>
+      </div>
+      <span class="status-chip <%= currentState === 'OK' ? 'status-ready' : 'status-cancelled' %>"><i class="bi <%= currentState === 'OK' ? 'bi-cloud-check-fill' : 'bi-cloud-exclamation-fill' %>"></i><%= currentState %></span>
+    </div>
+
+    <form method="post" action="/permisos/configuracion/sincronizacion" class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label for="alert_hours" class="form-label">Tolerancia sin contacto</label>
+        <div class="input-group">
+          <input type="number" class="form-control" id="alert_hours" name="alert_hours" min="1" max="168" step="1" value="<%= syncSettings.alertHours %>" required>
+          <span class="input-group-text">horas</span>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label for="alert_grace_minutes" class="form-label">Margen adicional</label>
+        <div class="input-group">
+          <input type="number" class="form-control" id="alert_grace_minutes" name="alert_grace_minutes" min="0" max="180" step="5" value="<%= syncSettings.alertGraceMinutes %>" required>
+          <span class="input-group-text">minutos</span>
+        </div>
+      </div>
+      <div class="col-md-4 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar configuración</button>
+      </div>
+    </form>
+
+    <div class="sync-config-status">
+      <div class="sync-config-stat"><span>Último contacto</span><strong><%= lastContactText %></strong></div>
+      <div class="sync-config-stat"><span>Minutos desde el contacto</span><strong><%= syncStatus && syncStatus.minutesSinceLastContact !== null ? syncStatus.minutesSinceLastContact : 'N/D' %></strong></div>
+      <div class="sync-config-stat"><span>Umbral efectivo</span><strong><%= syncSettings.alertHours %> h + <%= syncSettings.alertGraceMinutes %> min</strong></div>
+    </div>
+  </div>
+<% } %>
 
 <div class="content-card mb-4">
   <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">

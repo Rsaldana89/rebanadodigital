@@ -82,7 +82,7 @@ DB_USER=root
 DB_PASSWORD=tu_clave
 DB_NAME=chc_rebanado
 SESSION_SECRET=una_clave_larga
-PORT=3000
+PORT=3001
 NODE_ENV=development
 ```
 
@@ -126,3 +126,32 @@ npm ci
 ```
 
 Después de subir el código, aplica primero la migración en MySQL y luego redespliega la aplicación. El endpoint `/health` informa si la base está conectada.
+
+## Integración CORONELBOT / SAP / Siclik
+
+Esta versión incluye una capa adicional de sincronización para recibir órdenes desde CORONELBOT sin reemplazar la captura manual ni el flujo operativo existente.
+
+Antes de habilitarla, consulte y aplique:
+
+```text
+README_INTEGRACION_CORONELBOT.md
+database/migrations/2026-07-24_coronelbot_integration.sql
+```
+
+## Integración CORONELBOT v17.1
+
+La API incorpora `POST /api/integraciones/sap/rebanado/heartbeat`. CORONELBOT puede registrar contacto aunque no encuentre vales nuevos, evitando alertas falsas. Consulte `README_V17_1_HEARTBEAT_CORONELBOT.md` y `README_INTEGRACION_CORONELBOT.md`.
+
+## Entrega por rango Siclik y configuración v17.2
+
+- El tablero considera `entrega_fecha_inicio` y `entrega_fecha_fin`.
+- El texto `entrega_dias_texto` se muestra completo en cada vale sincronizado.
+- Un vale aparece al consultar cualquier día comprendido dentro de su rango.
+- El atraso comienza después del final del rango.
+- El administrador configura la tolerancia de alertas desde **Permisos y configuración**.
+
+Migración:
+
+```text
+database/migrations/2026-07-29_rangos_entrega_y_configuracion.sql
+```

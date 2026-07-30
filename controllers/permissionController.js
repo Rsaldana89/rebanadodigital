@@ -1,5 +1,7 @@
 const db = require('../config/db');
 const permissionService = require('../services/permissionService');
+const settingsService = require('../services/settingsService');
+const syncService = require('../services/rebanadoSyncService');
 
 const editableRoles = ['cedis', 'almacen', 'rebanado'];
 
@@ -12,15 +14,22 @@ exports.index = async (req, res) => {
        ORDER BY role, name`
     );
 
+    const isAdministrator = req.session.user.role === 'administrador';
+    const syncSettings = isAdministrator ? await settingsService.getSyncAlertSettings() : null;
+    const syncStatus = isAdministrator ? await syncService.getStatusForUi() : null;
+
     res.render('permisos/index', {
-      title: 'Permisos',
+      title: 'Permisos y configuración',
       permissions,
       roles: ['administrador', ...editableRoles],
-      usuarios
+      usuarios,
+      isAdministrator,
+      syncSettings,
+      syncStatus
     });
   } catch (err) {
     console.error(err);
-    req.session.error_msg = 'No fue posible cargar la administración de permisos';
+    req.session.error_msg = 'No fue posible cargar permisos y configuración';
     res.redirect('/dashboard');
   }
 };
@@ -125,5 +134,40 @@ exports.updateUser = async (req, res) => {
     console.error(err);
     req.session.error_msg = 'No fue posible guardar los permisos del usuario';
     res.redirect(`/permisos/usuario/${userId}`);
+  }
+};
+
+exports.updateSyncConfiguration = async (req, res) => {
+  try {
+    if (req.session.user.role !== 'administrador') {
+      req.session.error_msg = 'Sólo el perfil de administrador puede modificar la configuración de sincronización';
+      return res.redirect('/permisos');
+    }
+
+    const alertHours = Number(req.body.alert_hours);
+    const alertGraceMinutes = Number(req.body.alert_grace_minutes);
+    if (!Number.isFinite(alertHours) || alertHours < 1 || alertHours > 168) {
+      req.session.error_msg = 'La tolerancia debe estar entre 1 y 168 horas';
+      return res.redirect('/permisos#configuracion-sincronizacion');
+    }
+    if (!Number.isFinite(alertGraceMinutes) || alertGraceMinutes < 0 || alertGraceMinutes > 180) {
+      req.session.error_msg = 'El margen adicional debe estar entre 0 y 180 minutos';
+      return res.redirect('/permisos#configuracion-sincronizacion');
+    }
+
+    await settingsService.saveSyncAlertSettings({
+      alertHours,
+      alertGraceMinutes,
+      updatedBy: req.session.user.id
+    });
+
+    req.session.success_msg = 'Configuración de alertas de sincronización actualizada';
+    return res.redirect('/permisos#configuracion-sincronizacion');
+  } catch (err) {
+    console.error(err);
+    req.session.error_msg = err.code === 'ER_NO_SUCH_TABLE'
+      ? 'Falta aplicar la migración de configuración en la base de datos'
+      : 'No fue posible guardar la configuración de sincronización';
+    return res.redirect('/permisos#configuracion-sincronizacion');
   }
 };

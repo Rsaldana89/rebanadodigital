@@ -76,7 +76,7 @@
             </td>
             <td><%= v.prioridad %></td>
             <td><%= v.estado %></td>
-            <td><%= v.fecha_entrega_fmt || '' %></td>
+            <td><%= v.entrega_dias_texto || v.fecha_entrega_fmt || '' %></td>
             <td><a href="/vales/<%= v.id %>" class="btn btn-sm btn-soft">Detalle</a></td>
           </tr>
         <% }) %>

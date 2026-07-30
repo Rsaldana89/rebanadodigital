@@ -61,6 +61,22 @@
   </div>
 </section>
 
+
+<% if (syncStatus) {
+  const syncHealthy = syncStatus.ok && !syncStatus.stale;
+  const syncLastContact = syncStatus.lastContactAt
+    ? new Date(syncStatus.lastContactAt).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' })
+    : 'Sin contacto de CORONELBOT';
+  const syncSummary = syncStatus.lastSummary || { created: 0, updated: 0, skipped: 0 };
+%>
+  <section class="operator-sync-strip <%= syncHealthy ? 'is-healthy' : 'is-alert' %>" aria-label="Estado de sincronización SAP y Siclik">
+    <i class="bi <%= syncHealthy ? 'bi-cloud-check-fill' : 'bi-cloud-exclamation-fill' %>"></i>
+    <div><strong>CORONELBOT: <%= syncHealthy ? 'OK' : 'ALERTA' %></strong><span>Último contacto: <%= syncLastContact %></span></div>
+    <div class="operator-sync-summary"><%= syncSummary.created %> creados · <%= syncSummary.updated %> actualizados · <%= syncSummary.skipped %> omitidos</div>
+    <% if (syncStatus.lastError) { %><div class="operator-sync-error" title="<%= syncStatus.lastError %>"><%= String(syncStatus.lastError).split('\n')[0] %></div><% } %>
+  </section>
+<% } %>
+
 <section class="operator-tools" aria-label="Filtros del tablero">
   <div class="operator-tools-top">
     <form method="get" action="/vales/tablero" class="operator-date-form">
@@ -101,10 +117,9 @@
   <% allVales.forEach(function(vale){
     const e = estadoInfo[vale.estado] || estadoInfo.Pendiente;
     const p = prioridadInfo[vale.prioridad] || prioridadInfo.Normal;
-    const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '');
-    const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
+    const entregaDisplay = vale.entrega_display || '';
     const atrasoTexto = vale.days_late === 1 ? '1 día' : `${vale.days_late} días`;
-    const searchText = `${vale.folio} ${vale.numero_pedido || ''} ${vale.cliente} ${vale.productos_busqueda || ''} ${vale.prioridad} ${vale.estado} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
+    const searchText = `${vale.folio} ${vale.numero_pedido || ''} ${vale.cliente} ${vale.productos_busqueda || ''} ${vale.prioridad} ${vale.estado} ${entregaDisplay} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
     const allowedStates = vale.allowed_states || [];
     const canAdvance = e.siguiente ? allowedStates.includes(e.siguiente) : false;
     const canCancel = !['Entregado','Cancelado'].includes(vale.estado) && allowedStates.includes('Cancelado');
@@ -145,7 +160,7 @@
 
         <div class="operator-facts command-facts" aria-label="Datos del vale">
           <span><strong><%= vale.total_productos || 0 %></strong> producto<%= vale.total_productos === 1 ? '' : 's' %></span>
-          <span>Entrega <strong><%= fechaEntregaDisplay %></strong></span>
+          <span class="command-delivery-range"><i class="bi bi-calendar-range"></i>Entrega <strong><%= entregaDisplay %></strong><% if (vale.entrega_es_rango) { %><em>rango Siclik</em><% } %></span>
         </div>
 
         <% if (vale.observaciones) { %>

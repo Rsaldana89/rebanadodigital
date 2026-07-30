@@ -2335,3 +2335,48 @@ textarea:focus,
 .success-banner div {
   color: #1f5133 !important;
 }
+
+/* V17.2: entrega Siclik por fecha o rango */
+.command-delivery-range {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+.command-delivery-range i { color: #8d1d2c; }
+.command-delivery-range em {
+  font-size: .68rem;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: #8d1d2c;
+  background: #f8e7e9;
+  border: 1px solid #e9bcc2;
+  border-radius: 999px;
+  padding: .12rem .4rem;
+}
+.tv-delivery-value { font-weight: 800; }
+.tv-delivery-range-note {
+  margin-top: .2rem;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #8d1d2c;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.sync-config-card .form-text { max-width: 760px; }
+.sync-config-status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: .75rem;
+  margin-top: 1rem;
+}
+.sync-config-stat {
+  padding: .8rem 1rem;
+  border: 1px solid #eaded5;
+  border-radius: 12px;
+  background: #fffaf5;
+}
+.sync-config-stat span { display: block; color: #75645b; font-size: .78rem; }
+.sync-config-stat strong { display: block; margin-top: .2rem; }

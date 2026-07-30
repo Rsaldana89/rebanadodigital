@@ -72,6 +72,9 @@
     <div id="commandProductsList" class="command-products-list">
       <% rows.forEach((item, index) => { %>
         <article class="command-product-editor" data-product-row>
+          <input type="hidden" name="external_line_key[]" value="<%= item.external_line_key || '' %>">
+          <input type="hidden" name="sap_line_num[]" value="<%= item.sap_line_num !== undefined && item.sap_line_num !== null ? item.sap_line_num : '' %>">
+          <input type="hidden" name="almacen[]" value="<%= item.almacen || '' %>">
           <div class="command-product-editor-head">
             <div class="command-product-number"><span>Producto</span><strong data-product-number><%= index + 1 %></strong></div>
             <button type="button" class="command-remove-product" data-remove-product title="Quitar producto" aria-label="Quitar producto"><i class="bi bi-trash3"></i><span>Quitar</span></button>
@@ -96,7 +99,11 @@
             <div class="col-lg-2 col-md-4">
               <label class="form-label">Rebanado</label>
               <select name="tipo_rebanado[]" class="form-select" required>
-                <% ['Estándar','Grueso','Otro'].forEach(option => { %>
+                <% const cutOptions = ['Estándar','Grueso','Otro']; %>
+                <% if (item.tipo_rebanado && !cutOptions.includes(item.tipo_rebanado)) { %>
+                  <option value="<%= item.tipo_rebanado %>" selected><%= item.tipo_rebanado %></option>
+                <% } %>
+                <% cutOptions.forEach(option => { %>
                   <option value="<%= option %>" <%= (item.tipo_rebanado || 'Estándar') === option ? 'selected' : '' %>><%= option %></option>
                 <% }) %>
               </select>
@@ -124,6 +131,9 @@
 
 <template id="commandProductTemplate">
   <article class="command-product-editor" data-product-row>
+    <input type="hidden" name="external_line_key[]" value="">
+    <input type="hidden" name="sap_line_num[]" value="">
+    <input type="hidden" name="almacen[]" value="">
     <div class="command-product-editor-head">
       <div class="command-product-number"><span>Producto</span><strong data-product-number>1</strong></div>
       <button type="button" class="command-remove-product" data-remove-product title="Quitar producto" aria-label="Quitar producto"><i class="bi bi-trash3"></i><span>Quitar</span></button>

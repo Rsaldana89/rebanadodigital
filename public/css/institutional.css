@@ -2869,3 +2869,70 @@ body.tablero-operator-body .op-vale-operator .status-chip {
     grid-column: 1 / -1;
   }
 }
+
+/* Integración CORONELBOT / SAP / Siclik */
+.sync-status-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid #cbd8ce;
+  border-radius: 16px;
+  background: #f7faf8;
+  box-shadow: var(--chc-shadow-soft);
+}
+.sync-status-card.is-healthy { border-color: #a8d1b7; background: #eef8f1; }
+.sync-status-card.is-alert { border-color: #e2c18b; background: #fff8eb; }
+.sync-status-icon { font-size: 1.65rem; line-height: 1; }
+.sync-status-card.is-healthy .sync-status-icon { color: #23764a; }
+.sync-status-card.is-alert .sync-status-icon { color: #a66a13; }
+.sync-status-content { min-width: 0; }
+.sync-status-title { font-size: 1rem; font-weight: 800; }
+.sync-status-meta, .sync-status-summary { font-size: .88rem; color: #526159; margin-top: 3px; }
+.sync-status-warning, .sync-status-error { margin-top: 5px; font-size: .86rem; font-weight: 700; color: #8c570c; }
+.sync-status-error { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 900px; }
+.integration-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e8f1ff;
+  color: #315f91;
+  font-size: .78rem;
+  font-weight: 800;
+}
+.operator-sync-strip {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 14px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: #eaf1f4;
+}
+.operator-sync-strip > i { font-size: 1.3rem; }
+.operator-sync-strip.is-healthy > i { color: #6ed69b; }
+.operator-sync-strip.is-alert > i { color: #f4bd62; }
+.operator-sync-strip strong { display: block; font-size: .84rem; }
+.operator-sync-strip span { display: block; color: #afbdc5; font-size: .73rem; margin-top: 1px; }
+.operator-sync-summary { color: #cbd6db; font-size: .78rem; font-weight: 700; }
+.operator-sync-error { grid-column: 2 / -1; color: #f4bd62; font-size: .75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 768px) {
+  .operator-sync-strip { grid-template-columns: auto 1fr; }
+  .operator-sync-summary { grid-column: 2; }
+  .operator-sync-error { grid-column: 2; }
+}
+
+/* V17.2: permite que el texto completo de ENTREGA_DIAS se vea en tarjetas angostas. */
+.operator-facts .command-delivery-range {
+  white-space: normal;
+  min-width: 0;
+}
+.operator-facts .command-delivery-range strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

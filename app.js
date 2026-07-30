@@ -15,8 +15,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // Middlewares
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: false, limit: process.env.REBANADO_SYNC_BODY_LIMIT || '2mb' }));
+app.use(express.json({ limit: process.env.REBANADO_SYNC_BODY_LIMIT || '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuración de sesión
@@ -61,6 +61,7 @@ const inventarioRoutes = require('./routes/inventarioRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const userRoutes = require('./routes/userRoutes');
 const permissionRoutes = require('./routes/permissionRoutes');
+const integrationRoutes = require('./routes/integrationRoutes');
 
 app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
@@ -69,6 +70,7 @@ app.use('/inventario', inventarioRoutes);
 app.use('/reportes', reportRoutes);
 app.use('/usuarios', userRoutes);
 app.use('/permisos', permissionRoutes);
+app.use('/api/integraciones/sap/rebanado', integrationRoutes);
 
 // Ruta para pantalla informativa accesible sin login
 const { pantallaController } = require('./controllers/valeController');
@@ -84,12 +86,25 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Errores de JSON o tamaño de payload en la API de CORONELBOT.
+app.use((err, req, res, next) => {
+  if (!req.originalUrl.startsWith('/api/integraciones/sap/rebanado')) return next(err);
+
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ ok: false, status: 'payload_too_large', message: 'El payload excede el límite configurado.' });
+  }
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ ok: false, status: 'invalid_json', message: 'El cuerpo JSON no es válido.' });
+  }
+  return next(err);
+});
+
 // Página 404 simple
 app.use((req, res) => {
   res.status(404).render('404', { title: 'Página no encontrada' });
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Estado interno utilizado para diagnósticos y health checks.
 app.locals.databaseReady = false;

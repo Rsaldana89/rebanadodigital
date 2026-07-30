@@ -1,0 +1,38 @@
+{
+  "source": "SAP_SICLIK",
+  "syncRunId": "2026-07-24T14:00:00",
+  "orders": [
+    {
+      "sapDocEntry": 42088,
+      "sapDocNum": 237220,
+      "cardCode": "CAK318",
+      "cardName": "COMEDORES INDUSTRIALES ZITRON",
+      "docDate": "2026-07-24",
+      "comments": "",
+      "entrega": {
+        "diasTexto": "28/07/2026 - 07/08/2026",
+        "horario": "8:00 - 12:00",
+        "nombre": "José Rivera",
+        "epp": "Chaleco reflejante",
+        "comentario": "Entrega en entrada",
+        "numeroTraslado": "126766"
+      },
+      "siclik": {
+        "usuarioNombre": "Rodrigo Velasco",
+        "usuarioCorreo": "rvelasco@tesselar.mx"
+      },
+      "productos": [
+        {
+          "sapLineNum": 2,
+          "sku": "1101001",
+          "producto": "Jamon de Pavo y Cerdo Americano AROOS",
+          "cantidad": 1.42,
+          "almacen": "1",
+          "presentacion": "Rebanada Estándar",
+          "tipoRebanado": "Estándar",
+          "observaciones": ""
+        }
+      ]
+    }
+  ]
+}

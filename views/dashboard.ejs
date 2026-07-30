@@ -35,6 +35,31 @@
   </div>
 <% } %>
 
+
+<% if (syncStatus) {
+  const syncHealthy = syncStatus.ok && !syncStatus.stale;
+  const syncLastContact = syncStatus.lastContactAt
+    ? new Date(syncStatus.lastContactAt).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' })
+    : 'Sin contacto de CORONELBOT';
+  const syncLastData = syncStatus.lastSuccessAt
+    ? new Date(syncStatus.lastSuccessAt).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' })
+    : 'Aún sin órdenes sincronizadas';
+  const syncSummary = syncStatus.lastSummary || { created: 0, updated: 0, skipped: 0 };
+%>
+  <section class="sync-status-card <%= syncHealthy ? 'is-healthy' : 'is-alert' %> mb-4" aria-label="Estado de sincronización SAP y Siclik">
+    <div class="sync-status-icon"><i class="bi <%= syncHealthy ? 'bi-cloud-check-fill' : 'bi-cloud-exclamation-fill' %>"></i></div>
+    <div class="sync-status-content">
+      <div class="sync-status-title">Conexión con CORONELBOT: <strong><%= syncHealthy ? 'OK' : 'ALERTA' %></strong></div>
+      <div class="sync-status-meta">Último contacto: <strong><%= syncLastContact %></strong> · Última sincronización de datos exitosa: <strong><%= syncLastData %></strong></div>
+      <% if (syncStatus.lastSummary) { %>
+        <div class="sync-status-summary"><strong><%= syncSummary.created %></strong> creados · <strong><%= syncSummary.updated %></strong> actualizados · <strong><%= syncSummary.skipped %></strong> omitidos</div>
+      <% } %>
+      <% if (syncStatus.stale) { %><div class="sync-status-warning">CORONELBOT superó la tolerancia configurada de <%= syncStatus.alertHours || 6 %> h<%= syncStatus.alertGraceMinutes ? ` + ${syncStatus.alertGraceMinutes} min` : '' %> sin contacto.</div><% } %>
+      <% if (syncStatus.lastError) { %><div class="sync-status-error" title="<%= syncStatus.lastError %>">Último error de datos: <%= String(syncStatus.lastError).split('\n')[0] %></div><% } %>
+    </div>
+  </section>
+<% } %>
+
 <div class="row g-3 mb-4">
   <div class="col-xl-2 col-md-4 col-6">
     <a href="/vales/tablero?fecha=<%= fechaTrabajo %>#Pendiente" class="text-decoration-none d-block h-100">
@@ -137,7 +162,7 @@
         <% if (can('permissions.manage')) { %>
           <a class="quick-action" href="/permisos">
             <span class="quick-action-icon"><i class="bi bi-shield-lock"></i></span>
-            <div><strong>Permisos</strong><div class="text-muted small">Roles y excepciones</div></div>
+            <div><strong>Permisos y configuración</strong><div class="text-muted small">Roles, excepciones y sincronización</div></div>
           </a>
         <% } %>
         <a class="quick-action" href="/pantalla?fecha=<%= fechaTrabajo %>" target="_blank">

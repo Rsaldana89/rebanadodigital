@@ -1,8 +1,9 @@
 const db = require('../config/db');
 const permissionService = require('../services/permissionService');
+const syncService = require('../services/rebanadoSyncService');
+const { displayDateFromISO, enrichValeDelivery } = require('../services/valeDeliveryService');
 
 const VALID_STATES = ['Pendiente', 'Rebanando', 'Listo', 'Entregado', 'Cancelado'];
-const VALID_CUT_TYPES = ['Estándar', 'Grueso', 'Otro'];
 
 function getMexicoDateParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -25,30 +26,6 @@ function getMexicoDateParts(date = new Date()) {
   };
 }
 
-function displayDateFromISO(isoDate) {
-  if (!isoDate) return '';
-  return isoDate.split('-').reverse().join('/');
-}
-
-function dayDiff(olderIsoDate, newerIsoDate) {
-  if (!olderIsoDate || !newerIsoDate) return 0;
-  const older = new Date(`${olderIsoDate}T00:00:00Z`);
-  const newer = new Date(`${newerIsoDate}T00:00:00Z`);
-  const diff = newer.getTime() - older.getTime();
-  return Math.max(0, Math.floor(diff / 86400000));
-}
-
-function enrichVale(vale, filtroFecha) {
-  const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0, 10) : '');
-  const isOverdue = Boolean(fechaEntrega && fechaEntrega < filtroFecha && ['Pendiente', 'Rebanando', 'Listo'].includes(vale.estado));
-  return {
-    ...vale,
-    fecha_entrega_fmt: fechaEntrega,
-    is_overdue: isOverdue,
-    days_late: isOverdue ? dayDiff(fechaEntrega, filtroFecha) : 0
-  };
-}
-
 function asArray(value) {
   if (Array.isArray(value)) return value;
   if (value === undefined || value === null) return [];
@@ -62,7 +39,10 @@ function normalizeProducts(body) {
   const presentations = asArray(body.presentacion);
   const cuts = asArray(body.tipo_rebanado);
   const notes = asArray(body.producto_observaciones);
-  const rowCount = Math.max(skus.length, names.length, quantities.length, presentations.length, cuts.length, notes.length);
+  const externalLineKeys = asArray(body.external_line_key);
+  const sapLineNums = asArray(body.sap_line_num);
+  const warehouses = asArray(body.almacen);
+  const rowCount = Math.max(skus.length, names.length, quantities.length, presentations.length, cuts.length, notes.length, externalLineKeys.length, sapLineNums.length, warehouses.length);
 
   const products = [];
   for (let index = 0; index < rowCount; index += 1) {
@@ -71,8 +51,12 @@ function normalizeProducts(body) {
     const cantidadRaw = String(quantities[index] || '').trim();
     const presentacion = String(presentations[index] || '').trim();
     const requestedCut = String(cuts[index] || 'Estándar').trim();
-    const tipo_rebanado = VALID_CUT_TYPES.includes(requestedCut) ? requestedCut : 'Otro';
+    const tipo_rebanado = requestedCut ? requestedCut.slice(0, 80) : 'Estándar';
     const observaciones = String(notes[index] || '').trim();
+    const external_line_key = String(externalLineKeys[index] || '').trim() || null;
+    const sapLineRaw = String(sapLineNums[index] ?? '').trim();
+    const sap_line_num = sapLineRaw !== '' && Number.isInteger(Number(sapLineRaw)) ? Number(sapLineRaw) : null;
+    const almacen = String(warehouses[index] || '').trim() || null;
 
     // Ignora únicamente renglones completamente vacíos.
     if (!sku && !producto && !cantidadRaw && !presentacion && !observaciones) continue;
@@ -91,7 +75,11 @@ function normalizeProducts(body) {
       presentacion,
       tipo_rebanado,
       observaciones: observaciones || null,
-      orden: products.length + 1
+      orden: products.length + 1,
+      external_line_key,
+      sap_line_num,
+      almacen,
+      last_synced_at: null
     });
   }
 
@@ -110,7 +98,7 @@ async function attachProducts(vales, connection = db) {
   const ids = vales.map(vale => vale.id);
   const placeholders = ids.map(() => '?').join(',');
   const [rows] = await connection.query(
-    `SELECT id, vale_id, sku, producto, cantidad, presentacion, tipo_rebanado, observaciones, orden
+    `SELECT id, vale_id, sap_line_num, external_line_key, sku, producto, cantidad, almacen, presentacion, tipo_rebanado, observaciones, orden, last_synced_at
      FROM vale_productos
      WHERE vale_id IN (${placeholders})
      ORDER BY vale_id, orden, id`,
@@ -137,18 +125,23 @@ async function attachProducts(vales, connection = db) {
 async function insertProducts(connection, valeId, products) {
   const values = products.map(product => [
     valeId,
+    product.sap_line_num ?? null,
+    product.external_line_key || null,
     product.sku,
     product.producto,
     product.cantidad,
+    product.almacen || null,
     product.presentacion,
     product.tipo_rebanado,
     product.observaciones,
-    product.orden
+    product.orden,
+    product.last_synced_at || null
   ]);
 
   await connection.query(
     `INSERT INTO vale_productos
-      (vale_id, sku, producto, cantidad, presentacion, tipo_rebanado, observaciones, orden)
+      (vale_id, sap_line_num, external_line_key, sku, producto, cantidad, almacen,
+       presentacion, tipo_rebanado, observaciones, orden, last_synced_at)
      VALUES ?`,
     [values]
   );
@@ -176,16 +169,23 @@ exports.tablero = async (req, res) => {
     const filtroFecha = req.query.fecha || now.isoDate;
 
     const [rows] = await db.query(
-      `SELECT v.*, DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt, u.name AS creado_por
+      `SELECT v.*,
+              DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
+              DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
+              DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt,
+              u.name AS creado_por
        FROM vales v
        LEFT JOIN users u ON v.created_by = u.id
-       WHERE DATE(v.fecha_entrega) = ?
-          OR (DATE(v.fecha_entrega) < ? AND v.estado IN ('Pendiente', 'Rebanando', 'Listo'))
+       WHERE (? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
+                    AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega))
+          OR (COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+              AND v.estado IN ('Pendiente', 'Rebanando', 'Listo'))
        ORDER BY
-         CASE WHEN DATE(v.fecha_entrega) < ? AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
+         CASE WHEN COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+                   AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
          CASE v.prioridad WHEN 'Alta' THEN 1 WHEN 'Normal' THEN 2 WHEN 'Baja' THEN 3 ELSE 4 END,
          CASE v.estado WHEN 'Pendiente' THEN 1 WHEN 'Rebanando' THEN 2 WHEN 'Listo' THEN 3 WHEN 'Entregado' THEN 4 WHEN 'Cancelado' THEN 5 ELSE 6 END,
-         v.fecha_entrega ASC,
+         COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) ASC,
          v.cliente ASC,
          v.created_at ASC`,
       [filtroFecha, filtroFecha, filtroFecha]
@@ -193,7 +193,7 @@ exports.tablero = async (req, res) => {
 
     const rowsWithProducts = await attachProducts(rows);
     const vales = rowsWithProducts.map(v => {
-      const enriched = enrichVale(v, filtroFecha);
+      const enriched = enrichValeDelivery(v, filtroFecha);
       return {
         ...enriched,
         allowed_states: permissionService.getAllowedStateTargets(req.permissions, req.session.user.role, enriched.estado)
@@ -214,6 +214,9 @@ exports.tablero = async (req, res) => {
     });
 
     const overdueCount = vales.filter(v => v.is_overdue).length;
+    const syncStatus = ['administrador', 'cedis'].includes(req.session.user.role)
+      ? await syncService.getStatusForUi()
+      : null;
 
     res.render('vales/tablero', {
       title: 'Tablero de Vales',
@@ -221,7 +224,8 @@ exports.tablero = async (req, res) => {
       overdueCount,
       filtroFecha,
       filtroFechaDisplay: displayDateFromISO(filtroFecha),
-      horaActual: now.displayTime
+      horaActual: now.displayTime,
+      syncStatus
     });
   } catch (err) {
     console.error(err);
@@ -361,6 +365,28 @@ exports.editarVale = async (req, res) => {
       ]
     );
 
+    const [existingProductMetadata] = await connection.query(
+      `SELECT external_line_key, sap_line_num, almacen, last_synced_at
+       FROM vale_productos
+       WHERE vale_id = ? AND external_line_key IS NOT NULL`,
+      [id]
+    );
+    const metadataByKey = new Map(existingProductMetadata.map(item => [item.external_line_key, item]));
+    products.forEach(product => {
+      if (!product.external_line_key) return;
+      const metadata = metadataByKey.get(product.external_line_key);
+      if (!metadata) {
+        product.external_line_key = null;
+        product.sap_line_num = null;
+        product.almacen = null;
+        product.last_synced_at = null;
+        return;
+      }
+      product.sap_line_num = metadata.sap_line_num;
+      product.almacen = metadata.almacen;
+      product.last_synced_at = metadata.last_synced_at;
+    });
+
     await connection.query('DELETE FROM vale_productos WHERE vale_id = ?', [id]);
     await insertProducts(connection, id, products);
     await connection.query(
@@ -458,7 +484,7 @@ exports.detalle = async (req, res) => {
 
     const [withProducts] = await attachProducts(vales);
     const now = getMexicoDateParts();
-    const vale = enrichVale(withProducts, now.isoDate);
+    const vale = enrichValeDelivery(withProducts, now.isoDate);
     vale.allowed_states = permissionService.getAllowedStateTargets(
       req.permissions,
       req.session.user.role,
@@ -491,21 +517,27 @@ exports.pantallaController = async (req, res) => {
 
     const [rows] = await db.query(
       `SELECT v.id, v.folio, v.numero_pedido, v.cliente, v.prioridad, v.estado,
-              DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt
+              v.entrega_dias_texto,
+              DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
+              DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
+              DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt
        FROM vales v
-       WHERE DATE(v.fecha_entrega) = ?
-          OR (DATE(v.fecha_entrega) < ? AND v.estado IN ('Pendiente', 'Rebanando', 'Listo'))
+       WHERE (? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
+                    AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega))
+          OR (COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+              AND v.estado IN ('Pendiente', 'Rebanando', 'Listo'))
        ORDER BY
-         CASE WHEN DATE(v.fecha_entrega) < ? AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
+         CASE WHEN COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+                   AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
          CASE v.prioridad WHEN 'Alta' THEN 1 WHEN 'Normal' THEN 2 WHEN 'Baja' THEN 3 ELSE 4 END,
          CASE v.estado WHEN 'Pendiente' THEN 1 WHEN 'Rebanando' THEN 2 WHEN 'Listo' THEN 3 WHEN 'Entregado' THEN 4 WHEN 'Cancelado' THEN 5 ELSE 6 END,
-         v.fecha_entrega ASC,
+         COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) ASC,
          v.cliente ASC`,
       [filtroFecha, filtroFecha, filtroFecha]
     );
 
     const withProducts = await attachProducts(rows);
-    const vales = withProducts.map(v => enrichVale(v, filtroFecha));
+    const vales = withProducts.map(v => enrichValeDelivery(v, filtroFecha));
     const overdueCount = vales.filter(v => v.is_overdue).length;
 
     return res.render('pantalla', {
