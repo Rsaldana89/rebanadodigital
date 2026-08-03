@@ -32,6 +32,12 @@ function asArray(value) {
   return [value];
 }
 
+function getSafeReturnUrl(value, fallback = '/vales/tablero') {
+  const raw = String(value || '').trim();
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//') || /[\r\n]/.test(raw)) return fallback;
+  return raw;
+}
+
 function normalizeProducts(body) {
   const skus = asArray(body.sku);
   const names = asArray(body.producto);
@@ -285,7 +291,7 @@ exports.crearVale = async (req, res) => {
 
     await connection.commit();
     req.session.success_msg = `Vale creado correctamente con ${products.length} producto(s)`;
-    res.redirect(`/vales/tablero?fecha=${encodeURIComponent(fecha_entrega)}`);
+    res.redirect(`/vales/tablero?fecha=${encodeURIComponent(fecha_entrega)}&focus=${result.insertId}#vale-${result.insertId}`);
   } catch (err) {
     if (connection) await connection.rollback().catch(() => {});
     console.error(err);
@@ -318,7 +324,8 @@ exports.showEditarForm = async (req, res) => {
       title: `Editar ${withProducts.folio}`,
       modo: 'editar',
       vale: buildValeFormData({}, withProducts),
-      productos: withProducts.productos
+      productos: withProducts.productos,
+      return_url: getSafeReturnUrl(req.query.return_url, `/vales/${id}`)
     });
   } catch (err) {
     console.error(err);
@@ -329,6 +336,7 @@ exports.showEditarForm = async (req, res) => {
 
 exports.editarVale = async (req, res) => {
   const { id } = req.params;
+  const returnUrl = getSafeReturnUrl(req.body.return_url, `/vales/${id}`);
   let connection;
 
   try {
@@ -397,14 +405,14 @@ exports.editarVale = async (req, res) => {
 
     await connection.commit();
     req.session.success_msg = 'Vale y productos actualizados correctamente';
-    return res.redirect(`/vales/${id}`);
+    return res.redirect(returnUrl);
   } catch (err) {
     if (connection) await connection.rollback().catch(() => {});
     console.error(err);
     req.session.error_msg = err.code === 'INVALID_PRODUCT' || err.code === 'NO_PRODUCTS'
       ? err.message
       : 'Error al actualizar el vale';
-    return res.redirect(`/vales/${id}/editar`);
+    return res.redirect(`/vales/${id}/editar?return_url=${encodeURIComponent(returnUrl)}`);
   } finally {
     if (connection) connection.release();
   }
@@ -414,7 +422,7 @@ exports.editarVale = async (req, res) => {
 exports.cambiarEstado = async (req, res) => {
   const { id } = req.params;
   const { nuevo_estado, return_url } = req.body;
-  const redirectTo = return_url || req.get('Referer') || '/vales/tablero';
+  const redirectTo = getSafeReturnUrl(return_url, '/vales/tablero');
 
   try {
     const [rows] = await db.query('SELECT estado FROM vales WHERE id = ?', [id]);
@@ -467,6 +475,7 @@ exports.cambiarEstado = async (req, res) => {
 // Detalle de vale/comanda.
 exports.detalle = async (req, res) => {
   const { id } = req.params;
+  const returnUrl = getSafeReturnUrl(req.query.return_url, `/vales/tablero?focus=${id}#vale-${id}`);
 
   try {
     const [vales] = await db.query(
@@ -500,7 +509,7 @@ exports.detalle = async (req, res) => {
       [id]
     );
 
-    return res.render('vales/detalle', { title: `Vale ${vale.folio}`, vale, historial });
+    return res.render('vales/detalle', { title: `Vale ${vale.folio}`, vale, historial, return_url: returnUrl });
   } catch (err) {
     console.error(err);
     req.session.error_msg = 'Error al cargar el detalle';

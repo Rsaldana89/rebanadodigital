@@ -4,6 +4,9 @@
   const isEdit = modo === 'editar';
   const formAction = isEdit ? `/vales/${vale.id}/editar` : '/vales/crear';
   const rows = productos && productos.length ? productos : [{ sku: '', producto: '', cantidad: '', presentacion: '', tipo_rebanado: 'Estándar', observaciones: '' }];
+  const returnUrl = typeof return_url !== 'undefined' && return_url
+    ? return_url
+    : (isEdit ? `/vales/${vale.id}` : '/vales/tablero');
 %>
 
 <div class="page-header command-form-header">
@@ -15,13 +18,14 @@
     </div>
     <div class="col-lg-4">
       <div class="header-actions justify-content-lg-end">
-        <a href="<%= isEdit ? `/vales/${vale.id}` : '/vales/tablero' %>" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+        <a href="<%= returnUrl %>" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Volver</a>
       </div>
     </div>
   </div>
 </div>
 
 <form action="<%= formAction %>" method="post" id="valeCommandForm" class="command-form-shell">
+  <% if (isEdit) { %><input type="hidden" name="return_url" value="<%= returnUrl %>"><% } %>
   <section class="form-section command-order-section">
     <div class="form-section-title"><i class="bi bi-receipt-cutoff"></i>Datos del pedido</div>
     <div class="row g-3">
@@ -125,7 +129,7 @@
 
   <div class="command-form-actions">
     <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2-circle me-1"></i><%= isEdit ? 'Guardar correcciones' : 'Crear vale con productos' %></button>
-    <a href="<%= isEdit ? `/vales/${vale.id}` : '/vales/tablero' %>" class="btn btn-soft btn-lg"><i class="bi bi-x-lg me-1"></i>Cancelar</a>
+    <a href="<%= returnUrl %>" class="btn btn-soft btn-lg"><i class="bi bi-x-lg me-1"></i>Cancelar</a>
   </div>
 </form>
 

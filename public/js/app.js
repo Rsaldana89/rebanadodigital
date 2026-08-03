@@ -78,18 +78,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const opsList = document.getElementById('opsList');
   const searchInput = document.getElementById('opsSearch');
+  const searchClear = document.getElementById('opsSearchClear');
   const emptyFilter = document.getElementById('opsEmptyFilter');
   const filterButtons = document.querySelectorAll('[data-filter-status]');
   const filterLabel = document.getElementById('currentFilterLabel');
   const visibleOpsCount = document.getElementById('visibleOpsCount');
-  let currentStatus = 'Todos';
+  const boardParams = new URLSearchParams(window.location.search);
+  const validStatuses = ['Pendiente', 'Rebanando', 'Listo', 'Entregado', 'Cancelado'];
+  const requestedStatus = boardParams.get('estado');
+  let currentStatus = validStatuses.includes(requestedStatus) ? requestedStatus : 'Todos';
+
+  if (searchInput && boardParams.get('q')) {
+    searchInput.value = boardParams.get('q');
+  }
+
+  function syncSearchClear() {
+    if (!searchClear) return;
+    searchClear.classList.toggle('d-none', !(searchInput?.value || '').trim());
+  }
 
   function applyOpsFilter(statusFromButton) {
     if (!opsList) return;
     if (statusFromButton) currentStatus = statusFromButton;
 
     const query = (searchInput?.value || '').trim().toLowerCase();
-    const cards = Array.from(document.querySelectorAll('.op-vale-card'));
+    const cards = Array.from(opsList.querySelectorAll('[data-vale-id]'));
     let visible = 0;
 
     cards.forEach(card => {
@@ -98,7 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const statusOk = currentStatus === 'Todos' || status === currentStatus;
       const searchOk = !query || search.includes(query);
       const show = statusOk && searchOk;
+      card.hidden = !show;
       card.classList.toggle('d-none', !show);
+      card.setAttribute('aria-hidden', show ? 'false' : 'true');
       if (show) visible += 1;
     });
 
@@ -113,6 +128,22 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.toggle('active', selected);
       btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
     });
+
+    syncSearchClear();
+  }
+
+  function buildBoardReturnUrl(focusId) {
+    const boardUrl = new URL('/vales/tablero', window.location.origin);
+    const selectedDate = document.getElementById('fecha')?.value || boardParams.get('fecha');
+    const query = (searchInput?.value || '').trim();
+
+    if (selectedDate) boardUrl.searchParams.set('fecha', selectedDate);
+    if (currentStatus !== 'Todos') boardUrl.searchParams.set('estado', currentStatus);
+    if (query) boardUrl.searchParams.set('q', query);
+    boardUrl.searchParams.set('focus', String(focusId));
+    boardUrl.hash = `vale-${focusId}`;
+
+    return `${boardUrl.pathname}${boardUrl.search}${boardUrl.hash}`;
   }
 
   filterButtons.forEach(btn => {
@@ -123,10 +154,57 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput.addEventListener('input', () => applyOpsFilter());
   }
 
+  if (searchClear && searchInput) {
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      applyOpsFilter();
+      searchInput.focus();
+    });
+  }
+
+  document.querySelectorAll('.operator-state-form').forEach(form => {
+    form.addEventListener('submit', event => {
+      if (event.defaultPrevented) return;
+      const focusId = form.dataset.focusId || form.closest('[data-vale-id]')?.dataset.valeId;
+      const returnInput = form.querySelector('input[name="return_url"]');
+      if (focusId && returnInput) returnInput.value = buildBoardReturnUrl(focusId);
+    });
+  });
+
+  document.querySelectorAll('[data-board-return-link]').forEach(link => {
+    link.addEventListener('click', () => {
+      const focusId = link.dataset.focusId || link.closest('[data-vale-id]')?.dataset.valeId;
+      if (!focusId) return;
+      const targetUrl = new URL(link.href, window.location.origin);
+      targetUrl.searchParams.set('return_url', buildBoardReturnUrl(focusId));
+      link.href = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+    });
+  });
+
   if (opsList) {
-    const hashStatus = decodeURIComponent(window.location.hash.replace('#', ''));
-    const validStatuses = ['Pendiente', 'Rebanando', 'Listo', 'Entregado', 'Cancelado'];
-    applyOpsFilter(validStatuses.includes(hashStatus) ? hashStatus : 'Todos');
+    const hashFocus = window.location.hash.match(/^#vale-(\d+)$/)?.[1];
+    const focusId = boardParams.get('focus') || hashFocus;
+    const focusCard = focusId ? document.querySelector(`[data-vale-id="${CSS.escape(String(focusId))}"]`) : null;
+
+    applyOpsFilter(currentStatus);
+
+    if (focusCard) {
+      // Si el vale cambió de estado o dejó de coincidir con la búsqueda,
+      // se prioriza mostrarlo para no perder el contexto operativo.
+      if (focusCard.hidden || focusCard.classList.contains('d-none')) {
+        const activeQuery = (searchInput?.value || '').trim().toLowerCase();
+        const focusMatchesSearch = !activeQuery || (focusCard.dataset.search || '').includes(activeQuery);
+        currentStatus = focusCard.dataset.status || 'Todos';
+        if (!focusMatchesSearch && searchInput) searchInput.value = '';
+        applyOpsFilter(currentStatus);
+      }
+
+      window.requestAnimationFrame(() => {
+        focusCard.classList.add('is-return-focus');
+        focusCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        window.setTimeout(() => focusCard.focus({ preventScroll: true }), 420);
+      });
+    }
   }
 
   // Formulario de comanda: agrega o retira productos sin recargar la página.

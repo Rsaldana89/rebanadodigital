@@ -13,6 +13,9 @@
   const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '');
   const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
   const entregaDisplay = String(vale.entrega_dias_texto || '').trim() || fechaEntregaDisplay;
+  const returnUrl = typeof return_url !== 'undefined' && return_url
+    ? return_url
+    : `/vales/tablero?focus=${vale.id}#vale-${vale.id}`;
 %>
 
 <div class="page-header">
@@ -25,9 +28,9 @@
     <div class="col-lg-4">
       <div class="header-actions justify-content-lg-end">
         <% if (canEditVale) { %>
-          <a href="/vales/<%= vale.id %>/editar" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>Editar comanda</a>
+          <a href="/vales/<%= vale.id %>/editar?return_url=<%= encodeURIComponent(returnUrl) %>" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>Editar comanda</a>
         <% } %>
-        <a href="/vales/tablero" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Regresar</a>
+        <a href="<%= returnUrl %>" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Regresar</a>
       </div>
     </div>
   </div>
@@ -125,6 +128,7 @@
              const disabled = isCurrent || !isAllowed;
         %>
           <form action="/vales/<%= vale.id %>/estado" method="post" class="state-action-form">
+            <input type="hidden" name="return_url" value="<%= returnUrl %>">
             <input type="hidden" name="nuevo_estado" value="<%= est %>">
             <button type="submit"
                     class="btn btn-state-option btn-state-<%= estCls %> w-100 <%= isCurrent ? 'is-current' : '' %>"
@@ -143,6 +147,7 @@
 
         <% const canCancel = (vale.allowed_states || []).includes('Cancelado'); %>
         <form action="/vales/<%= vale.id %>/estado" method="post" class="state-action-form" data-confirm="¿Deseas cancelar este vale completo?">
+          <input type="hidden" name="return_url" value="<%= returnUrl %>">
           <input type="hidden" name="nuevo_estado" value="Cancelado">
           <button type="submit"
                   class="btn btn-state-cancel w-100 <%= vale.estado === 'Cancelado' ? 'is-current' : '' %>"

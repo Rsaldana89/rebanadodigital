@@ -9,22 +9,22 @@
   success_msg: compactSuccessMsg,
   error_msg: error_msg,
   compactAlerts: true,
-  bodyClass: 'tablero-dark-body tablero-operator-body'
+  bodyClass: 'tablero-dark-body tablero-operator-body tablero-simple-body'
 }) %>
 
 <%
   const estadoInfo = {
     Todos: { cls: 'all', icon: 'bi-grid-1x2' },
-    Pendiente: { cls: 'pending', icon: 'bi-hourglass-split', accion: 'Iniciar rebanado', accionCorta: 'Iniciar', siguiente: 'Rebanando', btnIcon: 'bi-play-circle' },
-    Rebanando: { cls: 'working', icon: 'bi-gear-wide-connected', accion: 'Marcar listo', accionCorta: 'Marcar listo', siguiente: 'Listo', btnIcon: 'bi-check2-circle' },
-    Listo: { cls: 'ready', icon: 'bi-check2-circle', accion: 'Entregar', accionCorta: 'Entregar', siguiente: 'Entregado', btnIcon: 'bi-truck' },
+    Pendiente: { cls: 'pending', icon: 'bi-hourglass-split', accion: 'Iniciar rebanado', siguiente: 'Rebanando', btnIcon: 'bi-play-circle-fill' },
+    Rebanando: { cls: 'working', icon: 'bi-gear-wide-connected', accion: 'Marcar como listo', siguiente: 'Listo', btnIcon: 'bi-check2-circle' },
+    Listo: { cls: 'ready', icon: 'bi-check2-circle', accion: 'Entregar vale', siguiente: 'Entregado', btnIcon: 'bi-truck' },
     Entregado: { cls: 'delivered', icon: 'bi-truck' },
     Cancelado: { cls: 'cancelled', icon: 'bi-x-circle' }
   };
   const prioridadInfo = {
     Alta: { cls: 'high', icon: 'bi-exclamation-circle-fill' },
-    Normal: { cls: 'normal', icon: 'bi-flag' },
-    Baja: { cls: 'low', icon: 'bi-arrow-down-circle' }
+    Normal: { cls: 'normal', icon: 'bi-flag-fill' },
+    Baja: { cls: 'low', icon: 'bi-arrow-down-circle-fill' }
   };
   const estadosOrden = ['Pendiente','Rebanando','Listo','Entregado','Cancelado'];
   const allVales = estadosOrden.flatMap(est => (estados[est] || []));
@@ -34,16 +34,16 @@
 
 <section class="operator-commandbar" aria-labelledby="operatorBoardTitle">
   <div class="operator-command-main">
-    <div class="operator-kicker">Comandas de rebanado</div>
+    <div class="operator-kicker">Centro operativo de rebanado</div>
     <div class="operator-title-line">
-      <h1 id="operatorBoardTitle">Vales por pedido</h1>
+      <h1 id="operatorBoardTitle">Gestión de vales</h1>
       <span class="operator-total"><strong><%= activos %></strong> activos</span>
       <% if (overdueCount > 0) { %>
         <span class="operator-overdue"><i class="bi bi-exclamation-triangle-fill"></i><strong><%= overdueCount %></strong> atrasado<%= overdueCount === 1 ? '' : 's' %></span>
       <% } %>
     </div>
     <div class="operator-date-line">
-      <i class="bi bi-calendar3"></i><span><%= filtroFechaDisplay %></span>
+      <i class="bi bi-calendar3"></i><span>Entrega visible: <strong><%= filtroFechaDisplay %></strong></span>
       <span class="operator-date-separator">·</span>
       <i class="bi bi-clock"></i><span><%= horaActual %></span>
     </div>
@@ -60,7 +60,6 @@
     </a>
   </div>
 </section>
-
 
 <% if (syncStatus) {
   const syncHealthy = syncStatus.ok && !syncStatus.stale;
@@ -89,7 +88,8 @@
 
     <div class="ops-search operator-search">
       <i class="bi bi-search"></i>
-      <input type="search" id="opsSearch" placeholder="Buscar folio, pedido, cliente, producto o SKU" aria-label="Buscar vales">
+      <input type="search" id="opsSearch" placeholder="Buscar vale, pedido, cliente, artículo o SKU" aria-label="Buscar vales">
+      <button type="button" id="opsSearchClear" class="operator-search-clear d-none" title="Limpiar búsqueda" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg"></i></button>
     </div>
   </div>
 
@@ -99,14 +99,14 @@
     </button>
     <% estadosOrden.forEach(function(est){ const info = estadoInfo[est]; %>
       <button id="<%= est %>" class="operator-filter-pill is-<%= info.cls %>" type="button" data-filter-status="<%= est %>" aria-pressed="false">
-        <span><%= est %></span><strong><%= estados[est].length %></strong>
+        <i class="bi <%= info.icon %>"></i><span><%= est %></span><strong><%= estados[est].length %></strong>
       </button>
     <% }) %>
     <span class="operator-visible-count"><strong id="visibleOpsCount"><%= allVales.length %></strong> visibles · <span id="currentFilterLabel">Todos</span></span>
   </div>
 </section>
 
-<section class="ops-list" id="opsList">
+<section class="ops-list simple-vale-grid" id="opsList" aria-live="polite">
   <% if (!allVales.length) { %>
     <div class="empty-state empty-state-card">
       <i class="bi bi-inbox"></i>
@@ -118,95 +118,159 @@
     const e = estadoInfo[vale.estado] || estadoInfo.Pendiente;
     const p = prioridadInfo[vale.prioridad] || prioridadInfo.Normal;
     const entregaDisplay = vale.entrega_display || '';
-    const atrasoTexto = vale.days_late === 1 ? '1 día' : `${vale.days_late} días`;
+    const atrasoTexto = vale.days_late === 1 ? '1 día tarde' : `${vale.days_late} días tarde`;
     const searchText = `${vale.folio} ${vale.numero_pedido || ''} ${vale.cliente} ${vale.productos_busqueda || ''} ${vale.prioridad} ${vale.estado} ${entregaDisplay} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
     const allowedStates = vale.allowed_states || [];
     const canAdvance = e.siguiente ? allowedStates.includes(e.siguiente) : false;
     const canCancel = !['Entregado','Cancelado'].includes(vale.estado) && allowedStates.includes('Cancelado');
     const showMoreMenu = canCancel || canEditVale;
+    const cardReturnUrl = `${returnUrl}&focus=${vale.id}#vale-${vale.id}`;
   %>
-    <article class="op-vale-card op-vale-<%= e.cls %> <%= vale.is_overdue ? 'op-vale-overdue' : '' %> op-vale-operator command-ticket" data-status="<%= vale.estado %>" data-search="<%= searchText %>">
-      <div class="operator-card-head">
-        <div class="operator-card-title">
-          <span class="op-folio"><%= vale.folio %></span>
-          <% if (vale.numero_pedido) { %><span class="command-order-number">Pedido <%= vale.numero_pedido %></span><% } %>
-          <span class="status-chip status-<%= e.cls %>"><i class="bi <%= e.icon %>"></i><%= vale.estado %></span>
-        </div>
-        <div class="operator-card-flags">
-          <span class="operator-priority priority-<%= p.cls %>" title="Prioridad <%= vale.prioridad %>"><i class="bi <%= p.icon %>"></i><%= vale.prioridad %></span>
-          <% if (vale.is_overdue) { %>
-            <span class="operator-late"><i class="bi bi-exclamation-triangle-fill"></i><%= atrasoTexto %> tarde</span>
-          <% } %>
-        </div>
-      </div>
+    <article
+      id="vale-<%= vale.id %>"
+      class="simple-vale-card op-vale-<%= e.cls %> <%= vale.is_overdue ? 'op-vale-overdue' : '' %>"
+      data-vale-id="<%= vale.id %>"
+      data-status="<%= vale.estado %>"
+      data-search="<%= searchText %>"
+      tabindex="-1">
 
-      <div class="operator-card-content">
-        <div class="operator-client command-client"><i class="bi bi-person-workspace"></i><strong><%= vale.cliente %></strong></div>
+      <header class="simple-vale-header">
+        <div class="simple-vale-identity">
+          <span class="simple-overline">Número de vale</span>
+          <strong class="simple-vale-folio"><%= vale.folio %></strong>
+          <div class="simple-order-line">
+            <span>Pedido / orden:</span>
+            <strong><%= vale.numero_pedido || 'Sin referencia' %></strong>
+          </div>
+        </div>
 
-        <div class="command-product-list" aria-label="Productos de la comanda">
-          <% (vale.productos || []).forEach(function(item, productIndex){ %>
-            <div class="command-product-line">
-              <span class="command-product-qty"><strong><%= item.cantidad %></strong> <%= item.presentacion %></span>
-              <span class="command-product-name"><%= item.producto %></span>
-              <span class="command-product-cut"><%= item.tipo_rebanado %></span>
-              <span class="command-product-sku"><%= item.sku %></span>
-              <% if (item.observaciones) { %><span class="command-product-note" title="<%= item.observaciones %>"><i class="bi bi-chat-left-text"></i><%= item.observaciones %></span><% } %>
+        <div class="simple-status-area">
+          <span class="simple-status-badge"><i class="bi <%= e.icon %>"></i><%= vale.estado %></span>
+          <div class="simple-secondary-badges">
+            <span class="operator-priority priority-<%= p.cls %>"><i class="bi <%= p.icon %>"></i><%= vale.prioridad %></span>
+            <% if (vale.is_overdue) { %>
+              <span class="operator-late"><i class="bi bi-exclamation-triangle-fill"></i><%= atrasoTexto %></span>
+            <% } %>
+          </div>
+        </div>
+      </header>
+
+      <section class="simple-client-block">
+        <div class="simple-client-main">
+          <span class="simple-overline">Cliente / sucursal</span>
+          <strong class="simple-client-name"><%= vale.cliente %></strong>
+        </div>
+        <div class="simple-client-side">
+          <span class="simple-client-chip">
+            <i class="bi bi-calendar2-check"></i>
+            <span>
+              <small>Entrega</small>
+              <strong><%= entregaDisplay %></strong>
+            </span>
+          </span>
+          <span class="simple-client-chip">
+            <i class="bi <%= vale.external_key ? 'bi-cloud-arrow-down-fill' : 'bi-pencil-square' %>"></i>
+            <span>
+              <small>Origen</small>
+              <strong><%= vale.external_key ? 'CORONELBOT / Siclik' : (vale.origen || 'Manual') %></strong>
+            </span>
+          </span>
+        </div>
+      </section>
+
+      <section class="simple-products-section" aria-label="Artículos del vale">
+        <div class="simple-products-title">
+          <span><i class="bi bi-list-check"></i>Artículos a rebanar</span>
+          <strong><%= vale.total_productos || 0 %></strong>
+        </div>
+
+        <div class="simple-product-list">
+          <% (vale.productos || []).forEach(function(item, productIndex){
+               const presentacionTexto = String(item.presentacion || '').trim();
+               const corteTexto = String(item.tipo_rebanado || '').trim();
+               const mostrarPresentacion = presentacionTexto && presentacionTexto.toLocaleLowerCase('es-MX') !== corteTexto.toLocaleLowerCase('es-MX');
+          %>
+            <div class="simple-product-row">
+              <div class="simple-product-left">
+                <div class="simple-product-number"><%= productIndex + 1 %></div>
+                <div class="simple-product-quantity">
+                  <strong><%= item.cantidad %></strong>
+                  <% if (mostrarPresentacion) { %>
+                    <span><%= presentacionTexto %></span>
+                  <% } %>
+                </div>
+              </div>
+              <div class="simple-product-description">
+                <strong><%= item.producto %></strong>
+                <span>SKU <%= item.sku %></span>
+                <% if (item.observaciones) { %>
+                  <small><i class="bi bi-chat-left-text"></i><%= item.observaciones %></small>
+                <% } %>
+              </div>
+              <% if (corteTexto) { %>
+                <div class="simple-product-cut"><%= corteTexto %></div>
+              <% } else { %>
+                <div class="simple-product-cut is-empty">Sin corte indicado</div>
+              <% } %>
             </div>
           <% }) %>
           <% if (!(vale.productos || []).length) { %>
-            <div class="command-product-line command-product-missing"><i class="bi bi-exclamation-triangle"></i>Sin productos registrados</div>
+            <div class="simple-product-empty"><i class="bi bi-exclamation-triangle"></i>Sin productos registrados</div>
           <% } %>
         </div>
+      </section>
 
-        <div class="operator-facts command-facts" aria-label="Datos del vale">
-          <span><strong><%= vale.total_productos || 0 %></strong> producto<%= vale.total_productos === 1 ? '' : 's' %></span>
-          <span class="command-delivery-range"><i class="bi bi-calendar-range"></i>Entrega <strong><%= entregaDisplay %></strong><% if (vale.entrega_es_rango) { %><em>rango Siclik</em><% } %></span>
+      <% if (vale.entrega_es_rango) { %>
+        <div class="simple-range-note"><i class="bi bi-info-circle"></i>Entrega con rango indicado por Siclik.</div>
+      <% } %>
+
+      <% if (vale.observaciones) { %>
+        <div class="simple-vale-note"><i class="bi bi-chat-left-text-fill"></i><span><%= vale.observaciones %></span></div>
+      <% } %>
+
+      <footer class="simple-vale-actions">
+        <div class="simple-main-actions">
+          <% if (e.siguiente && canAdvance) { %>
+            <form method="post" action="/vales/<%= vale.id %>/estado" class="operator-primary-form operator-state-form" data-focus-id="<%= vale.id %>">
+              <input type="hidden" name="return_url" value="<%= cardReturnUrl %>">
+              <input type="hidden" name="nuevo_estado" value="<%= e.siguiente %>">
+              <button type="submit" class="simple-primary-action state-<%= e.cls %>">
+                <i class="bi <%= e.btnIcon %>"></i><span><%= e.accion %></span>
+              </button>
+            </form>
+          <% } else if (vale.estado === 'Listo') { %>
+            <div class="simple-state-message is-ready"><i class="bi bi-check2-circle"></i><span>Listo para entregar</span></div>
+          <% } else if (e.siguiente) { %>
+            <div class="simple-state-message"><i class="bi bi-lock-fill"></i><span>Acción restringida</span></div>
+          <% } else { %>
+            <div class="simple-state-message"><i class="bi <%= e.icon %>"></i><span><%= vale.estado %></span></div>
+          <% } %>
+
+          <a href="/vales/<%= vale.id %>?return_url=<%= encodeURIComponent(cardReturnUrl) %>" class="simple-detail-action" data-board-return-link data-focus-id="<%= vale.id %>">
+            <i class="bi bi-eye-fill"></i><span>Ver detalle</span>
+          </a>
         </div>
 
-        <% if (vale.observaciones) { %>
-          <div class="operator-note" title="<%= vale.observaciones %>"><i class="bi bi-chat-left-text"></i><span><%= vale.observaciones %></span></div>
-        <% } %>
-      </div>
-
-      <div class="operator-card-actions">
-        <% if (e.siguiente && canAdvance) { %>
-          <form method="post" action="/vales/<%= vale.id %>/estado" class="operator-primary-form">
-            <input type="hidden" name="return_url" value="<%= returnUrl %>">
-            <input type="hidden" name="nuevo_estado" value="<%= e.siguiente %>">
-            <button type="submit" class="operator-primary-action state-<%= e.cls %>">
-              <i class="bi <%= e.btnIcon %>"></i><span><%= e.accionCorta || e.accion %></span>
-            </button>
-          </form>
-        <% } else if (vale.estado === 'Listo') { %>
-          <div class="operator-ready-state"><i class="bi bi-check2-circle"></i><span>Listo para entrega</span></div>
-        <% } else if (e.siguiente) { %>
-          <div class="operator-locked-state" title="No tienes permiso para esta acción"><i class="bi bi-lock-fill"></i><span>Acción restringida</span></div>
-        <% } else { %>
-          <div class="operator-finished-state"><i class="bi <%= e.icon %>"></i><span><%= vale.estado %></span></div>
-        <% } %>
-
-        <a href="/vales/<%= vale.id %>" class="operator-detail-action" title="Ver comanda completa" aria-label="Ver detalle del vale <%= vale.folio %>">
-          <i class="bi bi-eye"></i><span>Detalle</span>
-        </a>
-
         <% if (showMoreMenu) { %>
-          <details class="operator-more-menu">
+          <details class="operator-more-menu simple-more-menu">
             <summary title="Más acciones" aria-label="Más acciones"><i class="bi bi-three-dots-vertical"></i></summary>
             <div class="operator-more-panel command-more-panel">
               <% if (canEditVale) { %>
-                <a href="/vales/<%= vale.id %>/editar"><i class="bi bi-pencil-square"></i>Editar comanda</a>
+                <a href="/vales/<%= vale.id %>/editar?return_url=<%= encodeURIComponent(cardReturnUrl) %>" data-board-return-link data-focus-id="<%= vale.id %>"><i class="bi bi-pencil-square"></i>Editar comanda</a>
               <% } %>
               <% if (canCancel) { %>
-                <form method="post" action="/vales/<%= vale.id %>/estado" data-confirm="¿Cancelar este vale completo?">
-                  <input type="hidden" name="return_url" value="<%= returnUrl %>">
+                <form method="post" action="/vales/<%= vale.id %>/estado" class="operator-state-form" data-focus-id="<%= vale.id %>" data-confirm="¿Cancelar este vale completo?">
+                  <input type="hidden" name="return_url" value="<%= cardReturnUrl %>">
                   <input type="hidden" name="nuevo_estado" value="Cancelado">
                   <button type="submit"><i class="bi bi-x-circle"></i>Cancelar vale</button>
                 </form>
               <% } %>
             </div>
           </details>
+        <% } else { %>
+          <span class="simple-more-placeholder" aria-hidden="true"></span>
         <% } %>
-      </div>
+      </footer>
     </article>
   <% }) %>
 
