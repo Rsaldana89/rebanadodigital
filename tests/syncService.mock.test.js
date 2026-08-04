@@ -61,8 +61,8 @@ async function testCreate() {
     query: async (sql, params) => {
       connectionQueries.push({ sql, params });
       if (sql.includes('FROM vales WHERE external_key')) return [[]];
-      if (sql.includes('FROM vales WHERE folio')) return [[]];
       if (sql.includes('INSERT INTO vales')) return [{ insertId: 123 }];
+      if (sql.startsWith('UPDATE vales SET folio')) return [{ affectedRows: 1 }];
       if (sql.includes('FROM vale_productos WHERE external_line_key')) return [[]];
       if (sql.includes('INSERT INTO vale_productos')) return [{ insertId: 456 }];
       throw new Error(`Consulta de conexión no simulada: ${sql}`);
@@ -88,6 +88,9 @@ async function testCreate() {
 
   const insertVale = connectionQueries.find(item => item.sql.includes('INSERT INTO vales'));
   assert.strictEqual(insertVale.params.length, 20, 'El INSERT de vales debe recibir 20 parámetros.');
+  const folioUpdate = connectionQueries.find(item => item.sql.startsWith('UPDATE vales SET folio'));
+  assert.match(folioUpdate.params[0], /^VS-\d{4}-0123$/);
+  assert.strictEqual(folioUpdate.params[1], 123);
   const finish = poolQueries.find(item => item.sql.includes('UPDATE rebanado_sync_runs'));
   assert.strictEqual(finish.params.length, 10, 'El cierre de sync debe recibir 10 parámetros.');
   const details = JSON.parse(finish.params[8]);

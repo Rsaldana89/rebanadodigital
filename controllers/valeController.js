@@ -2,6 +2,7 @@ const db = require('../config/db');
 const permissionService = require('../services/permissionService');
 const syncService = require('../services/rebanadoSyncService');
 const { displayDateFromISO, enrichValeDelivery } = require('../services/valeDeliveryService');
+const { buildTemporaryFolio, assignFinalFolio } = require('../services/valeFolioService');
 
 const VALID_STATES = ['Pendiente', 'Rebanando', 'Listo', 'Entregado', 'Cancelado'];
 
@@ -32,6 +33,18 @@ function asArray(value) {
   return [value];
 }
 
+// Express con urlencoded({ extended: false }) conserva literalmente los
+// corchetes de campos HTML como name="sku[]". Aceptamos ambos formatos para
+// que la captura funcione con uno o varios productos y también con formularios
+// que pudieran seguir abiertos durante una actualización del sistema.
+function getFormArray(body, fieldName) {
+  const plainValue = body?.[fieldName];
+  const bracketValue = body?.[`${fieldName}[]`];
+
+  if (plainValue !== undefined) return asArray(plainValue);
+  return asArray(bracketValue);
+}
+
 function getSafeReturnUrl(value, fallback = '/vales/tablero') {
   const raw = String(value || '').trim();
   if (!raw || !raw.startsWith('/') || raw.startsWith('//') || /[\r\n]/.test(raw)) return fallback;
@@ -39,15 +52,15 @@ function getSafeReturnUrl(value, fallback = '/vales/tablero') {
 }
 
 function normalizeProducts(body) {
-  const skus = asArray(body.sku);
-  const names = asArray(body.producto);
-  const quantities = asArray(body.cantidad);
-  const presentations = asArray(body.presentacion);
-  const cuts = asArray(body.tipo_rebanado);
-  const notes = asArray(body.producto_observaciones);
-  const externalLineKeys = asArray(body.external_line_key);
-  const sapLineNums = asArray(body.sap_line_num);
-  const warehouses = asArray(body.almacen);
+  const skus = getFormArray(body, 'sku');
+  const names = getFormArray(body, 'producto');
+  const quantities = getFormArray(body, 'cantidad');
+  const presentations = getFormArray(body, 'presentacion');
+  const cuts = getFormArray(body, 'tipo_rebanado');
+  const notes = getFormArray(body, 'producto_observaciones');
+  const externalLineKeys = getFormArray(body, 'external_line_key');
+  const sapLineNums = getFormArray(body, 'sap_line_num');
+  const warehouses = getFormArray(body, 'almacen');
   const rowCount = Math.max(skus.length, names.length, quantities.length, presentations.length, cuts.length, notes.length, externalLineKeys.length, sapLineNums.length, warehouses.length);
 
   const products = [];
@@ -261,7 +274,8 @@ exports.crearVale = async (req, res) => {
       throw new Error('Cliente y fecha de entrega son obligatorios.');
     }
 
-    const folio = `V-${Date.now()}`;
+    const valeOrigin = origen || 'Manual';
+    const temporaryFolio = buildTemporaryFolio(valeOrigin);
     connection = await db.getConnection();
     await connection.beginTransaction();
 
@@ -270,8 +284,8 @@ exports.crearVale = async (req, res) => {
         (folio, origen, numero_pedido, cliente, fecha_entrega, prioridad, observaciones, estado, created_by, updated_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente', ?, ?)`,
       [
-        folio,
-        origen || 'Manual',
+        temporaryFolio,
+        valeOrigin,
         String(numero_pedido || '').trim() || null,
         String(cliente).trim(),
         fecha_entrega,
@@ -282,15 +296,16 @@ exports.crearVale = async (req, res) => {
       ]
     );
 
+    const folio = await assignFinalFolio(connection, result.insertId, valeOrigin);
     await insertProducts(connection, result.insertId, products);
     await connection.query(
       `INSERT INTO vale_history (vale_id, user_id, action, estado_anterior, estado_nuevo, descripcion)
        VALUES (?, ?, 'crear_vale', NULL, 'Pendiente', ?)`,
-      [result.insertId, req.session.user.id, `Vale creado con ${products.length} producto(s).`]
+      [result.insertId, req.session.user.id, `Vale ${folio} creado con ${products.length} producto(s).`]
     );
 
     await connection.commit();
-    req.session.success_msg = `Vale creado correctamente con ${products.length} producto(s)`;
+    req.session.success_msg = `Vale ${folio} creado correctamente con ${products.length} producto(s)`;
     res.redirect(`/vales/tablero?fecha=${encodeURIComponent(fecha_entrega)}&focus=${result.insertId}#vale-${result.insertId}`);
   } catch (err) {
     if (connection) await connection.rollback().catch(() => {});
@@ -563,3 +578,6 @@ exports.pantallaController = async (req, res) => {
     return res.status(500).send('Error al cargar la pantalla informativa');
   }
 };
+
+// Superficie interna para pruebas de regresión; no se publica como ruta HTTP.
+exports._test = { normalizeProducts, getFormArray };

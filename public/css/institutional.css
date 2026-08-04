@@ -307,6 +307,9 @@ textarea:focus,
 .ops-search input:focus {
   background: #fff !important;
   border-color: #b66a73 !important;
+  color: var(--chc-charcoal) !important;
+  caret-color: var(--chc-wine);
+  -webkit-text-fill-color: var(--chc-charcoal);
   box-shadow: 0 0 0 0.24rem rgba(122, 31, 43, 0.12) !important;
 }
 

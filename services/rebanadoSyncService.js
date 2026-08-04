@@ -2,6 +2,7 @@ const db = require('../config/db');
 const { lineaAplicaARebanado } = require('./rebanadoRules');
 const { parseEntregaDias } = require('./deliveryDateService');
 const settingsService = require('./settingsService');
+const { buildTemporaryFolio, assignFinalFolio } = require('./valeFolioService');
 
 const LOCKED_STATES = ['Rebanando', 'Listo', 'Entregado', 'Cancelado'];
 
@@ -66,13 +67,6 @@ function normalizeProduct(line, docEntry) {
     tipoRebanado,
     observaciones: nullableText(line?.observaciones)
   };
-}
-
-async function createFolio(connection, docEntry) {
-  const base = `SAP-${docEntry}`.slice(0, 50);
-  const [rows] = await connection.query('SELECT id FROM vales WHERE folio = ? LIMIT 1', [base]);
-  if (!rows.length) return base;
-  return `SAP-${docEntry}-${Date.now().toString().slice(-8)}`.slice(0, 50);
 }
 
 async function insertProduct(connection, valeId, product, order) {
@@ -211,7 +205,7 @@ async function processOrder(order) {
     let action;
 
     if (!existingRows.length) {
-      const folio = await createFolio(connection, normalized.docEntry);
+      const temporaryFolio = buildTemporaryFolio('Siclik');
       const [result] = await connection.query(
         `INSERT INTO vales
           (folio, origen, numero_pedido, cliente, fecha_entrega, prioridad, observaciones, estado,
@@ -222,7 +216,7 @@ async function processOrder(order) {
          VALUES (?, 'Siclik', ?, ?, ?, 'Normal', ?, 'Pendiente',
                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)`,
         [
-          folio,
+          temporaryFolio,
           normalized.docNum ? String(normalized.docNum) : null,
           normalized.cliente,
           normalized.entrega.fechaInicio,
@@ -245,6 +239,7 @@ async function processOrder(order) {
         ]
       );
       valeId = result.insertId;
+      await assignFinalFolio(connection, valeId, 'Siclik');
       action = 'created';
     } else {
       valeId = existingRows[0].id;
