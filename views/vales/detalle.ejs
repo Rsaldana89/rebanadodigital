@@ -58,6 +58,10 @@
         <div class="detail-item"><div class="detail-label">Número de pedido</div><div class="detail-value"><%= vale.numero_pedido || 'Sin referencia' %></div></div>
         <div class="detail-item"><div class="detail-label">Origen</div><div class="detail-value"><%= vale.origen %></div></div>
         <div class="detail-item"><div class="detail-label">Cliente</div><div class="detail-value"><%= vale.cliente %></div></div>
+        <div class="detail-item detail-delivery-place" style="grid-column: 1 / -1;">
+          <div class="detail-label">Lugar de entrega</div>
+          <div class="detail-value"><i class="bi bi-geo-alt-fill me-1"></i><%= vale.lugar_entrega || 'Por confirmar' %></div>
+        </div>
         <% if (vale.cliente_codigo) { %><div class="detail-item"><div class="detail-label">Código de cliente</div><div class="detail-value"><%= vale.cliente_codigo %></div></div><% } %>
         <div class="detail-item"><div class="detail-label"><%= vale.external_key ? 'Entrega indicada por Siclik' : 'Fecha de entrega' %></div><div class="detail-value"><%= entregaDisplay %></div></div>
         <% if (vale.external_key && vale.entrega_fecha_inicio_fmt && vale.entrega_fecha_fin_fmt) { %><div class="detail-item"><div class="detail-label">Rango interpretado</div><div class="detail-value"><%= vale.entrega_fecha_inicio_fmt.split('-').reverse().join('/') %><%= vale.entrega_fecha_fin_fmt !== vale.entrega_fecha_inicio_fmt ? ' al ' + vale.entrega_fecha_fin_fmt.split('-').reverse().join('/') : '' %></div></div><% } %>

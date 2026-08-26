@@ -56,6 +56,8 @@ La integración reutiliza `sku`, `producto`, `cantidad`, `presentacion`, `tipo_r
 - `sap_docnum`
 - `external_key`
 - `cliente_codigo`
+- `lugar_entrega`
+- `codigo_lugar_entrega`
 - `fecha_pedido`
 - `entrega_dias_texto`
 - `entrega_fecha_inicio`
@@ -192,6 +194,8 @@ Todos los endpoints de integración requieren Bearer token.
       "docDate": "2026-07-24",
       "comments": "",
       "entrega": {
+        "lugar": "Alfonso Obregon 2 Guanatos GDL, 44332, JAL MX",
+        "codigoLugar": "03B2D87A-F9C0-4DC6-ABB9-C50CF33F7D42",
         "diasTexto": "28/07/2026 - 07/08/2026",
         "horario": "8:00 - 12:00",
         "nombre": "José Rivera",

@@ -12,6 +12,12 @@ function nullableText(value, maxLength = null) {
   return maxLength ? text.slice(0, maxLength) : text;
 }
 
+function nullableDisplayText(value, maxLength = null) {
+  const text = String(value ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return null;
+  return maxLength ? text.slice(0, maxLength) : text;
+}
+
 function integerOrNull(value) {
   if (value === '' || value === null || value === undefined) return null;
   const parsed = Number(value);
@@ -166,6 +172,8 @@ function validateAndNormalizeOrder(order) {
     entregaEpp: nullableText(order?.entrega?.epp, 255),
     comentarioEntrega: nullableText(order?.entrega?.comentario),
     numeroTraslado: nullableText(order?.entrega?.numeroTraslado, 100),
+    lugarEntrega: nullableDisplayText(order?.entrega?.lugar, 255),
+    codigoLugarEntrega: nullableText(order?.entrega?.codigoLugar, 100),
     siclikUsuarioNombre: nullableText(order?.siclik?.usuarioNombre, 150),
     siclikUsuarioCorreo: nullableText(order?.siclik?.usuarioCorreo, 190),
     products,
@@ -189,7 +197,22 @@ async function processOrder(order) {
     );
 
     if (existingRows.length && LOCKED_STATES.includes(existingRows[0].estado)) {
-      await connection.query('UPDATE vales SET last_synced_at = NOW() WHERE id = ?', [existingRows[0].id]);
+      const lugarEntrega = nullableDisplayText(order?.entrega?.lugar, 255);
+      const codigoLugarEntrega = nullableText(order?.entrega?.codigoLugar, 100);
+      await connection.query(
+        `UPDATE vales
+         SET lugar_entrega = CASE
+               WHEN (lugar_entrega IS NULL OR TRIM(lugar_entrega) = '') AND ? IS NOT NULL THEN ?
+               ELSE lugar_entrega
+             END,
+             codigo_lugar_entrega = CASE
+               WHEN (codigo_lugar_entrega IS NULL OR TRIM(codigo_lugar_entrega) = '') AND ? IS NOT NULL THEN ?
+               ELSE codigo_lugar_entrega
+             END,
+             last_synced_at = NOW()
+         WHERE id = ?`,
+        [lugarEntrega, lugarEntrega, codigoLugarEntrega, codigoLugarEntrega, existingRows[0].id]
+      );
       await connection.commit();
       return {
         action: 'skipped',
@@ -209,12 +232,12 @@ async function processOrder(order) {
       const [result] = await connection.query(
         `INSERT INTO vales
           (folio, origen, numero_pedido, cliente, fecha_entrega, prioridad, observaciones, estado,
-           sap_docentry, sap_docnum, external_key, cliente_codigo, fecha_pedido,
+           sap_docentry, sap_docnum, external_key, cliente_codigo, lugar_entrega, codigo_lugar_entrega, fecha_pedido,
            entrega_dias_texto, entrega_fecha_inicio, entrega_fecha_fin, entrega_horario,
            entrega_nombre, entrega_epp, comentario_entrega, numero_traslado,
            siclik_usuario_nombre, siclik_usuario_correo, last_synced_at, created_by, updated_by)
          VALUES (?, 'Siclik', ?, ?, ?, 'Normal', ?, 'Pendiente',
-                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)`,
+                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, NULL)`,
         [
           temporaryFolio,
           normalized.docNum ? String(normalized.docNum) : null,
@@ -225,6 +248,8 @@ async function processOrder(order) {
           normalized.docNum,
           normalized.externalKey,
           normalized.cardCode,
+          normalized.lugarEntrega,
+          normalized.codigoLugarEntrega,
           normalized.docDate,
           normalized.entrega.texto,
           normalized.entrega.fechaInicio,
@@ -250,7 +275,10 @@ async function processOrder(order) {
              sap_docentry = ?, sap_docnum = ?, cliente_codigo = ?, fecha_pedido = ?,
              entrega_dias_texto = ?, entrega_fecha_inicio = ?, entrega_fecha_fin = ?,
              entrega_horario = ?, entrega_nombre = ?, entrega_epp = ?, comentario_entrega = ?,
-             numero_traslado = ?, siclik_usuario_nombre = ?, siclik_usuario_correo = ?,
+             numero_traslado = ?,
+             lugar_entrega = COALESCE(?, lugar_entrega),
+             codigo_lugar_entrega = COALESCE(?, codigo_lugar_entrega),
+             siclik_usuario_nombre = ?, siclik_usuario_correo = ?,
              last_synced_at = NOW()
          WHERE id = ?`,
         [
@@ -269,6 +297,8 @@ async function processOrder(order) {
           normalized.entregaEpp,
           normalized.comentarioEntrega,
           normalized.numeroTraslado,
+          normalized.lugarEntrega,
+          normalized.codigoLugarEntrega,
           normalized.siclikUsuarioNombre,
           normalized.siclikUsuarioCorreo,
           valeId

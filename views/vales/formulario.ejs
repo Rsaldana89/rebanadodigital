@@ -45,6 +45,14 @@
         <label class="form-label">Cliente / Ruta</label>
         <input type="text" name="cliente" value="<%= vale.cliente || '' %>" class="form-control" placeholder="Nombre del cliente o ruta" required>
       </div>
+      <div class="col-12">
+        <label class="form-label">Lugar de entrega <span class="text-muted fw-normal">(opcional)</span></label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+          <input type="text" name="lugar_entrega" maxlength="255" value="<%= vale.lugar_entrega || '' %>" class="form-control" placeholder="Dirección o destino seleccionado para entregar el pedido">
+        </div>
+        <div class="form-text">Los vales sincronizados lo reciben del destino seleccionado en SAP/Siclik. Si falta, el vale mostrará “Por confirmar”.</div>
+      </div>
       <div class="col-md-4">
         <label class="form-label">Fecha de entrega</label>
         <input type="date" name="fecha_entrega" value="<%= vale.fecha_entrega || '' %>" class="form-control" data-default-today required>

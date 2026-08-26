@@ -1,4 +1,15 @@
 const assert = require('assert');
+const path = require('path');
+
+// La prueba sólo usa las funciones puras del controlador; evita abrir MySQL.
+const dbPath = path.resolve(__dirname, '../config/db.js');
+require.cache[dbPath] = {
+  id: dbPath,
+  filename: dbPath,
+  loaded: true,
+  exports: {}
+};
+
 const valeController = require('../controllers/valeController');
 
 const { normalizeProducts } = valeController._test;

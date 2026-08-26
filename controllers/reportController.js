@@ -78,6 +78,7 @@ exports.listar = async (req, res) => {
             folio: vale.folio,
             numero_pedido: vale.numero_pedido || '',
             cliente: vale.cliente,
+            lugar_entrega: vale.lugar_entrega || '',
             sku: '',
             producto: '',
             cantidad: '',
@@ -97,6 +98,7 @@ exports.listar = async (req, res) => {
             folio: vale.folio,
             numero_pedido: vale.numero_pedido || '',
             cliente: vale.cliente,
+            lugar_entrega: vale.lugar_entrega || '',
             sku: product.sku,
             producto: product.producto,
             cantidad: product.cantidad,
@@ -112,7 +114,7 @@ exports.listar = async (req, res) => {
       });
 
       const fields = [
-        'folio', 'numero_pedido', 'cliente', 'sku', 'producto', 'cantidad', 'presentacion',
+        'folio', 'numero_pedido', 'cliente', 'lugar_entrega', 'sku', 'producto', 'cantidad', 'presentacion',
         'tipo_rebanado', 'indicaciones_producto', 'prioridad', 'estado', 'fecha_entrega',
         'observaciones_generales'
       ];

@@ -51,6 +51,12 @@ function getSafeReturnUrl(value, fallback = '/vales/tablero') {
   return raw;
 }
 
+function normalizeOptionalText(value, maxLength = null) {
+  const text = String(value ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return null;
+  return maxLength ? text.slice(0, maxLength) : text;
+}
+
 function normalizeProducts(body) {
   const skus = getFormArray(body, 'sku');
   const names = getFormArray(body, 'producto');
@@ -173,6 +179,7 @@ function buildValeFormData(body = {}, fallback = {}) {
     origen: body.origen || fallback.origen || 'Manual',
     numero_pedido: body.numero_pedido !== undefined ? body.numero_pedido : (fallback.numero_pedido || ''),
     cliente: body.cliente !== undefined ? body.cliente : (fallback.cliente || ''),
+    lugar_entrega: body.lugar_entrega !== undefined ? body.lugar_entrega : (fallback.lugar_entrega || ''),
     fecha_entrega: body.fecha_entrega || fallback.fecha_entrega_fmt || fallback.fecha_entrega || '',
     prioridad: body.prioridad || fallback.prioridad || 'Normal',
     observaciones: body.observaciones !== undefined ? body.observaciones : (fallback.observaciones || ''),
@@ -268,7 +275,7 @@ exports.crearVale = async (req, res) => {
   let connection;
   try {
     const products = normalizeProducts(req.body);
-    const { origen, numero_pedido, cliente, fecha_entrega, prioridad, observaciones } = req.body;
+    const { origen, numero_pedido, cliente, lugar_entrega, fecha_entrega, prioridad, observaciones } = req.body;
 
     if (!cliente || !fecha_entrega) {
       throw new Error('Cliente y fecha de entrega son obligatorios.');
@@ -281,13 +288,14 @@ exports.crearVale = async (req, res) => {
 
     const [result] = await connection.query(
       `INSERT INTO vales
-        (folio, origen, numero_pedido, cliente, fecha_entrega, prioridad, observaciones, estado, created_by, updated_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente', ?, ?)`,
+        (folio, origen, numero_pedido, cliente, lugar_entrega, fecha_entrega, prioridad, observaciones, estado, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pendiente', ?, ?)`,
       [
         temporaryFolio,
         valeOrigin,
         String(numero_pedido || '').trim() || null,
         String(cliente).trim(),
+        normalizeOptionalText(lugar_entrega, 255),
         fecha_entrega,
         prioridad || 'Normal',
         String(observaciones || '').trim() || null,
@@ -356,7 +364,7 @@ exports.editarVale = async (req, res) => {
 
   try {
     const products = normalizeProducts(req.body);
-    const { origen, numero_pedido, cliente, fecha_entrega, prioridad, observaciones } = req.body;
+    const { origen, numero_pedido, cliente, lugar_entrega, fecha_entrega, prioridad, observaciones } = req.body;
 
     if (!cliente || !fecha_entrega) {
       throw new Error('Cliente y fecha de entrega son obligatorios.');
@@ -374,12 +382,13 @@ exports.editarVale = async (req, res) => {
 
     await connection.query(
       `UPDATE vales
-       SET origen = ?, numero_pedido = ?, cliente = ?, fecha_entrega = ?, prioridad = ?, observaciones = ?, updated_by = ?
+       SET origen = ?, numero_pedido = ?, cliente = ?, lugar_entrega = ?, fecha_entrega = ?, prioridad = ?, observaciones = ?, updated_by = ?
        WHERE id = ?`,
       [
         origen || 'Manual',
         String(numero_pedido || '').trim() || null,
         String(cliente).trim(),
+        normalizeOptionalText(lugar_entrega, 255),
         fecha_entrega,
         prioridad || 'Normal',
         String(observaciones || '').trim() || null,
@@ -540,8 +549,8 @@ exports.pantallaController = async (req, res) => {
     const filtroFecha = req.query.fecha || now.isoDate;
 
     const [rows] = await db.query(
-      `SELECT v.id, v.folio, v.numero_pedido, v.cliente, v.prioridad, v.estado,
-              v.entrega_dias_texto,
+      `SELECT v.id, v.folio, v.numero_pedido, v.cliente, v.lugar_entrega,
+              v.prioridad, v.estado, v.updated_at, v.entrega_dias_texto,
               DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
               DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
               DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt
@@ -563,10 +572,27 @@ exports.pantallaController = async (req, res) => {
     const withProducts = await attachProducts(rows);
     const vales = withProducts.map(v => enrichValeDelivery(v, filtroFecha));
     const overdueCount = vales.filter(v => v.is_overdue).length;
+    const estados = {
+      Listo: [],
+      Rebanando: [],
+      Pendiente: [],
+      Entregado: [],
+      Cancelado: []
+    };
+
+    vales.forEach(vale => {
+      if (!estados[vale.estado]) estados[vale.estado] = [];
+      estados[vale.estado].push(vale);
+    });
+
+    ['Entregado', 'Cancelado'].forEach(estado => {
+      estados[estado].sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+    });
 
     return res.render('pantalla', {
       title: 'Pantalla de Almacén',
       vales,
+      estados,
       fecha: new Date(),
       overdueCount,
       filtroFecha,

@@ -48,6 +48,7 @@
         <tr>
           <th>Folio / Pedido</th>
           <th>Cliente</th>
+          <th>Lugar de entrega</th>
           <th>Productos</th>
           <th>Prioridad</th>
           <th>Estado</th>
@@ -58,7 +59,7 @@
       <tbody>
         <% if (!vales.length) { %>
           <tr>
-            <td colspan="7">
+            <td colspan="8">
               <div class="empty-state py-3"><i class="bi bi-inbox"></i><div>No hay registros para los filtros seleccionados.</div></div>
             </td>
           </tr>
@@ -67,6 +68,7 @@
           <tr>
             <td><strong><%= v.folio %></strong><% if (v.numero_pedido) { %><div class="small text-muted">Pedido <%= v.numero_pedido %></div><% } %></td>
             <td><%= v.cliente %></td>
+            <td><span class="report-delivery-place"><i class="bi bi-geo-alt-fill"></i><%= v.lugar_entrega || 'Por confirmar' %></span></td>
             <td>
               <div class="report-products-summary">
                 <strong><%= v.total_productos || 0 %> producto(s)</strong>

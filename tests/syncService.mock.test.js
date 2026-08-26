@@ -27,6 +27,8 @@ function sampleOrder() {
       diasTexto: '28/07/2026 - 07/08/2026',
       horario: '8:00 - 12:00',
       nombre: 'José Rivera',
+      lugar: 'Alfonso Obregon 2\nGuanatos   GDL, 44332, JAL MX',
+      codigoLugar: '03B2D87A-F9C0-4DC6-ABB9-C50CF33F7D42',
       epp: 'Chaleco reflejante',
       comentario: 'Entrega en entrada',
       numeroTraslado: '126766'
@@ -87,7 +89,10 @@ async function testCreate() {
   assert.strictEqual(response.errors.length, 0);
 
   const insertVale = connectionQueries.find(item => item.sql.includes('INSERT INTO vales'));
-  assert.strictEqual(insertVale.params.length, 20, 'El INSERT de vales debe recibir 20 parámetros.');
+  assert.strictEqual(insertVale.params.length, 22, 'El INSERT de vales debe recibir 22 parámetros.');
+  assert.strictEqual((insertVale.sql.match(/\?/g) || []).length, insertVale.params.length, 'El INSERT debe tener un placeholder por parámetro.');
+  assert.strictEqual(insertVale.params[9], 'Alfonso Obregon 2 Guanatos GDL, 44332, JAL MX');
+  assert.strictEqual(insertVale.params[10], '03B2D87A-F9C0-4DC6-ABB9-C50CF33F7D42');
   const folioUpdate = connectionQueries.find(item => item.sql.startsWith('UPDATE vales SET folio'));
   assert.match(folioUpdate.params[0], /^VS-\d{4}-0123$/);
   assert.strictEqual(folioUpdate.params[1], 123);
@@ -133,7 +138,8 @@ async function testPendingValeIsUpdated() {
   assert.strictEqual(response.created, 0);
 
   const updateVale = connectionQueries.find(item => item.sql.startsWith('UPDATE vales') && item.sql.includes("origen = 'Siclik'"));
-  assert.strictEqual(updateVale.params.length, 18, 'El UPDATE de vales debe recibir 18 parámetros.');
+  assert.strictEqual(updateVale.params.length, 20, 'El UPDATE de vales debe recibir 20 parámetros.');
+  assert.strictEqual((updateVale.sql.match(/\?/g) || []).length, updateVale.params.length, 'El UPDATE debe tener un placeholder por parámetro.');
   const updateProduct = connectionQueries.find(item => item.sql.startsWith('UPDATE vale_productos'));
   assert.strictEqual(updateProduct.params.length, 10, 'El UPDATE de producto debe recibir 10 parámetros.');
 }
@@ -149,7 +155,7 @@ async function testLockedValeIsSkipped() {
     query: async (sql, params) => {
       connectionQueries.push({ sql, params });
       if (sql.includes('FROM vales WHERE external_key')) return [[{ id: 55, estado: 'Entregado' }]];
-      if (sql.startsWith('UPDATE vales SET last_synced_at')) return [{ affectedRows: 1 }];
+      if (sql.startsWith('UPDATE vales') && sql.includes('lugar_entrega = CASE')) return [{ affectedRows: 1 }];
       throw new Error(`Consulta de conexión no simulada: ${sql}`);
     }
   };
@@ -170,11 +176,55 @@ async function testLockedValeIsSkipped() {
   assert.strictEqual(response.created, 0);
   assert.strictEqual(connectionQueries.some(item => item.sql.includes('INSERT INTO vales')), false);
   assert.strictEqual(connectionQueries.some(item => item.sql.includes('UPDATE vale_productos')), false);
+  const safeLocationUpdate = connectionQueries.find(item => item.sql.includes('lugar_entrega = CASE'));
+  assert.strictEqual((safeLocationUpdate.sql.match(/\?/g) || []).length, safeLocationUpdate.params.length);
+  assert.strictEqual(safeLocationUpdate.params[0], 'Alfonso Obregon 2 Guanatos GDL, 44332, JAL MX');
+  assert.strictEqual(safeLocationUpdate.params[4], 55);
 
   const finish = poolQueries.find(item => item.sql.includes('UPDATE rebanado_sync_runs'));
   const details = JSON.parse(finish.params[8]);
   assert.strictEqual(details[0].action, 'skipped');
   assert.match(details[0].reason, /Entregado/);
+}
+
+async function testLegacyPayloadLeavesLocationNull() {
+  const connectionQueries = [];
+  const fakeConnection = {
+    beginTransaction: async () => {},
+    commit: async () => {},
+    rollback: async () => {},
+    release: () => {},
+    query: async (sql, params) => {
+      connectionQueries.push({ sql, params });
+      if (sql.includes('FROM vales WHERE external_key')) return [[]];
+      if (sql.includes('INSERT INTO vales')) return [{ insertId: 124 }];
+      if (sql.startsWith('UPDATE vales SET folio')) return [{ affectedRows: 1 }];
+      if (sql.includes('FROM vale_productos WHERE external_line_key')) return [[]];
+      if (sql.includes('INSERT INTO vale_productos')) return [{ insertId: 457 }];
+      throw new Error(`Consulta de conexión no simulada: ${sql}`);
+    }
+  };
+  const fakeDb = {
+    getConnection: async () => fakeConnection,
+    query: async sql => {
+      if (sql.includes('INSERT INTO rebanado_sync_runs')) return [{ insertId: 80 }];
+      if (sql.includes('UPDATE rebanado_sync_runs')) return [{ affectedRows: 1 }];
+      throw new Error(`Consulta de pool no simulada: ${sql}`);
+    }
+  };
+
+  const legacyOrder = sampleOrder();
+  delete legacyOrder.entrega.lugar;
+  delete legacyOrder.entrega.codigoLugar;
+
+  const service = loadService(fakeDb);
+  const response = await service.synchronize({ source: 'SAP_SICLIK', syncRunId: 'run-legacy', orders: [legacyOrder] });
+  assert.strictEqual(response.ok, true);
+  assert.strictEqual(response.created, 1);
+
+  const insertVale = connectionQueries.find(item => item.sql.includes('INSERT INTO vales'));
+  assert.strictEqual(insertVale.params[9], null, 'El payload anterior debe guardar lugar_entrega en NULL.');
+  assert.strictEqual(insertVale.params[10], null, 'El payload anterior debe guardar codigo_lugar_entrega en NULL.');
 }
 
 
@@ -210,6 +260,7 @@ async function testHeartbeat() {
   await testCreate();
   await testPendingValeIsUpdated();
   await testLockedValeIsSkipped();
+  await testLegacyPayloadLeavesLocationNull();
   await testHeartbeat();
   console.log('Pruebas simuladas de sincronización idempotente: OK');
 })().catch(error => {

@@ -88,7 +88,7 @@
 
     <div class="ops-search operator-search">
       <i class="bi bi-search"></i>
-      <input type="search" id="opsSearch" placeholder="Buscar vale, pedido, cliente, artículo o SKU" aria-label="Buscar vales">
+      <input type="search" id="opsSearch" placeholder="Buscar vale, cliente, lugar, artículo o SKU" aria-label="Buscar vales">
       <button type="button" id="opsSearchClear" class="operator-search-clear d-none" title="Limpiar búsqueda" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg"></i></button>
     </div>
   </div>
@@ -119,7 +119,7 @@
     const p = prioridadInfo[vale.prioridad] || prioridadInfo.Normal;
     const entregaDisplay = vale.entrega_display || '';
     const atrasoTexto = vale.days_late === 1 ? '1 día tarde' : `${vale.days_late} días tarde`;
-    const searchText = `${vale.folio} ${vale.numero_pedido || ''} ${vale.cliente} ${vale.productos_busqueda || ''} ${vale.prioridad} ${vale.estado} ${entregaDisplay} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
+    const searchText = `${vale.folio} ${vale.numero_pedido || ''} ${vale.cliente} ${vale.lugar_entrega || ''} ${vale.productos_busqueda || ''} ${vale.prioridad} ${vale.estado} ${entregaDisplay} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
     const allowedStates = vale.allowed_states || [];
     const canAdvance = e.siguiente ? allowedStates.includes(e.siguiente) : false;
     const canCancel = !['Entregado','Cancelado'].includes(vale.estado) && allowedStates.includes('Cancelado');
@@ -159,6 +159,10 @@
         <div class="simple-client-main">
           <span class="simple-overline">Cliente / sucursal</span>
           <strong class="simple-client-name"><%= vale.cliente %></strong>
+          <div class="simple-delivery-place <%= vale.lugar_entrega ? '' : 'is-missing' %>">
+            <i class="bi bi-geo-alt-fill"></i>
+            <span><small>Lugar de entrega</small><strong><%= vale.lugar_entrega || 'Por confirmar' %></strong></span>
+          </div>
         </div>
         <div class="simple-client-side">
           <span class="simple-client-chip">

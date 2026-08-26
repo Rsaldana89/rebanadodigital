@@ -1,0 +1,24 @@
+<%
+  const entregaDisplay = vale.entrega_display || '';
+  const atrasoTexto = vale.days_late === 1 ? '1 día tarde' : `${vale.days_late} días tarde`;
+  const productos = vale.productos || [];
+%>
+<article class="warehouse-vale-card <%= vale.is_overdue ? 'is-overdue' : '' %>">
+  <div class="warehouse-vale-topline">
+    <div><strong><%= vale.folio %></strong><% if (vale.numero_pedido) { %><span>Pedido <%= vale.numero_pedido %></span><% } %></div>
+    <span class="warehouse-priority is-<%= String(vale.prioridad || 'Normal').toLowerCase() %>"><%= vale.prioridad %></span>
+  </div>
+  <h3><%= vale.cliente %></h3>
+  <div class="warehouse-location <%= vale.lugar_entrega ? '' : 'is-missing' %>"><i class="bi bi-geo-alt-fill"></i><span><small>Lugar de entrega</small><strong><%= vale.lugar_entrega || 'Por confirmar' %></strong></span></div>
+  <div class="warehouse-products">
+    <% productos.slice(0, 3).forEach(item => { %>
+      <div><strong><%= item.cantidad %></strong><span><%= item.producto %></span><em><%= item.tipo_rebanado || item.presentacion %></em></div>
+    <% }) %>
+    <% if (productos.length > 3) { %><div class="warehouse-products-more">+ <%= productos.length - 3 %> producto(s) más</div><% } %>
+    <% if (!productos.length) { %><div class="warehouse-products-more">Sin productos registrados</div><% } %>
+  </div>
+  <div class="warehouse-vale-footer">
+    <span><i class="bi bi-calendar2-check"></i><%= entregaDisplay %></span>
+    <% if (vale.is_overdue) { %><strong><i class="bi bi-exclamation-triangle-fill"></i><%= atrasoTexto %></strong><% } %>
+  </div>
+</article>

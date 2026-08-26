@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS vales (
   external_key VARCHAR(100) NULL,
   cliente VARCHAR(100) NOT NULL,
   cliente_codigo VARCHAR(50) NULL,
+  lugar_entrega VARCHAR(255) NULL,
+  codigo_lugar_entrega VARCHAR(100) NULL,
   fecha_pedido DATE NULL,
   fecha_entrega DATE NOT NULL,
   entrega_dias_texto VARCHAR(120) NULL,
