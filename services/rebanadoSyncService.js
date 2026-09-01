@@ -3,6 +3,7 @@ const { lineaAplicaARebanado } = require('./rebanadoRules');
 const { parseEntregaDias } = require('./deliveryDateService');
 const settingsService = require('./settingsService');
 const { buildTemporaryFolio, assignFinalFolio } = require('./valeFolioService');
+const inventoryService = require('./inventoryService');
 
 const LOCKED_STATES = ['Rebanando', 'Listo', 'Entregado', 'Cancelado'];
 
@@ -309,6 +310,12 @@ async function processOrder(order) {
     let productsCreated = 0;
     let productsUpdated = 0;
     for (let index = 0; index < normalized.products.length; index += 1) {
+      await inventoryService.ensureCatalogProduct(connection, {
+        sku: normalized.products[index].sku,
+        producto: normalized.products[index].producto,
+        origen: 'Siclik',
+        createdBy: null
+      });
       const productAction = await upsertProduct(connection, valeId, normalized.products[index], index + 1);
       if (productAction === 'created') productsCreated += 1;
       if (productAction === 'updated') productsUpdated += 1;

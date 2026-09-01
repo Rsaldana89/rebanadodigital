@@ -3,6 +3,7 @@ const permissionService = require('../services/permissionService');
 const syncService = require('../services/rebanadoSyncService');
 const { displayDateFromISO, enrichValeDelivery } = require('../services/valeDeliveryService');
 const { buildTemporaryFolio, assignFinalFolio } = require('../services/valeFolioService');
+const inventoryService = require('../services/inventoryService');
 
 const VALID_STATES = ['Pendiente', 'Rebanando', 'Listo', 'Entregado', 'Cancelado'];
 
@@ -55,6 +56,32 @@ function normalizeOptionalText(value, maxLength = null) {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   if (!text) return null;
   return maxLength ? text.slice(0, maxLength) : text;
+}
+
+function calendarMonthBounds(year, month) {
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const end = new Date(Date.UTC(year, month, 0));
+  const iso = date => date.toISOString().slice(0, 10);
+  return { start: iso(start), end: iso(end) };
+}
+
+function summarizeCalendarRows(rows, monthStart, monthEnd) {
+  const result = {};
+  rows.forEach(row => {
+    const startText = String(row.fecha_inicio || '').slice(0, 10);
+    const endText = String(row.fecha_fin || startText).slice(0, 10);
+    if (!startText) return;
+    let cursor = new Date(`${startText < monthStart ? monthStart : startText}T00:00:00Z`);
+    const limit = new Date(`${endText > monthEnd ? monthEnd : endText}T00:00:00Z`);
+    while (cursor <= limit) {
+      const day = cursor.toISOString().slice(0, 10);
+      if (!result[day]) result[day] = { total: 0, estados: {} };
+      result[day].total += 1;
+      result[day].estados[row.estado] = (result[day].estados[row.estado] || 0) + 1;
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+  });
+  return result;
 }
 
 function normalizeProducts(body) {
@@ -260,6 +287,31 @@ exports.tablero = async (req, res) => {
   }
 };
 
+// Resumen mensual utilizado por el calendario operativo.
+exports.calendarioResumen = async (req, res) => {
+  try {
+    const year = Number(req.query.year);
+    const month = Number(req.query.month);
+    if (!Number.isInteger(year) || year < 2020 || year > 2100 || !Number.isInteger(month) || month < 1 || month > 12) {
+      return res.status(400).json({ ok: false, message: 'Mes inválido.' });
+    }
+    const bounds = calendarMonthBounds(year, month);
+    const [rows] = await db.query(
+      `SELECT estado,
+              DATE_FORMAT(COALESCE(entrega_fecha_inicio, fecha_entrega), '%Y-%m-%d') AS fecha_inicio,
+              DATE_FORMAT(COALESCE(entrega_fecha_fin, entrega_fecha_inicio, fecha_entrega), '%Y-%m-%d') AS fecha_fin
+       FROM vales
+       WHERE COALESCE(entrega_fecha_inicio, fecha_entrega) <= ?
+         AND COALESCE(entrega_fecha_fin, entrega_fecha_inicio, fecha_entrega) >= ?`,
+      [bounds.end, bounds.start]
+    );
+    return res.json({ ok: true, year, month, dias: summarizeCalendarRows(rows, bounds.start, bounds.end) });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ ok: false, message: 'No fue posible consultar el calendario.' });
+  }
+};
+
 // Muestra formulario para crear un vale/comanda.
 exports.showCrearForm = (req, res) => {
   res.render('vales/formulario', {
@@ -305,6 +357,7 @@ exports.crearVale = async (req, res) => {
     );
 
     const folio = await assignFinalFolio(connection, result.insertId, valeOrigin);
+    await inventoryService.registerManualProducts(connection, products, req.session.user.id, valeOrigin);
     await insertProducts(connection, result.insertId, products);
     await connection.query(
       `INSERT INTO vale_history (vale_id, user_id, action, estado_anterior, estado_nuevo, descripcion)
@@ -380,6 +433,12 @@ exports.editarVale = async (req, res) => {
       return res.redirect('/vales/tablero');
     }
 
+    if (currentRows[0].estado === 'Entregado') {
+      await connection.rollback();
+      req.session.error_msg = 'Reabre el vale antes de modificar sus productos; así el inventario se restaurará correctamente.';
+      return res.redirect(returnUrl);
+    }
+
     await connection.query(
       `UPDATE vales
        SET origen = ?, numero_pedido = ?, cliente = ?, lugar_entrega = ?, fecha_entrega = ?, prioridad = ?, observaciones = ?, updated_by = ?
@@ -419,6 +478,7 @@ exports.editarVale = async (req, res) => {
       product.last_synced_at = metadata.last_synced_at;
     });
 
+    await inventoryService.registerManualProducts(connection, products, req.session.user.id, origen || 'Manual');
     await connection.query('DELETE FROM vale_productos WHERE vale_id = ?', [id]);
     await insertProducts(connection, id, products);
     await connection.query(
@@ -447,23 +507,28 @@ exports.cambiarEstado = async (req, res) => {
   const { id } = req.params;
   const { nuevo_estado, return_url } = req.body;
   const redirectTo = getSafeReturnUrl(return_url, '/vales/tablero');
+  let connection;
 
   try {
-    const [rows] = await db.query('SELECT estado FROM vales WHERE id = ?', [id]);
+    if (!VALID_STATES.includes(nuevo_estado)) {
+      req.session.error_msg = 'El estado solicitado no es válido';
+      return res.redirect(redirectTo);
+    }
+
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    const [rows] = await connection.query('SELECT estado FROM vales WHERE id = ? FOR UPDATE', [id]);
 
     if (rows.length === 0) {
+      await connection.rollback();
       req.session.error_msg = 'Vale no encontrado';
       return res.redirect(redirectTo);
     }
 
     const estadoAnterior = rows[0].estado;
 
-    if (!VALID_STATES.includes(nuevo_estado)) {
-      req.session.error_msg = 'El estado solicitado no es válido';
-      return res.redirect(redirectTo);
-    }
-
     if (nuevo_estado === estadoAnterior) {
+      await connection.rollback();
       req.session.error_msg = 'El vale ya se encuentra en ese estado';
       return res.redirect(redirectTo);
     }
@@ -475,24 +540,53 @@ exports.cambiarEstado = async (req, res) => {
     );
 
     if (!allowedStates.includes(nuevo_estado)) {
+      await connection.rollback();
       req.session.error_msg = `No tienes permiso para cambiar de ${estadoAnterior} a ${nuevo_estado}`;
       return res.redirect(redirectTo);
     }
 
-    await db.query('UPDATE vales SET estado = ?, updated_by = ? WHERE id = ?', [nuevo_estado, req.session.user.id, id]);
+    await connection.query('UPDATE vales SET estado = ?, updated_by = ? WHERE id = ?', [nuevo_estado, req.session.user.id, id]);
 
-    await db.query(
+    const [historyResult] = await connection.query(
       `INSERT INTO vale_history (vale_id, user_id, action, estado_anterior, estado_nuevo, descripcion)
        VALUES (?, ?, 'cambiar_estado', ?, ?, 'Cambio aplicado a toda la comanda')`,
       [id, req.session.user.id, estadoAnterior, nuevo_estado]
     );
 
-    req.session.success_msg = 'Estado de la comanda actualizado';
+    const operationDate = getMexicoDateParts().isoDate;
+    if (nuevo_estado === 'Entregado' && estadoAnterior !== 'Entregado') {
+      await inventoryService.applyValeDelivery(
+        connection,
+        Number(id),
+        historyResult.insertId,
+        req.session.user.id,
+        operationDate
+      );
+    } else if (estadoAnterior === 'Entregado' && nuevo_estado !== 'Entregado') {
+      await inventoryService.reverseValeDelivery(
+        connection,
+        Number(id),
+        historyResult.insertId,
+        req.session.user.id,
+        operationDate
+      );
+    }
+
+    await connection.commit();
+
+    req.session.success_msg = nuevo_estado === 'Entregado'
+      ? 'Comanda entregada e inventario actualizado'
+      : 'Estado de la comanda actualizado';
     return res.redirect(redirectTo);
   } catch (err) {
+    if (connection) await connection.rollback().catch(() => {});
     console.error(err);
-    req.session.error_msg = 'Error al cambiar el estado';
+    req.session.error_msg = err.code === 'ER_NO_SUCH_TABLE'
+      ? 'Aplica la migración V19 antes de entregar vales.'
+      : (err.message || 'Error al cambiar el estado');
     return res.redirect(redirectTo);
+  } finally {
+    if (connection) connection.release();
   }
 };
 
@@ -606,4 +700,4 @@ exports.pantallaController = async (req, res) => {
 };
 
 // Superficie interna para pruebas de regresión; no se publica como ruta HTTP.
-exports._test = { normalizeProducts, getFormArray };
+exports._test = { normalizeProducts, getFormArray, calendarMonthBounds, summarizeCalendarRows };

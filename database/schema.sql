@@ -139,6 +139,89 @@ CREATE TABLE IF NOT EXISTS inventario_rebanado (
   FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
+-- V19: catálogo e inventario operativo. La tabla anterior se conserva
+-- para compatibilidad con registros históricos.
+CREATE TABLE IF NOT EXISTS productos_rebanables (
+  sku VARCHAR(100) PRIMARY KEY,
+  descripcion VARCHAR(180) NOT NULL,
+  presentacion VARCHAR(100) NULL DEFAULT 'REBANADO',
+  unidad_control VARCHAR(30) NOT NULL DEFAULT 'UNIDAD',
+  origen VARCHAR(30) NOT NULL DEFAULT 'Manual',
+  activo TINYINT(1) NOT NULL DEFAULT 1,
+  created_by INT NULL,
+  updated_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_productos_rebanables_descripcion (descripcion),
+  KEY idx_productos_rebanables_activo (activo)
+);
+
+CREATE TABLE IF NOT EXISTS inventario_existencias (
+  sku VARCHAR(100) PRIMARY KEY,
+  cantidad_sin_rebanar DECIMAL(12,2) NOT NULL DEFAULT 0,
+  cantidad_rebanado_queda DECIMAL(12,2) NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (sku) REFERENCES productos_rebanables(sku) ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS cierres_rebanado (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  fecha DATE NOT NULL UNIQUE,
+  observaciones TEXT NULL,
+  created_by INT NULL,
+  updated_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS cierre_rebanado_detalles (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  cierre_id BIGINT NOT NULL,
+  sku VARCHAR(100) NOT NULL,
+  cantidad_rebanado_queda DECIMAL(12,2) NOT NULL DEFAULT 0,
+  cantidad_merma DECIMAL(12,2) NOT NULL DEFAULT 0,
+  observaciones VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_cierre_rebanado_sku (cierre_id, sku),
+  FOREIGN KEY (cierre_id) REFERENCES cierres_rebanado(id) ON DELETE CASCADE,
+  FOREIGN KEY (sku) REFERENCES productos_rebanables(sku) ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS inventario_movimientos (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  fecha_operacion DATE NOT NULL,
+  sku VARCHAR(100) NOT NULL,
+  tipo VARCHAR(40) NOT NULL,
+  cantidad DECIMAL(12,2) NOT NULL DEFAULT 0,
+  delta_sin_rebanar DECIMAL(12,2) NOT NULL DEFAULT 0,
+  delta_rebanado_queda DECIMAL(12,2) NOT NULL DEFAULT 0,
+  cantidad_rebanada_historial DECIMAL(12,2) NOT NULL DEFAULT 0,
+  cantidad_merma DECIMAL(12,2) NOT NULL DEFAULT 0,
+  saldo_sin_rebanar DECIMAL(12,2) NOT NULL DEFAULT 0,
+  saldo_rebanado_queda DECIMAL(12,2) NOT NULL DEFAULT 0,
+  vale_id INT NULL,
+  vale_producto_id INT NULL,
+  vale_history_id INT NULL,
+  cierre_id BIGINT NULL,
+  event_key VARCHAR(190) NULL UNIQUE,
+  referencia VARCHAR(150) NULL,
+  observaciones TEXT NULL,
+  created_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  reversed_at DATETIME NULL,
+  reversed_by INT NULL,
+  reversal_movement_id BIGINT NULL,
+  KEY idx_inv_mov_sku_fecha (sku, fecha_operacion, id),
+  KEY idx_inv_mov_tipo_fecha (tipo, fecha_operacion),
+  KEY idx_inv_mov_vale (vale_id, reversed_at),
+  FOREIGN KEY (sku) REFERENCES productos_rebanables(sku) ON UPDATE CASCADE,
+  FOREIGN KEY (vale_id) REFERENCES vales(id) ON DELETE SET NULL,
+  FOREIGN KEY (vale_producto_id) REFERENCES vale_productos(id) ON DELETE SET NULL,
+  FOREIGN KEY (vale_history_id) REFERENCES vale_history(id) ON DELETE SET NULL,
+  FOREIGN KEY (cierre_id) REFERENCES cierres_rebanado(id) ON DELETE SET NULL
+);
+
 CREATE TABLE IF NOT EXISTS user_history (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,

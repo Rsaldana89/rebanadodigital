@@ -36,8 +36,11 @@
             <% if (can('vales.create')) { %>
               <li class="nav-item"><a class="nav-link" href="/vales/crear"><i class="bi bi-plus-square"></i>Nuevo vale</a></li>
             <% } %>
-            <% if (can('inventario.manage')) { %>
-              <li class="nav-item"><a class="nav-link" href="/inventario/registro"><i class="bi bi-archive"></i>Cierre de día</a></li>
+            <% if (can('inventario.view')) { %>
+              <li class="nav-item"><a class="nav-link" href="/inventario"><i class="bi bi-boxes"></i>Inventario</a></li>
+            <% } %>
+            <% if (can('inventario.cierre')) { %>
+              <li class="nav-item"><a class="nav-link" href="/inventario/cierre"><i class="bi bi-clipboard2-check"></i>Cierre</a></li>
             <% } %>
             <% if (can('reportes.view')) { %>
               <li class="nav-item"><a class="nav-link" href="/reportes"><i class="bi bi-bar-chart"></i>Reportes</a></li>

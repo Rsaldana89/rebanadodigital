@@ -66,6 +66,8 @@ async function testCreate() {
       if (sql.includes('INSERT INTO vales')) return [{ insertId: 123 }];
       if (sql.startsWith('UPDATE vales SET folio')) return [{ affectedRows: 1 }];
       if (sql.includes('FROM vale_productos WHERE external_line_key')) return [[]];
+      if (sql.includes('INSERT IGNORE INTO productos_rebanables')) return [{ affectedRows: 1 }];
+      if (sql.includes('INSERT IGNORE INTO inventario_existencias')) return [{ affectedRows: 1 }];
       if (sql.includes('INSERT INTO vale_productos')) return [{ insertId: 456 }];
       throw new Error(`Consulta de conexión no simulada: ${sql}`);
     }
@@ -115,6 +117,8 @@ async function testPendingValeIsUpdated() {
       if (sql.includes('FROM vales WHERE external_key')) return [[{ id: 56, estado: 'Pendiente' }]];
       if (sql.startsWith('UPDATE vales') && sql.includes("origen = 'Siclik'")) return [{ affectedRows: 1 }];
       if (sql.includes('FROM vale_productos WHERE external_line_key')) return [[{ id: 99, vale_id: 56 }]];
+      if (sql.includes('INSERT IGNORE INTO productos_rebanables')) return [{ affectedRows: 0 }];
+      if (sql.includes('INSERT IGNORE INTO inventario_existencias')) return [{ affectedRows: 0 }];
       if (sql.startsWith('UPDATE vale_productos')) return [{ affectedRows: 1 }];
       throw new Error(`Consulta de conexión no simulada: ${sql}`);
     }
@@ -200,6 +204,8 @@ async function testLegacyPayloadLeavesLocationNull() {
       if (sql.includes('INSERT INTO vales')) return [{ insertId: 124 }];
       if (sql.startsWith('UPDATE vales SET folio')) return [{ affectedRows: 1 }];
       if (sql.includes('FROM vale_productos WHERE external_line_key')) return [[]];
+      if (sql.includes('INSERT IGNORE INTO productos_rebanables')) return [{ affectedRows: 1 }];
+      if (sql.includes('INSERT IGNORE INTO inventario_existencias')) return [{ affectedRows: 1 }];
       if (sql.includes('INSERT INTO vale_productos')) return [{ insertId: 457 }];
       throw new Error(`Consulta de conexión no simulada: ${sql}`);
     }

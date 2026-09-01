@@ -36,8 +36,8 @@ function requirePermission(code) {
     if (req.permissions?.['vales.view']) {
       return res.redirect('/vales/tablero');
     }
-    if (req.permissions?.['inventario.manage']) {
-      return res.redirect('/inventario/registro');
+    if (req.permissions?.['inventario.view']) {
+      return res.redirect('/inventario');
     }
     return res.redirect('/logout');
   };

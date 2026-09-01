@@ -5,6 +5,7 @@ const { requirePermission } = require('../middleware/permissions');
 const valeController = require('../controllers/valeController');
 
 router.get('/tablero', ensureAuthenticated, requirePermission('vales.view'), valeController.tablero);
+router.get('/calendario/resumen', ensureAuthenticated, requirePermission('vales.view'), valeController.calendarioResumen);
 router.get('/crear', ensureAuthenticated, requirePermission('vales.create'), valeController.showCrearForm);
 router.post('/crear', ensureAuthenticated, requirePermission('vales.create'), valeController.crearVale);
 router.get('/:id/editar', ensureAuthenticated, requirePermission('vales.edit'), valeController.showEditarForm);

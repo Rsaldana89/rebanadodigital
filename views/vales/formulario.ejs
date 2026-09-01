@@ -94,11 +94,11 @@
           <div class="row g-2">
             <div class="col-lg-2 col-md-4">
               <label class="form-label">SKU</label>
-              <input type="text" name="sku[]" value="<%= item.sku || '' %>" class="form-control" placeholder="Código" required>
+              <input type="text" name="sku[]" value="<%= item.sku || '' %>" class="form-control" placeholder="Código" data-product-sku autocomplete="off" required>
             </div>
             <div class="col-lg-4 col-md-8">
               <label class="form-label">Producto</label>
-              <input type="text" name="producto[]" value="<%= item.producto || '' %>" class="form-control" placeholder="Nombre del producto" required>
+              <input type="text" name="producto[]" value="<%= item.producto || '' %>" class="form-control" placeholder="Nombre del producto" data-product-description required>
             </div>
             <div class="col-lg-2 col-md-4">
               <label class="form-label">Cantidad</label>
@@ -153,11 +153,11 @@
     <div class="row g-2">
       <div class="col-lg-2 col-md-4">
         <label class="form-label">SKU</label>
-        <input type="text" name="sku[]" class="form-control" placeholder="Código" required>
+        <input type="text" name="sku[]" class="form-control" placeholder="Código" data-product-sku autocomplete="off" required>
       </div>
       <div class="col-lg-4 col-md-8">
         <label class="form-label">Producto</label>
-        <input type="text" name="producto[]" class="form-control" placeholder="Nombre del producto" required>
+        <input type="text" name="producto[]" class="form-control" placeholder="Nombre del producto" data-product-description required>
       </div>
       <div class="col-lg-2 col-md-4">
         <label class="form-label">Cantidad</label>

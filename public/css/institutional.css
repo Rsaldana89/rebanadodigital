@@ -1786,6 +1786,120 @@ body.tablero-dark-body .ops-list > .empty-state-card {
 }
 
 /* =========================================================
+   V19 · Inventario por SKU, cierre y calendario operativo
+   ========================================================= */
+.inventory-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.inventory-kpis article {
+  position: relative;
+  min-height: 108px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid #e2d8cf;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fff, #fbf7f2);
+  box-shadow: 0 8px 22px rgba(54, 31, 23, .07);
+}
+
+.inventory-kpis article span { display: block; max-width: 80%; color: #76665d; font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+.inventory-kpis article strong { display: block; margin-top: 8px; color: #2f1712; font-size: 1.75rem; line-height: 1; }
+.inventory-kpis article i { position: absolute; right: 15px; bottom: 9px; color: rgba(139, 31, 44, .16); font-size: 2.2rem; }
+.inventory-kpis article.is-alert { border-color: #e9b3aa; background: #fff2ee; }
+.inventory-kpis article.is-alert strong, .inventory-kpis article.is-alert i { color: #a22f27; }
+
+.inventory-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.inventory-action-card { border: 1px solid #e1d5ca; border-radius: 16px; background: #fff; box-shadow: 0 6px 18px rgba(54,31,23,.06); }
+.inventory-action-card[open] { grid-column: 1 / -1; }
+.inventory-action-card summary { display: flex; align-items: center; gap: 9px; padding: 14px 16px; color: #4b2720; font-weight: 800; cursor: pointer; list-style: none; }
+.inventory-action-card summary::-webkit-details-marker { display: none; }
+.inventory-action-card summary i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: #8e1f2d; background: #f6e8e9; }
+.inventory-action-card form { padding: 4px 16px 16px; }
+
+.inventory-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0 0; padding: 7px; border: 1px solid #dfd3c8; border-radius: 15px 15px 0 0; background: #f7f2ed; }
+.inventory-tabs button { display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border: 0; border-radius: 11px; color: #69564c; background: transparent; font-weight: 800; }
+.inventory-tabs button.active { color: #fff; background: #8d1f2c; box-shadow: 0 5px 13px rgba(141,31,44,.22); }
+.inventory-panel { display: none; padding: 16px; border: 1px solid #dfd3c8; border-top: 0; border-radius: 0 0 18px 18px; background: #fff; }
+.inventory-panel.active { display: block; }
+.inventory-panel-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.inventory-panel-heading h2 { margin: 0 0 3px; color: #351a14; font-size: 1.2rem; }
+.inventory-panel-heading p { margin: 0; color: #83736a; }
+.inventory-table-tools { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.inventory-table-tools > i { color: #8d1f2c; }
+.inventory-table-tools .form-control { max-width: 430px; }
+.inventory-table-tools label { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; color: #67554b; font-weight: 700; }
+.inventory-table-shell { border: 1px solid #e5dbd3; border-radius: 14px; }
+.inventory-table { margin: 0; }
+.inventory-table thead th, .close-table thead th { padding: 12px 14px; color: #705e54; background: #f5f0eb; border-bottom: 1px solid #ddd0c6; font-size: .75rem; text-transform: uppercase; letter-spacing: .035em; white-space: nowrap; }
+.inventory-table td, .close-table td { padding: 12px 14px; border-color: #eee6df; vertical-align: middle; }
+.inventory-sku { display: block; color: #8d1f2c; font-size: .83rem; letter-spacing: .035em; }
+.inventory-product-name { display: block; color: #35231d; font-weight: 700; }
+.inventory-number { display: inline-flex; min-width: 58px; justify-content: center; padding: 6px 9px; border-radius: 9px; background: #f3eee9; color: #3f2b23; font-weight: 850; }
+.inventory-number.is-sliced { background: #efe8f8; color: #633f84; }
+.inventory-number.is-committed { background: #fff3d5; color: #865d0c; }
+.inventory-number.is-ok { background: #e8f5ec; color: #267040; }
+.inventory-number.is-negative { color: #fff; background: #b43a31; }
+.movement-type { display: inline-block; padding: 5px 8px; border-radius: 8px; color: #6b302c; background: #f8e9e7; font-size: .78rem; font-weight: 800; }
+
+.close-date-selector { display: flex; align-items: end; gap: 9px; max-width: 520px; margin-bottom: 14px; padding: 13px; border: 1px solid #ded2c7; border-radius: 14px; background: #fff; }
+.close-date-selector label { display: inline-flex; align-items: center; gap: 7px; align-self: center; color: #53352c; font-weight: 800; white-space: nowrap; }
+.close-date-selector .form-control { max-width: 185px; }
+.close-help-strip { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 15px; border: 1px solid #e3c987; border-radius: 13px; color: #60471c; background: #fff8df; }
+.close-table { margin: 0; min-width: 900px; }
+.close-table tbody tr:not(.is-relevant) { opacity: .68; }
+.close-table tbody tr:focus-within, .close-table tbody tr:hover { opacity: 1; background: #fffaf3; }
+.close-quantity { min-width: 120px; font-weight: 800; text-align: center; }
+.close-auto-value { display: block; color: #8d1f2c; font-size: 1.1rem; font-weight: 900; }
+.close-table td small { color: #89786f; }
+
+.delivery-calendar { position: relative; min-width: 155px; }
+.delivery-calendar-toggle { display: flex; width: 100%; min-height: 42px; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border: 1px solid #d8cdc4; border-radius: 11px; color: #3d2720; background: #fff; font-weight: 750; }
+.delivery-calendar-popover { position: absolute; z-index: 1100; top: calc(100% + 7px); left: 0; width: 320px; padding: 12px; border: 1px solid #d9cec5; border-radius: 15px; background: #fff; box-shadow: 0 18px 45px rgba(48,25,18,.2); }
+.delivery-calendar-header { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; margin-bottom: 8px; text-align: center; }
+.delivery-calendar-header strong { color: #351b15; text-transform: capitalize; }
+.delivery-calendar-header button { width: 34px; height: 34px; border: 0; border-radius: 9px; color: #76202a; background: #f6ebec; }
+.delivery-calendar-weekdays, .delivery-calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.delivery-calendar-weekdays span { padding: 5px 0; color: #88756b; font-size: .72rem; font-weight: 800; text-align: center; }
+.delivery-calendar-day, .delivery-calendar-spacer { position: relative; aspect-ratio: 1; }
+.delivery-calendar-day { display: grid; place-items: center; border: 1px solid transparent; border-radius: 10px; color: #3d2a22; background: #fff; font-size: .82rem; }
+.delivery-calendar-day:hover { border-color: #cdaeb0; background: #fbf2f3; }
+.delivery-calendar-day.is-today { border-color: #c6a24d; }
+.delivery-calendar-day.has-vales { color: #6e1723; background: #f8e5e8; font-weight: 900; }
+.delivery-calendar-day.has-vales::after { content: ''; position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%; background: #8d1f2c; }
+.delivery-calendar-day strong { position: absolute; top: 2px; right: 2px; display: grid; min-width: 15px; height: 15px; place-items: center; padding: 0 3px; border-radius: 8px; color: #fff; background: #8d1f2c; font-size: .58rem; }
+.delivery-calendar-day.is-selected { color: #fff; background: #8d1f2c; box-shadow: 0 4px 10px rgba(141,31,44,.28); }
+.delivery-calendar-day.is-selected strong { color: #8d1f2c; background: #fff; }
+.delivery-calendar-day.is-selected::after { background: #fff; }
+.delivery-calendar-legend { display: flex; justify-content: space-between; align-items: center; margin-top: 9px; padding-top: 8px; border-top: 1px solid #eee4dc; color: #79675d; font-size: .7rem; }
+.delivery-calendar-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.delivery-calendar-legend i { width: 8px; height: 8px; border-radius: 50%; background: #8d1f2c; }
+
+@media (max-width: 1199.98px) {
+  .inventory-kpis { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+}
+
+@media (max-width: 767.98px) {
+  .inventory-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inventory-actions { grid-template-columns: 1fr; }
+  .inventory-action-card[open] { grid-column: auto; }
+  .inventory-table-tools { align-items: stretch; flex-wrap: wrap; }
+  .inventory-tabs { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .inventory-tabs button { justify-content: center; }
+  .close-date-selector { align-items: stretch; flex-wrap: wrap; }
+  .delivery-calendar-popover { position: fixed; top: 50%; left: 50%; width: min(92vw, 340px); transform: translate(-50%, -50%); }
+}
+
+@media (max-width: 480px) {
+  .inventory-kpis { grid-template-columns: 1fr; }
+  .inventory-kpis article { min-height: 88px; }
+  .inventory-tabs { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
    V18.2.9 · Lugar de entrega y pantalla operativa de almacén
    ========================================================= */
 .simple-delivery-place {

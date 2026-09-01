@@ -81,7 +81,22 @@
     <form method="get" action="/vales/tablero" class="operator-date-form">
       <label for="fecha" class="visually-hidden">Fecha de entrega</label>
       <span class="operator-control-label"><i class="bi bi-calendar-event"></i>Entrega</span>
-      <input type="date" id="fecha" name="fecha" value="<%= filtroFecha %>" class="form-control">
+      <div class="delivery-calendar" data-delivery-calendar data-selected-date="<%= filtroFecha %>">
+        <input type="hidden" id="fecha" name="fecha" value="<%= filtroFecha %>">
+        <button type="button" class="delivery-calendar-toggle" data-calendar-toggle aria-expanded="false">
+          <span data-calendar-selected-label><%= filtroFechaDisplay %></span><i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="delivery-calendar-popover" data-calendar-popover hidden>
+          <div class="delivery-calendar-header">
+            <button type="button" data-calendar-prev aria-label="Mes anterior"><i class="bi bi-chevron-left"></i></button>
+            <strong data-calendar-month-label></strong>
+            <button type="button" data-calendar-next aria-label="Mes siguiente"><i class="bi bi-chevron-right"></i></button>
+          </div>
+          <div class="delivery-calendar-weekdays"><span>do.</span><span>lu.</span><span>ma.</span><span>mi.</span><span>ju.</span><span>vi.</span><span>sá.</span></div>
+          <div class="delivery-calendar-days" data-calendar-days></div>
+          <div class="delivery-calendar-legend"><span><i></i>Día con vales</span><small>El número indica cuántos hay</small></div>
+        </div>
+      </div>
       <button type="submit" class="operator-icon-button" title="Aplicar fecha" aria-label="Aplicar fecha"><i class="bi bi-arrow-right"></i></button>
       <a href="/vales/tablero" class="operator-today-link">Hoy</a>
     </form>

@@ -147,10 +147,10 @@
             <div><strong>Consultar reportes</strong><div class="text-muted small">Filtrar y exportar</div></div>
           </a>
         <% } %>
-        <% if (can('inventario.manage')) { %>
-          <a class="quick-action" href="/inventario/registro">
-            <span class="quick-action-icon"><i class="bi bi-archive"></i></span>
-            <div><strong>Cierre de día</strong><div class="text-muted small">Inventario, sobrante y merma</div></div>
+        <% if (can('inventario.view')) { %>
+          <a class="quick-action" href="/inventario">
+            <span class="quick-action-icon"><i class="bi bi-boxes"></i></span>
+            <div><strong>Inventario</strong><div class="text-muted small">Sin rebanar, rebanado y merma</div></div>
           </a>
         <% } %>
         <% if (can('users.manage')) { %>

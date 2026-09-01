@@ -1,5 +1,7 @@
 # CHC Rebanado Digital
 
+> Versión 19.0: inventario por SKU, cierre sencillo de Rebanado, historial de mermas y calendario con días resaltados. Consulta `ACTUALIZACION_V19_INVENTARIO_CALENDARIO.md` antes de desplegar.
+
 Aplicación web Node.js, Express, EJS y MySQL para crear, visualizar y dar seguimiento a comandas de rebanado desde computadoras, tablets y pantallas de almacén.
 
 ## Versión 1.7.0: un vale por pedido

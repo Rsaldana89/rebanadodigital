@@ -1,0 +1,141 @@
+<%- include('../partials/header', { title: 'Inventario', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+
+<%
+  const fmt = value => {
+    const number = Number(value) || 0;
+    return Number.isInteger(number) ? String(number) : number.toFixed(2);
+  };
+  const typeLabels = {
+    CARGA_CEDIS: 'Carga CEDIS',
+    SALIDA_VALE: 'Salida por vale',
+    REVERSA_VALE: 'Reversión de vale',
+    CIERRE_REBANADO: 'Cierre de Rebanado',
+    MERMA_MANUAL: 'Merma'
+  };
+%>
+
+<div class="page-header inventory-page-header">
+  <div class="row align-items-center g-3">
+    <div class="col-lg-8">
+      <div class="page-kicker">Control por SKU</div>
+      <h1 class="page-title">Inventario de Rebanado</h1>
+      <p class="page-subtitle mb-0">Existencia real: producto sin rebanar más producto rebanado que todavía queda.</p>
+    </div>
+    <div class="col-lg-4">
+      <div class="header-actions justify-content-lg-end">
+        <% if (can('inventario.cierre')) { %>
+          <a class="btn btn-primary" href="/inventario/cierre"><i class="bi bi-clipboard2-check me-1"></i>Hacer cierre</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="inventory-kpis" aria-label="Resumen de inventario">
+  <article><span>Productos</span><strong><%= summary.totalProducts %></strong><i class="bi bi-box-seam"></i></article>
+  <article><span>Sin rebanar</span><strong><%= fmt(summary.unsliced) %></strong><i class="bi bi-box2"></i></article>
+  <article><span>Rebanado que queda</span><strong><%= fmt(summary.sliced) %></strong><i class="bi bi-layers"></i></article>
+  <article><span>Comprometido</span><strong><%= fmt(summary.committed) %></strong><i class="bi bi-receipt"></i></article>
+  <article class="<%= summary.negative ? 'is-alert' : '' %>"><span>SKUs proyectados negativos</span><strong><%= summary.negative %></strong><i class="bi bi-exclamation-triangle"></i></article>
+</section>
+
+<% if (can('inventario.manage') || can('productos.manage')) { %>
+  <section class="inventory-actions">
+    <% if (can('inventario.manage')) { %>
+      <details class="inventory-action-card" open>
+        <summary><i class="bi bi-plus-square"></i><span>Cargar sin rebanar</span></summary>
+        <form action="/inventario/carga" method="post" class="row g-2 product-aware-form">
+          <div class="col-md-2"><label class="form-label">Fecha</label><input type="date" name="fecha" value="<%= today %>" class="form-control" required></div>
+          <div class="col-md-2"><label class="form-label">SKU</label><input type="text" name="sku" class="form-control" data-product-sku autocomplete="off" required></div>
+          <div class="col-md-4"><label class="form-label">Producto</label><input type="text" name="producto" class="form-control" data-product-description required></div>
+          <div class="col-md-2"><label class="form-label">Cantidad</label><input type="number" name="cantidad" min="0.01" step="0.01" class="form-control" required></div>
+          <div class="col-md-2"><label class="form-label">Referencia</label><input type="text" name="referencia" class="form-control" placeholder="Opcional"></div>
+          <div class="col-12 d-flex gap-2"><input type="text" name="observaciones" class="form-control" placeholder="Observaciones opcionales"><button class="btn btn-primary" type="submit">Registrar carga</button></div>
+        </form>
+      </details>
+
+      <details class="inventory-action-card">
+        <summary><i class="bi bi-exclamation-diamond"></i><span>Registrar merma</span></summary>
+        <form action="/inventario/merma" method="post" class="row g-2 product-aware-form">
+          <div class="col-md-2"><label class="form-label">Fecha</label><input type="date" name="fecha" value="<%= today %>" class="form-control" required></div>
+          <div class="col-md-2"><label class="form-label">SKU</label><input type="text" name="sku" class="form-control" data-product-sku autocomplete="off" required></div>
+          <div class="col-md-3"><label class="form-label">Producto</label><input type="text" name="producto" class="form-control" data-product-description required></div>
+          <div class="col-md-2"><label class="form-label">Cantidad</label><input type="number" name="cantidad" min="0.01" step="0.01" class="form-control" required></div>
+          <div class="col-md-3"><label class="form-label">Descontar de</label><select name="origen_merma" class="form-select"><option>Sin rebanar</option><option>Rebanado que queda</option></select></div>
+          <div class="col-12 d-flex gap-2"><input type="text" name="observaciones" class="form-control" placeholder="Motivo u observaciones"><button class="btn btn-danger" type="submit">Registrar merma</button></div>
+        </form>
+      </details>
+    <% } %>
+
+    <% if (can('productos.manage')) { %>
+      <details class="inventory-action-card">
+        <summary><i class="bi bi-tag"></i><span>Nuevo producto rebanable</span></summary>
+        <form action="/inventario/productos" method="post" class="row g-2">
+          <div class="col-md-3"><label class="form-label">SKU</label><input type="text" name="sku" class="form-control" required></div>
+          <div class="col-md-7"><label class="form-label">Descripción sugerida</label><input type="text" name="producto" class="form-control" required></div>
+          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">Guardar producto</button></div>
+        </form>
+      </details>
+    <% } %>
+  </section>
+<% } %>
+
+<nav class="inventory-tabs" aria-label="Secciones de inventario">
+  <button type="button" class="active" data-inventory-tab="existencias"><i class="bi bi-boxes"></i>Existencias</button>
+  <button type="button" data-inventory-tab="rebanado"><i class="bi bi-clock-history"></i>Rebanado</button>
+  <button type="button" data-inventory-tab="mermas"><i class="bi bi-exclamation-octagon"></i>Mermas</button>
+  <button type="button" data-inventory-tab="movimientos"><i class="bi bi-arrow-left-right"></i>Movimientos</button>
+</nav>
+
+<section class="inventory-panel active" data-inventory-panel="existencias" id="existencias">
+  <div class="inventory-table-tools"><i class="bi bi-search"></i><input type="search" class="form-control" data-inventory-search placeholder="Buscar SKU o producto"><label><input type="checkbox" data-negative-only> Sólo negativos</label></div>
+  <div class="table-responsive inventory-table-shell">
+    <table class="table inventory-table align-middle">
+      <thead><tr><th>SKU / Producto</th><th>Sin rebanar</th><th>Rebanado que queda</th><th>Total real</th><th>Comprometido</th><th>Proyectado</th></tr></thead>
+      <tbody>
+        <% products.forEach(item => { const negative = Number(item.proyectado) < 0; %>
+          <tr data-inventory-product data-search="<%= `${item.sku} ${item.descripcion}`.toLowerCase() %>" data-negative="<%= negative ? '1' : '0' %>">
+            <td><strong class="inventory-sku"><%= item.sku %></strong><span class="inventory-product-name"><%= item.descripcion %></span></td>
+            <td><span class="inventory-number"><%= fmt(item.cantidad_sin_rebanar) %></span></td>
+            <td><span class="inventory-number is-sliced"><%= fmt(item.cantidad_rebanado_queda) %></span></td>
+            <td><strong class="inventory-number"><%= fmt(item.total_real) %></strong></td>
+            <td><span class="inventory-number is-committed"><%= fmt(item.comprometido) %></span></td>
+            <td><strong class="inventory-number <%= negative ? 'is-negative' : 'is-ok' %>"><%= fmt(item.proyectado) %></strong></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="inventory-panel" data-inventory-panel="rebanado" id="rebanado">
+  <div class="inventory-panel-heading"><div><h2>Historial de producto rebanado</h2><p>Es actividad procesada; no representa existencia disponible.</p></div></div>
+  <div class="table-responsive inventory-table-shell"><table class="table inventory-table"><thead><tr><th>Fecha</th><th>SKU / Producto</th><th>Cantidad rebanada</th><th>Origen</th><th>Usuario</th></tr></thead><tbody>
+    <% if (!rebanadoHistory.length) { %><tr><td colspan="5" class="text-center text-muted py-4">Todavía no hay actividad de rebanado.</td></tr><% } %>
+    <% rebanadoHistory.forEach(item => { %><tr><td><%= String(item.fecha_operacion).slice(0,10) %></td><td><strong><%= item.sku %></strong><span class="inventory-product-name"><%= item.descripcion %></span></td><td><strong><%= fmt(item.cantidad_rebanada_historial) %></strong></td><td><%= item.folio ? `Vale ${item.folio}` : (item.tipo === 'CIERRE_REBANADO' ? 'Preventivo para otro día' : item.referencia || typeLabels[item.tipo] || item.tipo) %></td><td><%= item.usuario || 'Sistema' %></td></tr><% }) %>
+  </tbody></table></div>
+</section>
+
+<section class="inventory-panel" data-inventory-panel="mermas" id="mermas">
+  <div class="inventory-panel-heading"><div><h2>Historial de mermas</h2><p>Producto descartado durante el proceso o mediante un ajuste autorizado.</p></div></div>
+  <div class="table-responsive inventory-table-shell"><table class="table inventory-table"><thead><tr><th>Fecha</th><th>SKU / Producto</th><th>Cantidad</th><th>Origen</th><th>Observaciones</th><th>Usuario</th></tr></thead><tbody>
+    <% if (!wasteHistory.length) { %><tr><td colspan="6" class="text-center text-muted py-4">No hay mermas registradas.</td></tr><% } %>
+    <% wasteHistory.forEach(item => { %><tr><td><%= String(item.fecha_operacion).slice(0,10) %></td><td><strong><%= item.sku %></strong><span class="inventory-product-name"><%= item.descripcion %></span></td><td><strong class="text-danger"><%= fmt(item.cantidad_merma) %></strong></td><td><%= item.referencia || (item.tipo === 'CIERRE_REBANADO' ? 'Durante el proceso' : '') %></td><td><%= item.observaciones || '—' %></td><td><%= item.usuario || 'Sistema' %></td></tr><% }) %>
+  </tbody></table></div>
+</section>
+
+<section class="inventory-panel" data-inventory-panel="movimientos" id="movimientos">
+  <div class="inventory-panel-heading"><div><h2>Todos los movimientos</h2><p>Auditoría de entradas, salidas, cierres y reversiones.</p></div></div>
+  <div class="table-responsive inventory-table-shell"><table class="table inventory-table"><thead><tr><th>Fecha</th><th>Movimiento</th><th>SKU</th><th>Sin rebanar</th><th>Rebanado que queda</th><th>Referencia</th><th>Usuario</th></tr></thead><tbody>
+    <% if (!movements.length) { %><tr><td colspan="7" class="text-center text-muted py-4">No hay movimientos registrados.</td></tr><% } %>
+    <% movements.forEach(item => { %><tr><td><%= String(item.fecha_operacion).slice(0,10) %></td><td><span class="movement-type"><%= typeLabels[item.tipo] || item.tipo %></span></td><td><strong><%= item.sku %></strong></td><td><%= Number(item.delta_sin_rebanar) >= 0 ? '+' : '' %><%= fmt(item.delta_sin_rebanar) %></td><td><%= Number(item.delta_rebanado_queda) >= 0 ? '+' : '' %><%= fmt(item.delta_rebanado_queda) %></td><td><%= item.folio ? `Vale ${item.folio}` : item.referencia || '—' %></td><td><%= item.usuario || 'Sistema' %></td></tr><% }) %>
+  </tbody></table></div>
+</section>
+
+<datalist id="inventoryProductCatalog">
+  <% products.forEach(item => { %><option value="<%= item.sku %>"><%= item.descripcion %></option><% }) %>
+</datalist>
+<script type="application/json" id="inventoryProductData"><%- JSON.stringify(products.map(item => ({ sku: item.sku, descripcion: item.descripcion }))).replace(/</g, '\\u003c') %></script>
+
+<%- include('../partials/footer') %>
+

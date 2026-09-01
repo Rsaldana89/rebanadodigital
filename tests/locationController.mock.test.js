@@ -15,6 +15,8 @@ const fakeConnection = {
     connectionQueries.push({ sql, params });
     if (sql.includes('INSERT INTO vales')) return [{ insertId: nextId++ }];
     if (sql.startsWith('UPDATE vales SET folio')) return [{ affectedRows: 1 }];
+    if (sql.includes('INSERT IGNORE INTO productos_rebanables')) return [{ affectedRows: 1 }];
+    if (sql.includes('INSERT IGNORE INTO inventario_existencias')) return [{ affectedRows: 1 }];
     if (sql.includes('INSERT INTO vale_productos')) return [{ affectedRows: 1 }];
     if (sql.includes('INSERT INTO vale_history')) return [{ affectedRows: 1 }];
     throw new Error(`Consulta no simulada: ${sql}`);

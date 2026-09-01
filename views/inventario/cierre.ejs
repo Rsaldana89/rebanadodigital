@@ -1,0 +1,48 @@
+<%- include('../partials/header', { title: 'Cierre de Rebanado', user: user, success_msg: success_msg, error_msg: error_msg }) %>
+
+<div class="page-header close-page-header">
+  <div class="row align-items-center g-3">
+    <div class="col-lg-8">
+      <div class="page-kicker">Cierre sencillo</div>
+      <h1 class="page-title">Cierre de Rebanado</h1>
+      <p class="page-subtitle mb-0">El rebanado de los vales se calcula automáticamente. Captura únicamente lo que queda y la merma.</p>
+    </div>
+    <div class="col-lg-4"><div class="header-actions justify-content-lg-end"><a href="/inventario" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Ver inventario</a></div></div>
+  </div>
+</div>
+
+<form method="get" action="/inventario/cierre" class="close-date-selector">
+  <label for="closeDate"><i class="bi bi-calendar3"></i>Fecha del cierre</label>
+  <input id="closeDate" type="date" name="fecha" value="<%= date %>" class="form-control">
+  <button class="btn btn-soft" type="submit">Consultar</button>
+</form>
+
+<form method="post" action="/inventario/cierre" class="close-form">
+  <input type="hidden" name="fecha" value="<%= date %>">
+  <div class="close-help-strip"><i class="bi bi-info-circle-fill"></i><span><strong>Rebanado para vales</strong> es sólo historial. <strong>Rebanado que queda</strong> sí forma parte del inventario disponible.</span></div>
+  <div class="table-responsive inventory-table-shell">
+    <table class="table close-table align-middle">
+      <thead><tr><th>SKU / Producto</th><th>Rebanado para vales</th><th>Rebanado que queda</th><th>Merma del proceso</th><th>Nota</th></tr></thead>
+      <tbody>
+        <% products.forEach(item => { const relevant = Number(item.rebanado_vales) > 0 || Number(item.saldo_rebanado_queda) > 0; %>
+          <tr class="<%= relevant ? 'is-relevant' : '' %>">
+            <td>
+              <input type="hidden" name="sku[]" value="<%= item.sku %>">
+              <input type="hidden" name="producto[]" value="<%= item.descripcion %>">
+              <strong class="inventory-sku"><%= item.sku %></strong><span class="inventory-product-name"><%= item.descripcion %></span>
+            </td>
+            <td><span class="close-auto-value"><%= Number(item.rebanado_vales || 0).toFixed(2) %></span><small>Automático</small></td>
+            <td><input type="number" name="rebanado_que_queda[]" min="0" step="0.01" value="<%= Number(item.cierre_rebanado_queda || 0).toFixed(2) %>" class="form-control close-quantity" required></td>
+            <td><input type="number" name="merma[]" min="0" step="0.01" value="<%= Number(item.cierre_merma || 0).toFixed(2) %>" class="form-control close-quantity" required></td>
+            <td><input type="text" name="detalle_observaciones[]" value="<%= item.cierre_observaciones || '' %>" class="form-control" placeholder="Opcional"></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <section class="form-section mt-3"><label class="form-label fw-bold">Observaciones generales</label><textarea name="observaciones" class="form-control" rows="2" placeholder="Incidencias generales del cierre"><%= observations %></textarea></section>
+  <div class="command-form-actions"><button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2-circle me-1"></i>Guardar cierre</button><a href="/inventario" class="btn btn-soft btn-lg">Cancelar</a></div>
+</form>
+
+<%- include('../partials/footer') %>
+
