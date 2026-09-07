@@ -1146,22 +1146,78 @@ textarea:focus,
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  width: 100%;
 }
 
 .btn-state-main i {
   font-size: 1.15rem;
 }
 
-.btn-state-main span {
+.btn-state-main .state-action-copy {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .btn-state-main small {
   font-size: 0.82rem;
   font-weight: 500;
   opacity: 0.88;
+}
+
+.btn-state-main .state-change-stamp {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.08rem;
+  margin-left: auto;
+  padding-left: 0.75rem;
+  text-align: right;
+  line-height: 1.2;
+}
+
+.state-change-stamp small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+}
+
+.state-change-stamp strong {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.state-change-stamp.no-time {
+  opacity: 0.58;
+}
+
+@media (max-width: 575.98px) {
+  .btn-state-option,
+  .btn-state-cancel {
+    padding: 0.8rem 0.85rem !important;
+  }
+
+  .btn-state-main {
+    gap: 0.6rem;
+  }
+
+  .btn-state-main .state-change-stamp {
+    padding-left: 0.35rem;
+  }
+
+  .state-change-stamp small {
+    font-size: 0.6rem;
+  }
+
+  .state-change-stamp strong {
+    font-size: 0.7rem;
+  }
 }
 
 .btn-state-pending {

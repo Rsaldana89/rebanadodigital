@@ -13,6 +13,7 @@
   const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '');
   const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
   const entregaDisplay = String(vale.entrega_dias_texto || '').trim() || fechaEntregaDisplay;
+  const stateChanges = typeof state_changes !== 'undefined' && state_changes ? state_changes : {};
   const returnUrl = typeof return_url !== 'undefined' && return_url
     ? return_url
     : `/vales/tablero?focus=${vale.id}#vale-${vale.id}`;
@@ -130,6 +131,7 @@
              const isCurrent = est === vale.estado;
              const isAllowed = (vale.allowed_states || []).includes(est);
              const disabled = isCurrent || !isAllowed;
+             const changedAt = stateChanges[est];
         %>
           <form action="/vales/<%= vale.id %>/estado" method="post" class="state-action-form">
             <input type="hidden" name="return_url" value="<%= returnUrl %>">
@@ -140,9 +142,13 @@
                     title="<%= isCurrent ? 'Estado actual' : (!isAllowed ? 'No tienes permiso para marcar este estado' : 'Cambiar a ' + est) %>">
               <span class="btn-state-main">
                 <i class="bi <%= isCurrent ? 'bi-check-circle-fill' : (!isAllowed ? 'bi-lock-fill' : iconMap[est]) %>"></i>
-                <span>
+                <span class="state-action-copy">
                   <strong><%= est %></strong>
                   <small><%= isCurrent ? 'Estado actual' : (!isAllowed ? 'No permitido para tu usuario' : 'Aplicar a toda la comanda') %></small>
+                </span>
+                <span class="state-change-stamp <%= changedAt ? 'has-time' : 'no-time' %>">
+                  <small><i class="bi bi-clock-history"></i> Último cambio</small>
+                  <strong><%= changedAt ? changedAt.display : 'Sin registrar' %></strong>
                 </span>
               </span>
             </button>
@@ -150,6 +156,7 @@
         <% }) %>
 
         <% const canCancel = (vale.allowed_states || []).includes('Cancelado'); %>
+        <% const cancelledAt = stateChanges.Cancelado; %>
         <form action="/vales/<%= vale.id %>/estado" method="post" class="state-action-form" data-confirm="¿Deseas cancelar este vale completo?">
           <input type="hidden" name="return_url" value="<%= returnUrl %>">
           <input type="hidden" name="nuevo_estado" value="Cancelado">
@@ -159,9 +166,13 @@
                   title="<%= vale.estado === 'Cancelado' ? 'Estado actual' : (!canCancel ? 'No tienes permiso para cancelar este vale' : 'Cancelar vale') %>">
             <span class="btn-state-main">
               <i class="bi <%= vale.estado === 'Cancelado' ? 'bi-check-circle-fill' : (!canCancel ? 'bi-lock-fill' : 'bi-x-circle') %>"></i>
-              <span>
+              <span class="state-action-copy">
                 <strong>Cancelado</strong>
                 <small><%= vale.estado === 'Cancelado' ? 'Estado actual' : (!canCancel ? 'No permitido para tu usuario' : 'Cancelar toda la comanda') %></small>
+              </span>
+              <span class="state-change-stamp <%= cancelledAt ? 'has-time' : 'no-time' %>">
+                <small><i class="bi bi-clock-history"></i> Último cambio</small>
+                <strong><%= cancelledAt ? cancelledAt.display : 'Sin registrar' %></strong>
               </span>
             </span>
           </button>
@@ -188,7 +199,7 @@
                   <div class="small text-muted mb-1">De <strong><%= item.estado_anterior || 'N/D' %></strong> a <strong><%= item.estado_nuevo || 'N/D' %></strong></div>
                 <% } %>
                 <div class="small"><strong>Por:</strong> <%= item.usuario || 'N/D' %></div>
-                <div class="small text-muted"><%= new Date(item.created_at).toISOString().slice(0,16).replace('T',' ') %></div>
+                <div class="small text-muted"><i class="bi bi-clock me-1"></i><%= item.created_at_display %></div>
                 <% if (item.descripcion) { %><div class="small mt-1"><%= item.descripcion %></div><% } %>
               </div>
             </li>

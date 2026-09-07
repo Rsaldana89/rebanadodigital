@@ -28,6 +28,42 @@ function getMexicoDateParts(date = new Date()) {
   };
 }
 
+function formatMexicoDateTime(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(date).reduce((acc, part) => {
+    acc[part.type] = part.value;
+    return acc;
+  }, {});
+
+  return {
+    date: `${parts.day}/${parts.month}/${parts.year}`,
+    time: `${parts.hour}:${parts.minute}`,
+    display: `${parts.day}/${parts.month}/${parts.year} · ${parts.hour}:${parts.minute}`
+  };
+}
+
+function buildStateChangeMap(historyRows = []) {
+  const stateChanges = {};
+  historyRows.forEach(item => {
+    const state = String(item.estado_nuevo || '').trim();
+    if (!VALID_STATES.includes(state) || stateChanges[state]) return;
+    const timestamp = formatMexicoDateTime(item.created_at);
+    if (timestamp) stateChanges[state] = timestamp;
+  });
+  return stateChanges;
+}
+
 function asArray(value) {
   if (Array.isArray(value)) return value;
   if (value === undefined || value === null) return [];
@@ -618,7 +654,7 @@ exports.detalle = async (req, res) => {
       vale.estado
     );
 
-    const [historial] = await db.query(
+    const [historyRows] = await db.query(
       `SELECT vh.*, u.name AS usuario
        FROM vale_history vh
        LEFT JOIN users u ON vh.user_id = u.id
@@ -627,7 +663,19 @@ exports.detalle = async (req, res) => {
       [id]
     );
 
-    return res.render('vales/detalle', { title: `Vale ${vale.folio}`, vale, historial, return_url: returnUrl });
+    const historial = historyRows.map(item => ({
+      ...item,
+      created_at_display: formatMexicoDateTime(item.created_at)?.display || 'Fecha no disponible'
+    }));
+    const stateChanges = buildStateChangeMap(historyRows);
+
+    return res.render('vales/detalle', {
+      title: `Vale ${vale.folio}`,
+      vale,
+      historial,
+      state_changes: stateChanges,
+      return_url: returnUrl
+    });
   } catch (err) {
     console.error(err);
     req.session.error_msg = 'Error al cargar el detalle';
@@ -700,4 +748,11 @@ exports.pantallaController = async (req, res) => {
 };
 
 // Superficie interna para pruebas de regresión; no se publica como ruta HTTP.
-exports._test = { normalizeProducts, getFormArray, calendarMonthBounds, summarizeCalendarRows };
+exports._test = {
+  normalizeProducts,
+  getFormArray,
+  calendarMonthBounds,
+  summarizeCalendarRows,
+  formatMexicoDateTime,
+  buildStateChangeMap
+};
