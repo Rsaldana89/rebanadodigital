@@ -2545,7 +2545,7 @@ body.tv-warehouse-body {
   position: sticky;
   top: 14px;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 3fr) minmax(180px, 2fr);
   height: calc(100vh - 28px);
   min-width: 0;
   overflow: hidden;
@@ -2586,6 +2586,44 @@ body.tv-warehouse-body {
 
 .warehouse-history-header > i { color: #bdada5; }
 
+.warehouse-side-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.warehouse-side-panel + .warehouse-side-panel {
+  border-top: 1px solid rgba(255,255,255,0.16);
+}
+
+.warehouse-side-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.035);
+}
+
+.warehouse-side-panel-heading span {
+  color: #f2e7e1;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.warehouse-side-panel-heading small {
+  color: #a99a93;
+  font-size: 0.56rem;
+}
+
+.warehouse-side-panel.is-priority .warehouse-side-panel-heading {
+  box-shadow: inset 4px 0 #31855e;
+}
+
 .warehouse-history-scroll {
   min-height: 0;
   overflow-y: auto;
@@ -2620,6 +2658,8 @@ body.tv-warehouse-body {
 
 .warehouse-history-section.is-delivered .warehouse-history-title i { color: #aeb9c9; }
 .warehouse-history-section.is-cancelled .warehouse-history-title i { color: #ec8592; }
+.warehouse-history-section.is-ready .warehouse-history-title i { color: #70d99d; }
+.warehouse-history-section.is-working .warehouse-history-title i { color: #68bde3; }
 
 .warehouse-history-title > strong {
   display: grid;
@@ -2649,6 +2689,18 @@ body.tv-warehouse-body {
   background: rgba(130, 34, 47, 0.14);
 }
 
+.warehouse-history-section.is-ready .warehouse-compact-card {
+  border-color: rgba(80, 196, 132, 0.34);
+  background: rgba(35, 130, 88, 0.18);
+  box-shadow: inset 3px 0 #3cb779;
+}
+
+.warehouse-history-section.is-working .warehouse-compact-card {
+  border-color: rgba(91, 181, 223, 0.34);
+  background: rgba(40, 124, 165, 0.18);
+  box-shadow: inset 3px 0 #3e9dca;
+}
+
 .warehouse-compact-top {
   display: flex;
   align-items: center;
@@ -2657,6 +2709,8 @@ body.tv-warehouse-body {
 }
 
 .warehouse-compact-top strong { color: #f1c76f; font-size: 0.75rem; }
+.warehouse-history-section.is-ready .warehouse-compact-top strong { color: #80e4aa; }
+.warehouse-history-section.is-working .warehouse-compact-top strong { color: #7fcef1; }
 .warehouse-compact-top span { color: #ad9e97; font-size: 0.57rem; }
 
 .warehouse-compact-card h3 {

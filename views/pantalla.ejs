@@ -74,56 +74,118 @@
         <% }) %>
       </section>
 
-      <aside class="warehouse-history-column" aria-label="Vales terminados y cancelados">
+      <aside class="warehouse-history-column" aria-label="Seguimiento rápido por estado">
         <header class="warehouse-history-header">
-          <div><span>Actividad del día</span><strong>Entregados y cancelados</strong></div>
+          <div><span>Seguimiento rápido</span><strong>Estados importantes</strong></div>
           <i class="bi bi-arrow-down-up" title="Desplazamiento automático"></i>
         </header>
 
-        <div class="warehouse-history-scroll" data-auto-scroll>
-          <section class="warehouse-history-section is-delivered">
-            <div class="warehouse-history-title"><span><i class="bi bi-truck"></i>Entregados</span><strong><%= counts.Entregado %></strong></div>
-            <% if ((estados.Entregado || []).length) { %>
-              <div class="warehouse-history-list">
-                <% estados.Entregado.forEach(vale => { %>
-                  <%- include('partials/pantallaValeCompact', { vale }) %>
-                <% }) %>
-              </div>
-            <% } else { %>
-              <div class="warehouse-history-empty">Aún no hay entregados.</div>
-            <% } %>
-          </section>
+        <section class="warehouse-side-panel is-priority" aria-label="Listos y rebanando">
+          <header class="warehouse-side-panel-heading">
+            <span>Listos y rebanando</span>
+            <small>Folio, cliente y entrega</small>
+          </header>
+          <div class="warehouse-history-scroll" data-auto-scroll data-scroll-key="important">
+            <section class="warehouse-history-section is-ready">
+              <div class="warehouse-history-title"><span><i class="bi bi-check2-circle"></i>Listos</span><strong><%= counts.Listo %></strong></div>
+              <% if ((estados.Listo || []).length) { %>
+                <div class="warehouse-history-list">
+                  <% estados.Listo.forEach(vale => { %>
+                    <%- include('partials/pantallaValeCompact', { vale, showProducts: false }) %>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div class="warehouse-history-empty">No hay vales listos.</div>
+              <% } %>
+            </section>
 
-          <section class="warehouse-history-section is-cancelled">
-            <div class="warehouse-history-title"><span><i class="bi bi-x-circle"></i>Cancelados</span><strong><%= counts.Cancelado %></strong></div>
-            <% if ((estados.Cancelado || []).length) { %>
-              <div class="warehouse-history-list">
-                <% estados.Cancelado.forEach(vale => { %>
-                  <%- include('partials/pantallaValeCompact', { vale }) %>
-                <% }) %>
-              </div>
-            <% } else { %>
-              <div class="warehouse-history-empty">No hay cancelados.</div>
-            <% } %>
-          </section>
-        </div>
+            <section class="warehouse-history-section is-working">
+              <div class="warehouse-history-title"><span><i class="bi bi-gear-wide-connected"></i>Rebanando</span><strong><%= counts.Rebanando %></strong></div>
+              <% if ((estados.Rebanando || []).length) { %>
+                <div class="warehouse-history-list">
+                  <% estados.Rebanando.forEach(vale => { %>
+                    <%- include('partials/pantallaValeCompact', { vale, showProducts: false }) %>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div class="warehouse-history-empty">No hay vales rebanando.</div>
+              <% } %>
+            </section>
+          </div>
+        </section>
+
+        <section class="warehouse-side-panel is-activity" aria-label="Entregados y cancelados">
+          <header class="warehouse-side-panel-heading">
+            <span>Actividad del día</span>
+            <small>Entregados y cancelados</small>
+          </header>
+          <div class="warehouse-history-scroll warehouse-history-scroll-secondary" data-auto-scroll data-scroll-key="activity">
+            <section class="warehouse-history-section is-delivered">
+              <div class="warehouse-history-title"><span><i class="bi bi-truck"></i>Entregados</span><strong><%= counts.Entregado %></strong></div>
+              <% if ((estados.Entregado || []).length) { %>
+                <div class="warehouse-history-list">
+                  <% estados.Entregado.forEach(vale => { %>
+                    <%- include('partials/pantallaValeCompact', { vale }) %>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div class="warehouse-history-empty">Aún no hay entregados.</div>
+              <% } %>
+            </section>
+
+            <section class="warehouse-history-section is-cancelled">
+              <div class="warehouse-history-title"><span><i class="bi bi-x-circle"></i>Cancelados</span><strong><%= counts.Cancelado %></strong></div>
+              <% if ((estados.Cancelado || []).length) { %>
+                <div class="warehouse-history-list">
+                  <% estados.Cancelado.forEach(vale => { %>
+                    <%- include('partials/pantallaValeCompact', { vale }) %>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div class="warehouse-history-empty">No hay cancelados.</div>
+              <% } %>
+            </section>
+          </div>
+        </section>
       </aside>
     </div>
   </main>
 
   <script>
     (() => {
-      const scroller = document.querySelector('[data-auto-scroll]');
-      if (scroller && scroller.scrollHeight > scroller.clientHeight) {
-        let direction = 1;
+      const storagePrefix = 'chc-pantalla-scroll-';
+
+      document.querySelectorAll('[data-auto-scroll]').forEach(scroller => {
+        const key = storagePrefix + (scroller.dataset.scrollKey || 'general');
+        let direction = Number(window.sessionStorage.getItem(`${key}-direction`)) || 1;
+        let pauseUntil = Date.now() + 1200;
+        const savedPosition = Number(window.sessionStorage.getItem(`${key}-position`));
+
+        if (Number.isFinite(savedPosition)) {
+          scroller.scrollTop = Math.min(savedPosition, Math.max(0, scroller.scrollHeight - scroller.clientHeight));
+        }
+
         window.setInterval(() => {
+          if (scroller.scrollHeight <= scroller.clientHeight || Date.now() < pauseUntil) return;
+
           const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
           const atTop = scroller.scrollTop <= 0;
-          if (atBottom) direction = -1;
-          if (atTop) direction = 1;
-          scroller.scrollTop += direction;
-        }, 45);
-      }
+
+          if (atBottom && direction > 0) {
+            direction = -1;
+            pauseUntil = Date.now() + 1400;
+          } else if (atTop && direction < 0) {
+            direction = 1;
+            pauseUntil = Date.now() + 1400;
+          } else {
+            scroller.scrollTop += direction;
+          }
+
+          window.sessionStorage.setItem(`${key}-position`, String(scroller.scrollTop));
+          window.sessionStorage.setItem(`${key}-direction`, String(direction));
+        }, 40);
+      });
+
       window.setTimeout(() => window.location.reload(), 30000);
     })();
   </script>
