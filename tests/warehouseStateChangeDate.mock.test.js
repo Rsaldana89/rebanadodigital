@@ -17,7 +17,10 @@ const db = {
       return [[{
         id: 91,
         folio: 'VM-2609-0091',
+        origen: 'Siclik',
         numero_pedido: 'PRB-ANTERIOR',
+        sap_docnum: 237224,
+        external_key: 'sap-order-91',
         cliente: 'CLIENTE ENTREGADO HOY',
         lugar_entrega: 'Centro, Querétaro',
         prioridad: 'Normal',

@@ -4,11 +4,14 @@ const ejs = require('ejs');
 
 const view = path.join(__dirname, '..', 'views', 'pantalla.ejs');
 
-function vale(folio, estado, lugarEntrega) {
+function vale(folio, estado, lugarEntrega, siclik = false) {
   return {
     id: folio,
     folio,
     numero_pedido: `PED-${folio}`,
+    sap_docnum: siclik ? 237224 : null,
+    external_key: siclik ? `sap-order-${folio}` : null,
+    origen: siclik ? 'Siclik' : 'Manual',
     cliente: `CLIENTE ${estado.toUpperCase()}`,
     lugar_entrega: lugarEntrega,
     prioridad: 'Normal',
@@ -25,7 +28,7 @@ const estados = {
   Listo: [vale('VM-0001', 'Listo', 'Centro, Querétaro')],
   Rebanando: [vale('VM-0002', 'Rebanando', null)],
   Pendiente: [],
-  Entregado: [vale('VM-0003', 'Entregado', 'Juriquilla, Querétaro')],
+  Entregado: [vale('VS-0003', 'Entregado', 'Juriquilla, Querétaro', true)],
   Cancelado: [vale('VM-0004', 'Cancelado', 'El Marqués, Querétaro')]
 };
 
@@ -52,8 +55,12 @@ ejs.renderFile(view, {
   assert(html.includes('VM-0002'));
   assert(html.includes('CLIENTE REBANANDO'));
   assert(html.includes('Lugar por confirmar'));
-  assert(html.includes('VM-0003'));
+  assert(html.includes('VS-0003'));
   assert(html.includes('CLIENTE ENTREGADO'));
+  assert(html.includes('Pedido / orden de venta'));
+  assert(html.includes('237224'));
+  assert(html.includes('Vale VS-0003'));
+  assert(html.includes('warehouse-compact-siclik-reference'));
   assert(html.includes('VM-0004'));
   assert(html.includes('CLIENTE CANCELADO'));
   assert(html.includes("document.querySelectorAll('[data-auto-scroll]')"));

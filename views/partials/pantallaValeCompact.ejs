@@ -1,6 +1,20 @@
-<% const displayProducts = typeof showProducts === 'undefined' ? true : Boolean(showProducts); %>
+<%
+  const displayProducts = typeof showProducts === 'undefined' ? true : Boolean(showProducts);
+  const isSiclik = Boolean(vale.external_key) || String(vale.origen || '').toLowerCase() === 'siclik';
+  const salesOrder = vale.sap_docnum || vale.numero_pedido;
+%>
 <article class="warehouse-compact-card">
-  <div class="warehouse-compact-top"><strong><%= vale.folio %></strong><% if (vale.numero_pedido) { %><span>Pedido <%= vale.numero_pedido %></span><% } %></div>
+  <% if (isSiclik) { %>
+    <div class="warehouse-compact-siclik-reference">
+      <div>
+        <small>Pedido / orden de venta</small>
+        <strong><%= salesOrder || 'Sin referencia' %></strong>
+      </div>
+      <span>Vale <%= vale.folio %></span>
+    </div>
+  <% } else { %>
+    <div class="warehouse-compact-top"><strong><%= vale.folio %></strong><% if (vale.numero_pedido) { %><span>Pedido <%= vale.numero_pedido %></span><% } %></div>
+  <% } %>
   <h3><%= vale.cliente %></h3>
   <p class="<%= vale.lugar_entrega ? '' : 'is-missing' %>"><i class="bi bi-geo-alt-fill"></i><%= vale.lugar_entrega || 'Lugar por confirmar' %></p>
   <% if (displayProducts) { %>

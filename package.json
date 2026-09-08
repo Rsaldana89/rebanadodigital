@@ -1,6 +1,6 @@
 {
   "name": "chc-rebanado-digital",
-  "version": "19.0.5",
+  "version": "19.0.6",
   "description": "Sistema CHC de vales, calendario operativo e inventario de Rebanado por SKU",
   "main": "app.js",
   "packageManager": "npm@11.6.2",

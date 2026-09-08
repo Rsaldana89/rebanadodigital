@@ -757,7 +757,8 @@ exports.pantallaController = async (req, res) => {
     const filtroFecha = req.query.fecha || now.isoDate;
 
     const [rows] = await db.query(
-      `SELECT v.id, v.folio, v.numero_pedido, v.cliente, v.lugar_entrega,
+      `SELECT v.id, v.folio, v.origen, v.numero_pedido, v.sap_docnum, v.external_key,
+              v.cliente, v.lugar_entrega,
               v.prioridad, v.estado, v.updated_at, v.entrega_dias_texto,
               sh.entregado_at, sh.cancelado_at,
               DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,

@@ -2702,6 +2702,56 @@ body.tv-warehouse-body {
 .warehouse-side-panel.is-cancelled .warehouse-compact-top strong { color: #f09aa5; }
 .warehouse-compact-top span { color: #ad9e97; font-size: 0.57rem; }
 
+.warehouse-compact-siclik-reference {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -2px -2px 6px;
+  padding: 3px 4px 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.11);
+}
+
+.warehouse-compact-siclik-reference > div {
+  min-width: 0;
+}
+
+.warehouse-compact-siclik-reference small {
+  display: block;
+  margin-bottom: 1px;
+  color: #b9aaa2;
+  font-size: 0.52rem;
+  font-weight: 850;
+  letter-spacing: 0.035em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.warehouse-compact-siclik-reference strong {
+  display: block;
+  color: #fff1cd;
+  font-size: 1rem;
+  font-weight: 950;
+  letter-spacing: 0.015em;
+  line-height: 1.05;
+}
+
+.warehouse-compact-siclik-reference > span {
+  flex: 0 0 auto;
+  max-width: 48%;
+  padding-top: 3px;
+  color: #ab9d96;
+  font-size: 0.56rem;
+  font-weight: 750;
+  line-height: 1.15;
+  text-align: right;
+}
+
+.warehouse-side-panel.is-ready .warehouse-compact-siclik-reference strong { color: #80e4aa; }
+.warehouse-side-panel.is-working .warehouse-compact-siclik-reference strong { color: #7fcef1; }
+.warehouse-side-panel.is-delivered .warehouse-compact-siclik-reference strong { color: #e6edf7; }
+.warehouse-side-panel.is-cancelled .warehouse-compact-siclik-reference strong { color: #f2a6af; }
+
 .warehouse-compact-card h3 {
   margin: 5px 0;
   color: #fff;
