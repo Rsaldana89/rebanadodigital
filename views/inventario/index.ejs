@@ -10,8 +10,10 @@
     SALIDA_VALE: 'Salida por vale',
     REVERSA_VALE: 'Reversión de vale',
     CIERRE_REBANADO: 'Cierre de Rebanado',
-    MERMA_MANUAL: 'Merma'
+    MERMA_MANUAL: 'Merma',
+    AJUSTE_ADMIN: 'Ajuste administrativo'
   };
+  const canAdjustInventory = typeof can === 'function' && can('inventario.adjust');
 %>
 
 <div class="page-header inventory-page-header">
@@ -91,7 +93,7 @@
   <div class="inventory-table-tools"><i class="bi bi-search"></i><input type="search" class="form-control" data-inventory-search placeholder="Buscar SKU o producto"><label><input type="checkbox" data-negative-only> Sólo negativos</label></div>
   <div class="table-responsive inventory-table-shell">
     <table class="table inventory-table align-middle">
-      <thead><tr><th>SKU / Producto</th><th>Sin rebanar</th><th>Rebanado que queda</th><th>Total real</th><th>Comprometido</th><th>Proyectado</th></tr></thead>
+      <thead><tr><th>SKU / Producto</th><th>Sin rebanar</th><th>Rebanado que queda</th><th>Total real</th><th>Comprometido</th><th>Proyectado</th><% if (canAdjustInventory) { %><th class="text-end">Acción</th><% } %></tr></thead>
       <tbody>
         <% products.forEach(item => { const negative = Number(item.proyectado) < 0; %>
           <tr data-inventory-product data-search="<%= `${item.sku} ${item.descripcion}`.toLowerCase() %>" data-negative="<%= negative ? '1' : '0' %>">
@@ -101,12 +103,77 @@
             <td><strong class="inventory-number"><%= fmt(item.total_real) %></strong></td>
             <td><span class="inventory-number is-committed"><%= fmt(item.comprometido) %></span></td>
             <td><strong class="inventory-number <%= negative ? 'is-negative' : 'is-ok' %>"><%= fmt(item.proyectado) %></strong></td>
+            <% if (canAdjustInventory) { %>
+              <td class="text-end">
+                <button type="button"
+                        class="btn btn-soft btn-sm inventory-adjust-button"
+                        data-inventory-adjust
+                        data-sku="<%= item.sku %>"
+                        data-product="<%= item.descripcion %>"
+                        data-unsliced="<%= Number(item.cantidad_sin_rebanar) || 0 %>"
+                        data-sliced="<%= Number(item.cantidad_rebanado_queda) || 0 %>"
+                        data-bs-toggle="modal"
+                        data-bs-target="#inventoryAdjustmentModal">
+                  <i class="bi bi-pencil-square me-1"></i>Editar
+                </button>
+              </td>
+            <% } %>
           </tr>
         <% }) %>
       </tbody>
     </table>
   </div>
 </section>
+
+<% if (canAdjustInventory) { %>
+  <div class="modal fade" id="inventoryAdjustmentModal" tabindex="-1" aria-labelledby="inventoryAdjustmentTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content inventory-adjust-modal">
+        <form action="/inventario/ajuste" method="post" data-inventory-adjustment-form>
+          <div class="modal-header">
+            <div>
+              <div class="page-kicker">Corrección administrativa</div>
+              <h2 class="modal-title fs-5" id="inventoryAdjustmentTitle">Editar existencias</h2>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="inventory-adjust-product">
+              <strong data-adjust-product>Producto</strong>
+              <span>SKU <b data-adjust-sku>—</b></span>
+            </div>
+            <input type="hidden" name="sku" data-adjust-sku-input>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Fecha del ajuste</label>
+                <input type="date" name="fecha" value="<%= today %>" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Saldo exacto sin rebanar</label>
+                <input type="number" name="cantidad_sin_rebanar" step="0.01" class="form-control" data-adjust-unsliced required>
+                <div class="form-text">Puede ser negativo si la operación ya consumió más existencia.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Saldo exacto rebanado que queda</label>
+                <input type="number" name="cantidad_rebanado_queda" min="0" step="0.01" class="form-control" data-adjust-sliced required>
+                <div class="form-text">Nunca puede ser negativo.</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Motivo de la corrección</label>
+                <textarea name="observaciones" class="form-control" rows="3" minlength="5" maxlength="500" placeholder="Ejemplo: conteo físico realizado por Administración" required></textarea>
+              </div>
+            </div>
+            <div class="inventory-adjust-warning"><i class="bi bi-info-circle-fill"></i>Escribe las existencias finales, no la cantidad que deseas sumar o restar. La diferencia quedará registrada en Movimientos.</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Guardar corrección</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<% } %>
 
 <section class="inventory-panel" data-inventory-panel="rebanado" id="rebanado">
   <div class="inventory-panel-heading"><div><h2>Historial de producto rebanado</h2><p>Es actividad procesada; no representa existencia disponible.</p></div></div>
@@ -135,7 +202,6 @@
 <datalist id="inventoryProductCatalog">
   <% products.forEach(item => { %><option value="<%= item.sku %>"><%= item.descripcion %></option><% }) %>
 </datalist>
-<script type="application/json" id="inventoryProductData"><%- JSON.stringify(products.map(item => ({ sku: item.sku, descripcion: item.descripcion }))).replace(/</g, '\\u003c') %></script>
+<script type="application/json" id="inventoryProductData"><%- JSON.stringify(products.map(item => ({ sku: item.sku, descripcion: item.descripcion, cantidad_sin_rebanar: Number(item.cantidad_sin_rebanar) || 0, cantidad_rebanado_queda: Number(item.cantidad_rebanado_queda) || 0 }))).replace(/</g, '\\u003c') %></script>
 
 <%- include('../partials/footer') %>
-

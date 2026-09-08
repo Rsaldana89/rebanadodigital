@@ -26,6 +26,17 @@ function nonNegativeNumber(value, field = 'cantidad') {
   return Math.round(parsed * 100) / 100;
 }
 
+function inventoryNumber(value, field = 'cantidad') {
+  if (String(value ?? '').trim() === '') {
+    throw new Error(`${field} es obligatoria.`);
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`${field} debe ser un número válido.`);
+  }
+  return Math.round(parsed * 100) / 100;
+}
+
 function calculateValeAllocation(requested, slicedAvailable) {
   const quantity = positiveNumber(requested, 'La cantidad del vale');
   const available = Math.max(0, Number(slicedAvailable) || 0);
@@ -423,6 +434,55 @@ async function registerWaste({ sku, producto, cantidad, origenMerma, observacion
   }
 }
 
+async function adjustStock({ sku, targetUnsliced, targetSliced, observations, userId, date }) {
+  const connection = await db.getConnection();
+  try {
+    const normalizedSku = normalizeSku(sku);
+    if (!normalizedSku) throw new Error('El SKU es obligatorio.');
+    const operationDate = String(date || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(operationDate)) throw new Error('La fecha del ajuste no es válida.');
+
+    if (String(targetSliced ?? '').trim() === '') throw new Error('Rebanado que queda es obligatorio.');
+    const nextUnsliced = inventoryNumber(targetUnsliced, 'Sin rebanar');
+    const nextSliced = nonNegativeNumber(targetSliced, 'Rebanado que queda');
+    const reason = String(observations || '').replace(/\s+/g, ' ').trim();
+    if (reason.length < 5) throw new Error('Escribe un motivo de al menos 5 caracteres para auditar el ajuste.');
+
+    await connection.beginTransaction();
+    const [productRows] = await connection.query(
+      'SELECT sku, descripcion FROM productos_rebanables WHERE sku = ? AND activo = 1 FOR UPDATE',
+      [normalizedSku]
+    );
+    if (!productRows.length) throw new Error(`El SKU ${normalizedSku} no existe o está inactivo.`);
+
+    const existence = await lockExistence(connection, normalizedSku);
+    const deltaUnsliced = Math.round((nextUnsliced - existence.unsliced) * 100) / 100;
+    const deltaSliced = Math.round((nextSliced - existence.sliced) * 100) / 100;
+    if (Math.abs(deltaUnsliced) <= EPSILON && Math.abs(deltaSliced) <= EPSILON) {
+      throw new Error('Las cantidades nuevas son iguales a las existencias actuales.');
+    }
+
+    await applyMovement(connection, {
+      date: operationDate,
+      sku: normalizedSku,
+      type: 'AJUSTE_ADMIN',
+      quantity: Math.round((Math.abs(deltaUnsliced) + Math.abs(deltaSliced)) * 100) / 100,
+      deltaUnsliced,
+      deltaSliced,
+      reference: 'Corrección administrativa',
+      notes: `${reason} · Anterior: ${existence.unsliced.toFixed(2)} sin rebanar y ${existence.sliced.toFixed(2)} rebanado.`,
+      userId
+    });
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 async function saveClose({ date, observations, details, userId }) {
   const connection = await db.getConnection();
   try {
@@ -523,6 +583,7 @@ module.exports = {
   reverseValeDelivery,
   registerLoad,
   registerWaste,
+  adjustStock,
   saveClose,
-  _test: { positiveNumber, nonNegativeNumber }
+  _test: { positiveNumber, nonNegativeNumber, inventoryNumber }
 };

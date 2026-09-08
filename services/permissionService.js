@@ -5,6 +5,7 @@ const PERMISSIONS = [
   { code: 'vales.view', category: 'Vales', name: 'Consultar vales', description: 'Ver tablero, detalle e historial.', sort: 20 },
   { code: 'vales.create', category: 'Vales', name: 'Crear vales', description: 'Registrar nuevas solicitudes de rebanado con uno o varios productos.', sort: 30 },
   { code: 'vales.edit', category: 'Vales', name: 'Editar vales', description: 'Corregir datos generales y productos de una comanda.', sort: 35 },
+  { code: 'vales.delete', category: 'Vales', name: 'Eliminar vales', description: 'Eliminar definitivamente una comanda; si estaba entregada, restaura antes su inventario.', sort: 36 },
   { code: 'vales.state.pending', category: 'Estados', name: 'Marcar Pendiente', description: 'Cambiar un vale al estado Pendiente.', sort: 40 },
   { code: 'vales.state.rebanando', category: 'Estados', name: 'Marcar Rebanando', description: 'Cambiar un vale al estado Rebanando.', sort: 50 },
   { code: 'vales.state.listo', category: 'Estados', name: 'Marcar Listo', description: 'Cambiar un vale al estado Listo.', sort: 60 },
@@ -12,9 +13,10 @@ const PERMISSIONS = [
   { code: 'vales.state.cancelado', category: 'Estados', name: 'Cancelar vale', description: 'Cambiar un vale al estado Cancelado.', sort: 80 },
   { code: 'vales.state.manage_all', category: 'Estados', name: 'Corregir estados libremente', description: 'Permite avanzar o regresar entre estados para corregir errores.', sort: 90 },
   { code: 'inventario.view', category: 'Inventario', name: 'Consultar inventario', description: 'Ver existencias, rebanado, mermas y movimientos.', sort: 100 },
-  { code: 'inventario.manage', category: 'Inventario', name: 'Administrar inventario', description: 'Cargar producto sin rebanar y registrar ajustes o mermas.', sort: 101 },
+  { code: 'inventario.manage', category: 'Inventario', name: 'Administrar inventario', description: 'Cargar producto sin rebanar y registrar mermas.', sort: 101 },
   { code: 'inventario.cierre', category: 'Inventario', name: 'Realizar cierre de Rebanado', description: 'Capturar rebanado que queda y merma del cierre.', sort: 102 },
   { code: 'productos.manage', category: 'Inventario', name: 'Administrar productos rebanables', description: 'Dar de alta SKUs para inventario y vales.', sort: 103 },
+  { code: 'inventario.adjust', category: 'Inventario', name: 'Corregir existencias', description: 'Establecer saldos exactos de inventario mediante un movimiento administrativo auditado.', sort: 104 },
   { code: 'reportes.view', category: 'Módulos', name: 'Reportes', description: 'Consultar y exportar reportes de vales.', sort: 110 },
   { code: 'users.manage', category: 'Administración', name: 'Administrar usuarios', description: 'Crear, editar y activar usuarios.', sort: 120 },
   { code: 'permissions.manage', category: 'Administración', name: 'Administrar permisos y configuración', description: 'Modificar permisos por rol, excepciones por usuario y parámetros administrativos.', sort: 130 }
@@ -29,6 +31,7 @@ const DEFAULTS = {
     'vales.view': true,
     'vales.create': true,
     'vales.edit': true,
+    'vales.delete': false,
     'vales.state.pending': true,
     'vales.state.rebanando': true,
     'vales.state.listo': true,
@@ -39,6 +42,7 @@ const DEFAULTS = {
     'inventario.manage': true,
     'inventario.cierre': true,
     'productos.manage': true,
+    'inventario.adjust': false,
     'reportes.view': true,
     'users.manage': false,
     'permissions.manage': false
@@ -48,6 +52,7 @@ const DEFAULTS = {
     'vales.view': true,
     'vales.create': true,
     'vales.edit': true,
+    'vales.delete': false,
     'vales.state.pending': true,
     'vales.state.rebanando': true,
     'vales.state.listo': true,
@@ -58,6 +63,7 @@ const DEFAULTS = {
     'inventario.manage': false,
     'inventario.cierre': false,
     'productos.manage': false,
+    'inventario.adjust': false,
     'reportes.view': true,
     'users.manage': false,
     'permissions.manage': false
@@ -67,6 +73,7 @@ const DEFAULTS = {
     'vales.view': true,
     'vales.create': false,
     'vales.edit': false,
+    'vales.delete': false,
     'vales.state.pending': false,
     'vales.state.rebanando': true,
     'vales.state.listo': true,
@@ -77,6 +84,7 @@ const DEFAULTS = {
     'inventario.manage': false,
     'inventario.cierre': true,
     'productos.manage': false,
+    'inventario.adjust': false,
     'reportes.view': false,
     'users.manage': false,
     'permissions.manage': false
@@ -236,7 +244,7 @@ function getAllowedStateTargets(permissionMap, role, currentState) {
     const standardTransitions = {
       Pendiente: ['Rebanando', 'Cancelado'],
       Rebanando: ['Listo', 'Cancelado'],
-      Listo: ['Rebanando', 'Cancelado'],
+      Listo: ['Entregado', 'Cancelado'],
       Entregado: [],
       Cancelado: []
     };

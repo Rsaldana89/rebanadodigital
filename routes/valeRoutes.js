@@ -11,6 +11,7 @@ router.post('/crear', ensureAuthenticated, requirePermission('vales.create'), va
 router.get('/:id/editar', ensureAuthenticated, requirePermission('vales.edit'), valeController.showEditarForm);
 router.post('/:id/editar', ensureAuthenticated, requirePermission('vales.edit'), valeController.editarVale);
 router.post('/:id/estado', ensureAuthenticated, requirePermission('vales.view'), valeController.cambiarEstado);
+router.post('/:id/eliminar', ensureAuthenticated, requirePermission('vales.delete'), valeController.eliminarVale);
 router.get('/:id', ensureAuthenticated, requirePermission('vales.view'), valeController.detalle);
 
 module.exports = router;

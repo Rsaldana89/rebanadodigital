@@ -9,9 +9,9 @@ router.get('/productos/buscar', ensureAuthenticated, inventarioController.buscar
 router.post('/productos', ensureAuthenticated, requirePermission('productos.manage'), inventarioController.registrarProducto);
 router.post('/carga', ensureAuthenticated, requirePermission('inventario.manage'), inventarioController.registrarCarga);
 router.post('/merma', ensureAuthenticated, requirePermission('inventario.manage'), inventarioController.registrarMerma);
+router.post('/ajuste', ensureAuthenticated, requirePermission('inventario.adjust'), inventarioController.ajustarExistencia);
 router.get('/cierre', ensureAuthenticated, requirePermission('inventario.cierre'), inventarioController.showCierre);
 router.post('/cierre', ensureAuthenticated, requirePermission('inventario.cierre'), inventarioController.guardarCierre);
 router.get('/registro', ensureAuthenticated, requirePermission('inventario.cierre'), inventarioController.showRegistro);
 
 module.exports = router;
-

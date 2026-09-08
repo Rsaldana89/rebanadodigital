@@ -539,6 +539,70 @@ exports.editarVale = async (req, res) => {
   }
 };
 
+// Elimina una comanda completa. Si ya había generado una salida por entrega,
+// primero restaura el inventario dentro de la misma transacción.
+exports.eliminarVale = async (req, res) => {
+  const id = Number(req.params.id);
+  const requestedReturnUrl = getSafeReturnUrl(req.body.return_url, '/vales/tablero');
+  const redirectTo = requestedReturnUrl.startsWith('/vales/tablero') ? requestedReturnUrl : '/vales/tablero';
+  let connection;
+
+  try {
+    if (!Number.isInteger(id) || id <= 0) throw new Error('El vale solicitado no es válido.');
+
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    const [rows] = await connection.query(
+      'SELECT id, folio, estado, external_key FROM vales WHERE id = ? FOR UPDATE',
+      [id]
+    );
+
+    if (!rows.length) {
+      await connection.rollback();
+      req.session.error_msg = 'Vale no encontrado';
+      return res.redirect(redirectTo);
+    }
+
+    const vale = rows[0];
+    if (vale.estado === 'Entregado') {
+      const [historyResult] = await connection.query(
+        `INSERT INTO vale_history (vale_id, user_id, action, estado_anterior, estado_nuevo, descripcion)
+         VALUES (?, ?, 'eliminar_vale', 'Entregado', 'Entregado', 'Inventario restaurado antes de eliminar la comanda')`,
+        [id, req.session.user.id]
+      );
+      await inventoryService.reverseValeDelivery(
+        connection,
+        id,
+        historyResult.insertId,
+        req.session.user.id,
+        getMexicoDateParts().isoDate
+      );
+    }
+
+    const auditText = `El vale ${vale.folio} fue eliminado por ${req.session.user.name || req.session.user.username || 'Administración'}.`;
+    await connection.query(
+      `UPDATE inventario_movimientos
+       SET referencia = ?, observaciones = CONCAT_WS(' · ', NULLIF(observaciones, ''), ?)
+       WHERE vale_id = ?`,
+      [`Vale eliminado ${vale.folio}`, auditText, id]
+    );
+    await connection.query('DELETE FROM vales WHERE id = ?', [id]);
+    await connection.commit();
+
+    req.session.success_msg = vale.external_key
+      ? `Vale ${vale.folio} eliminado. Si la orden sigue en Siclik, CORONELBOT puede crearlo nuevamente.`
+      : `Vale ${vale.folio} eliminado correctamente`;
+    return res.redirect(redirectTo);
+  } catch (err) {
+    if (connection) await connection.rollback().catch(() => {});
+    console.error(err);
+    req.session.error_msg = err.message || 'No fue posible eliminar el vale';
+    return res.redirect(redirectTo);
+  } finally {
+    if (connection) connection.release();
+  }
+};
+
 // Cambia el estado de un vale completo. Todos los productos avanzan como una sola comanda.
 exports.cambiarEstado = async (req, res) => {
   const { id } = req.params;
@@ -695,14 +759,31 @@ exports.pantallaController = async (req, res) => {
     const [rows] = await db.query(
       `SELECT v.id, v.folio, v.numero_pedido, v.cliente, v.lugar_entrega,
               v.prioridad, v.estado, v.updated_at, v.entrega_dias_texto,
+              sh.entregado_at, sh.cancelado_at,
               DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
               DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
               DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt
        FROM vales v
-       WHERE (? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
-                    AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega))
-          OR (COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
-              AND v.estado IN ('Pendiente', 'Rebanando', 'Listo'))
+       LEFT JOIN (
+         SELECT vale_id,
+                MAX(CASE WHEN estado_nuevo = 'Entregado' THEN created_at END) AS entregado_at,
+                MAX(CASE WHEN estado_nuevo = 'Cancelado' THEN created_at END) AS cancelado_at
+         FROM vale_history
+         WHERE estado_nuevo IN ('Entregado', 'Cancelado')
+         GROUP BY vale_id
+       ) sh ON sh.vale_id = v.id
+       WHERE (
+         v.estado IN ('Pendiente', 'Rebanando', 'Listo')
+         AND (
+           ? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
+                     AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega)
+           OR COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+         )
+       )
+          OR (v.estado = 'Entregado'
+              AND DATE(CONVERT_TZ(COALESCE(sh.entregado_at, v.updated_at), '+00:00', '-06:00')) = ?)
+          OR (v.estado = 'Cancelado'
+              AND DATE(CONVERT_TZ(COALESCE(sh.cancelado_at, v.updated_at), '+00:00', '-06:00')) = ?)
        ORDER BY
          CASE WHEN COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
                    AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
@@ -710,7 +791,7 @@ exports.pantallaController = async (req, res) => {
          CASE v.estado WHEN 'Pendiente' THEN 1 WHEN 'Rebanando' THEN 2 WHEN 'Listo' THEN 3 WHEN 'Entregado' THEN 4 WHEN 'Cancelado' THEN 5 ELSE 6 END,
          COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) ASC,
          v.cliente ASC`,
-      [filtroFecha, filtroFecha, filtroFecha]
+      [filtroFecha, filtroFecha, filtroFecha, filtroFecha, filtroFecha]
     );
 
     const withProducts = await attachProducts(rows);
@@ -729,9 +810,8 @@ exports.pantallaController = async (req, res) => {
       estados[vale.estado].push(vale);
     });
 
-    ['Entregado', 'Cancelado'].forEach(estado => {
-      estados[estado].sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
-    });
+    estados.Entregado.sort((a, b) => new Date(b.entregado_at || b.updated_at || 0) - new Date(a.entregado_at || a.updated_at || 0));
+    estados.Cancelado.sort((a, b) => new Date(b.cancelado_at || b.updated_at || 0) - new Date(a.cancelado_at || a.updated_at || 0));
 
     return res.render('pantalla', {
       title: 'Pantalla de Almacén',

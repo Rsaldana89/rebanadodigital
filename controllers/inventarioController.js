@@ -161,6 +161,24 @@ exports.registrarMerma = async (req, res) => {
   return res.redirect('/inventario#mermas');
 };
 
+exports.ajustarExistencia = async (req, res) => {
+  try {
+    await inventoryService.adjustStock({
+      sku: req.body.sku,
+      targetUnsliced: req.body.cantidad_sin_rebanar,
+      targetSliced: req.body.cantidad_rebanado_queda,
+      observations: req.body.observaciones,
+      userId: req.session.user.id,
+      date: req.body.fecha || mexicoDate()
+    });
+    req.session.success_msg = `Existencias del SKU ${inventoryService.normalizeSku(req.body.sku)} corregidas`;
+  } catch (error) {
+    console.error(error);
+    req.session.error_msg = error.message || 'No fue posible corregir las existencias';
+  }
+  return res.redirect('/inventario#existencias');
+};
+
 exports.showCierre = async (req, res) => {
   try {
     const date = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.fecha || '')) ? req.query.fecha : mexicoDate();
@@ -232,4 +250,3 @@ exports.guardarCierre = async (req, res) => {
 
 // Compatibilidad con enlaces anteriores.
 exports.showRegistro = (req, res) => res.redirect('/inventario/cierre');
-

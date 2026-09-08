@@ -2,6 +2,7 @@
   const compactSuccessMsg = /^Bienvenido/i.test(success_msg || '') ? null : success_msg;
   const canCreateVale = typeof can === 'function' && can('vales.create');
   const canEditVale = typeof can === 'function' && can('vales.edit');
+  const canDeleteVale = typeof can === 'function' && can('vales.delete');
 %>
 <%- include('../partials/header', {
   title: 'Vales',
@@ -138,7 +139,7 @@
     const allowedStates = vale.allowed_states || [];
     const canAdvance = e.siguiente ? allowedStates.includes(e.siguiente) : false;
     const canCancel = !['Entregado','Cancelado'].includes(vale.estado) && allowedStates.includes('Cancelado');
-    const showMoreMenu = canCancel || canEditVale;
+    const showMoreMenu = canCancel || canEditVale || canDeleteVale;
     const cardReturnUrl = `${returnUrl}&focus=${vale.id}#vale-${vale.id}`;
   %>
     <article
@@ -294,6 +295,12 @@
                   <input type="hidden" name="return_url" value="<%= cardReturnUrl %>">
                   <input type="hidden" name="nuevo_estado" value="Cancelado">
                   <button type="submit"><i class="bi bi-x-circle"></i>Cancelar vale</button>
+                </form>
+              <% } %>
+              <% if (canDeleteVale) { %>
+                <form method="post" action="/vales/<%= vale.id %>/eliminar" data-confirm="¿Eliminar definitivamente el vale <%= vale.folio %>?<%= vale.estado === 'Entregado' ? ' Se restaurará primero el inventario descontado.' : '' %><%= vale.external_key ? ' Al provenir de Siclik, podría volver a aparecer en una sincronización.' : '' %>">
+                  <input type="hidden" name="return_url" value="<%= returnUrl %>">
+                  <button type="submit" class="is-delete"><i class="bi bi-trash3"></i>Eliminar vale</button>
                 </form>
               <% } %>
             </div>

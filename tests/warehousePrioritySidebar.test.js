@@ -25,8 +25,8 @@ const estados = {
   Listo: [vale('VM-0001', 'Listo', 'Centro, Querétaro')],
   Rebanando: [vale('VM-0002', 'Rebanando', null)],
   Pendiente: [],
-  Entregado: [],
-  Cancelado: []
+  Entregado: [vale('VM-0003', 'Entregado', 'Juriquilla, Querétaro')],
+  Cancelado: [vale('VM-0004', 'Cancelado', 'El Marqués, Querétaro')]
 };
 
 ejs.renderFile(view, {
@@ -37,15 +37,25 @@ ejs.renderFile(view, {
 }, { filename: view }, (error, html) => {
   if (error) throw error;
 
-  assert(html.includes('Listos y rebanando'));
-  assert(html.includes('data-scroll-key="important"'));
-  assert(html.includes('data-scroll-key="activity"'));
+  assert(html.includes('Estados siempre visibles'));
+  assert(html.includes('data-scroll-key="delivered"'));
+  assert(html.includes('data-scroll-key="ready"'));
+  assert(html.includes('data-scroll-key="working"'));
+  assert(html.includes('data-scroll-key="cancelled"'));
+  assert.strictEqual((html.match(/data-auto-scroll data-scroll-key=/g) || []).length, 4);
+  assert(html.indexOf('warehouse-side-panel is-delivered') < html.indexOf('warehouse-side-panel is-ready'));
+  assert(html.indexOf('warehouse-side-panel is-ready') < html.indexOf('warehouse-side-panel is-working'));
+  assert(html.indexOf('warehouse-side-panel is-working') < html.indexOf('warehouse-side-panel is-cancelled'));
   assert(html.includes('VM-0001'));
   assert(html.includes('CLIENTE LISTO'));
   assert(html.includes('Centro, Querétaro'));
   assert(html.includes('VM-0002'));
   assert(html.includes('CLIENTE REBANANDO'));
   assert(html.includes('Lugar por confirmar'));
+  assert(html.includes('VM-0003'));
+  assert(html.includes('CLIENTE ENTREGADO'));
+  assert(html.includes('VM-0004'));
+  assert(html.includes('CLIENTE CANCELADO'));
   assert(html.includes("document.querySelectorAll('[data-auto-scroll]')"));
   assert(html.includes('window.sessionStorage'));
 

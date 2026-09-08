@@ -10,6 +10,7 @@
   };
   const estadoCls = estadoMap[vale.estado] || 'pending';
   const canEditVale = typeof can === 'function' && can('vales.edit');
+  const canDeleteVale = typeof can === 'function' && can('vales.delete');
   const fechaEntrega = vale.fecha_entrega_fmt || (vale.fecha_entrega ? new Date(vale.fecha_entrega).toISOString().substring(0,10) : '');
   const fechaEntregaDisplay = fechaEntrega ? fechaEntrega.split('-').reverse().join('/') : '';
   const entregaDisplay = String(vale.entrega_dias_texto || '').trim() || fechaEntregaDisplay;
@@ -30,6 +31,12 @@
       <div class="header-actions justify-content-lg-end">
         <% if (canEditVale) { %>
           <a href="/vales/<%= vale.id %>/editar?return_url=<%= encodeURIComponent(returnUrl) %>" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>Editar comanda</a>
+        <% } %>
+        <% if (canDeleteVale) { %>
+          <form action="/vales/<%= vale.id %>/eliminar" method="post" class="m-0" data-confirm="¿Eliminar definitivamente el vale <%= vale.folio %>?<%= vale.estado === 'Entregado' ? ' Se restaurará primero el inventario descontado.' : '' %><%= vale.external_key ? ' Al provenir de Siclik, podría volver a aparecer en una sincronización.' : '' %>">
+            <input type="hidden" name="return_url" value="<%= returnUrl %>">
+            <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash3 me-1"></i>Eliminar</button>
+          </form>
         <% } %>
         <a href="<%= returnUrl %>" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Regresar</a>
       </div>

@@ -355,6 +355,29 @@ document.addEventListener('DOMContentLoaded', () => {
   inventorySearch?.addEventListener('input', filterInventoryRows);
   negativeOnly?.addEventListener('change', filterInventoryRows);
 
+  // Ajuste administrativo: abre el producto seleccionado con sus saldos
+  // actuales. El servidor vuelve a validar todo antes de guardar.
+  const inventoryAdjustmentForm = document.querySelector('[data-inventory-adjustment-form]');
+  if (inventoryAdjustmentForm) {
+    const skuInput = inventoryAdjustmentForm.querySelector('[data-adjust-sku-input]');
+    const skuLabel = inventoryAdjustmentForm.querySelector('[data-adjust-sku]');
+    const productLabel = inventoryAdjustmentForm.querySelector('[data-adjust-product]');
+    const unslicedInput = inventoryAdjustmentForm.querySelector('[data-adjust-unsliced]');
+    const slicedInput = inventoryAdjustmentForm.querySelector('[data-adjust-sliced]');
+    const notesInput = inventoryAdjustmentForm.querySelector('textarea[name="observaciones"]');
+
+    document.querySelectorAll('[data-inventory-adjust]').forEach(button => {
+      button.addEventListener('click', () => {
+        skuInput.value = button.dataset.sku || '';
+        skuLabel.textContent = button.dataset.sku || '—';
+        productLabel.textContent = button.dataset.product || 'Producto';
+        unslicedInput.value = button.dataset.unsliced || '0';
+        slicedInput.value = button.dataset.sliced || '0';
+        if (notesInput) notesInput.value = '';
+      });
+    });
+  }
+
   // Calendario operativo con marcas para días que contienen vales.
   const calendarRoot = document.querySelector('[data-delivery-calendar]');
   if (calendarRoot) {
