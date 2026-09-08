@@ -34,6 +34,177 @@ function calculateValeAllocation(requested, slicedAvailable) {
   return { quantity, fromSliced, fromUnsliced };
 }
 
+function roundedQuantity(value) {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+function compactQuantity(value) {
+  const number = roundedQuantity(value);
+  return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+}
+
+function calculateSlicedAvailability(vales = [], stockRows = [], readyRows = []) {
+  const stockBySku = new Map();
+  stockRows.forEach(row => {
+    const sku = normalizeSku(row.sku);
+    if (sku) stockBySku.set(sku, Math.max(0, roundedQuantity(row.cantidad_rebanado_queda)));
+  });
+
+  const groupedReady = new Map();
+  readyRows.forEach(row => {
+    const sku = normalizeSku(row.sku);
+    const valeId = Number(row.vale_id);
+    if (!sku || !valeId) return;
+    const key = `${valeId}|${sku}`;
+    if (!groupedReady.has(key)) {
+      groupedReady.set(key, {
+        valeId,
+        sku,
+        quantity: 0,
+        readyAt: row.listo_desde || row.updated_at || null
+      });
+    }
+    groupedReady.get(key).quantity = roundedQuantity(
+      groupedReady.get(key).quantity + Math.max(0, Number(row.cantidad) || 0)
+    );
+  });
+
+  const readyBySku = new Map();
+  groupedReady.forEach(item => {
+    if (!readyBySku.has(item.sku)) readyBySku.set(item.sku, []);
+    readyBySku.get(item.sku).push(item);
+  });
+
+  const reservations = new Map();
+  const remainingBySku = new Map(stockBySku);
+  readyBySku.forEach((items, sku) => {
+    items.sort((left, right) => {
+      const leftTime = left.readyAt ? new Date(left.readyAt).getTime() : 0;
+      const rightTime = right.readyAt ? new Date(right.readyAt).getTime() : 0;
+      return leftTime - rightTime || left.valeId - right.valeId;
+    });
+    let available = stockBySku.get(sku) || 0;
+    items.forEach(item => {
+      const reserved = Math.min(item.quantity, available);
+      reservations.set(`${item.valeId}|${sku}`, roundedQuantity(reserved));
+      available = roundedQuantity(Math.max(0, available - reserved));
+    });
+    remainingBySku.set(sku, available);
+  });
+
+  return vales.map(vale => {
+    if (['Entregado', 'Cancelado'].includes(vale.estado)) {
+      return { ...vale, rebanado_badge: null };
+    }
+
+    const availableBySku = new Map();
+    const valeId = Number(vale.id);
+    (vale.productos || []).forEach(product => {
+      const sku = normalizeSku(product.sku);
+      if (availableBySku.has(sku)) return;
+      const available = vale.estado === 'Listo'
+        ? (reservations.get(`${valeId}|${sku}`) || 0)
+        : (remainingBySku.get(sku) || 0);
+      availableBySku.set(sku, Math.max(0, roundedQuantity(available)));
+    });
+
+    let totalRequired = 0;
+    let totalCovered = 0;
+    const products = (vale.productos || []).map(product => {
+      const sku = normalizeSku(product.sku);
+      const required = Math.max(0, roundedQuantity(product.cantidad));
+      const available = availableBySku.get(sku) || 0;
+      const covered = Math.min(required, available);
+      availableBySku.set(sku, roundedQuantity(Math.max(0, available - covered)));
+      totalRequired = roundedQuantity(totalRequired + required);
+      totalCovered = roundedQuantity(totalCovered + covered);
+      return { ...product, rebanado_cubierto: covered, rebanado_requerido: required };
+    });
+
+    // Sin producto rebanado utilizable: no se muestra ningún indicador y el
+    // flujo operativo conserva exactamente el mismo comportamiento.
+    if (totalCovered <= EPSILON || totalRequired <= EPSILON) {
+      return {
+        ...vale,
+        productos: products.map(({ rebanado_cubierto, rebanado_requerido, ...product }) => product),
+        rebanado_badge: null
+      };
+    }
+
+    const fullyCovered = totalCovered + EPSILON >= totalRequired;
+    if (fullyCovered) {
+      return {
+        ...vale,
+        productos: products.map(({ rebanado_cubierto, rebanado_requerido, ...product }) => product),
+        rebanado_badge: {
+          status: vale.estado === 'Listo' ? 'reserved' : 'available',
+          label: vale.estado === 'Listo' ? 'Rebanado apartado' : 'Rebanado disponible'
+        }
+      };
+    }
+
+    return {
+      ...vale,
+      rebanado_badge: null,
+      productos: products.map(product => {
+        const covered = product.rebanado_cubierto;
+        const required = product.rebanado_requerido;
+        let status = 'none';
+        let label = 'Por rebanar';
+        if (covered + EPSILON >= required) {
+          status = vale.estado === 'Listo' ? 'reserved' : 'available';
+          label = vale.estado === 'Listo' ? 'Apartado' : 'Disponible';
+        } else if (covered > EPSILON) {
+          status = 'partial';
+          label = `${compactQuantity(covered)}/${compactQuantity(required)} ${vale.estado === 'Listo' ? 'apartado' : 'disponible'}`;
+        }
+        const { rebanado_cubierto, rebanado_requerido, ...cleanProduct } = product;
+        return { ...cleanProduct, rebanado_badge: { status, label } };
+      })
+    };
+  });
+}
+
+async function attachSlicedAvailability(vales = [], connection = db) {
+  if (!vales.length) return vales;
+  const skus = [...new Set(vales.flatMap(vale => (vale.productos || []).map(product => normalizeSku(product.sku))).filter(Boolean))];
+  if (!skus.length) return vales;
+  const placeholders = skus.map(() => '?').join(',');
+
+  try {
+    const [stockRows] = await connection.query(
+      `SELECT sku, cantidad_rebanado_queda
+       FROM inventario_existencias
+       WHERE sku IN (${placeholders})`,
+      skus
+    );
+
+    if (!stockRows.some(row => Number(row.cantidad_rebanado_queda) > EPSILON)) return vales;
+
+    const [readyRows] = await connection.query(
+      `SELECT v.id AS vale_id, vp.sku, vp.cantidad,
+              COALESCE(
+                (SELECT MAX(vh.created_at)
+                 FROM vale_history vh
+                 WHERE vh.vale_id = v.id AND vh.estado_nuevo = 'Listo'),
+                v.updated_at,
+                v.created_at
+              ) AS listo_desde
+       FROM vales v
+       INNER JOIN vale_productos vp ON vp.vale_id = v.id
+       WHERE v.estado = 'Listo'
+         AND vp.sku IN (${placeholders})
+       ORDER BY listo_desde, v.id, vp.orden, vp.id`,
+      skus
+    );
+
+    return calculateSlicedAvailability(vales, stockRows, readyRows);
+  } catch (error) {
+    console.warn('Indicador de inventario rebanado no disponible:', error.message);
+    return vales;
+  }
+}
+
 async function ensureCatalogProduct(connection, { sku, producto, origen = 'Manual', createdBy = null }) {
   const normalizedSku = normalizeSku(sku);
   const description = normalizeDescription(producto);
@@ -344,6 +515,8 @@ module.exports = {
   normalizeSku,
   normalizeDescription,
   calculateValeAllocation,
+  calculateSlicedAvailability,
+  attachSlicedAvailability,
   ensureCatalogProduct,
   registerManualProducts,
   applyValeDelivery,
@@ -353,4 +526,3 @@ module.exports = {
   saveClose,
   _test: { positiveNumber, nonNegativeNumber }
 };
-

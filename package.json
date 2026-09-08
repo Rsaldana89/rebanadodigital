@@ -1,6 +1,6 @@
 {
   "name": "chc-rebanado-digital",
-  "version": "19.0.1",
+  "version": "19.0.2",
   "description": "Sistema CHC de vales, calendario operativo e inventario de Rebanado por SKU",
   "main": "app.js",
   "packageManager": "npm@11.6.2",
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "node tests/valeFolioService.test.js && node tests/manualValeProducts.test.js && node tests/locationController.mock.test.js && node tests/integrationHelpers.test.js && node tests/valeDeliveryService.test.js && node tests/settingsService.mock.test.js && node tests/syncService.mock.test.js && node tests/inventoryRules.test.js && node tests/inventoryFlow.mock.test.js && node tests/inventoryClose.mock.test.js && node tests/valeInventoryState.mock.test.js && node tests/calendarSummary.test.js && node tests/stateChangeTimes.test.js"
+    "test": "node tests/valeFolioService.test.js && node tests/manualValeProducts.test.js && node tests/locationController.mock.test.js && node tests/integrationHelpers.test.js && node tests/valeDeliveryService.test.js && node tests/settingsService.mock.test.js && node tests/syncService.mock.test.js && node tests/inventoryRules.test.js && node tests/inventoryFlow.mock.test.js && node tests/inventoryClose.mock.test.js && node tests/valeInventoryState.mock.test.js && node tests/calendarSummary.test.js && node tests/stateChangeTimes.test.js && node tests/slicedAvailability.test.js"
   },
   "dependencies": {
     "express": "^4.19.2",

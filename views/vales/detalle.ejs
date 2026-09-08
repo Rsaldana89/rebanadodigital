@@ -47,6 +47,11 @@
         </div>
         <div class="d-flex flex-wrap gap-2 justify-content-end">
           <span class="status-chip status-<%= estadoCls %>"><%= vale.estado %></span>
+          <% if (vale.rebanado_badge) { %>
+            <span class="sliced-stock-badge is-<%= vale.rebanado_badge.status %>">
+              <i class="bi <%= vale.rebanado_badge.status === 'reserved' ? 'bi-lock-fill' : 'bi-layers-fill' %>"></i><%= vale.rebanado_badge.label %>
+            </span>
+          <% } %>
           <% if (vale.external_key) { %><span class="integration-source-badge"><i class="bi bi-cloud-arrow-down-fill"></i>SAP/Siclik</span><% } %>
           <% if (vale.is_overdue) { %>
             <span class="overdue-badge"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso · <%= vale.days_late === 1 ? '1 día' : vale.days_late + ' días' %></span>
@@ -100,6 +105,11 @@
                   <span>SKU <strong><%= item.sku %></strong></span>
                   <span><strong><%= item.cantidad %></strong> <%= item.presentacion %></span>
                   <span>Rebanado <strong><%= item.tipo_rebanado %></strong></span>
+                  <% if (item.rebanado_badge) { %>
+                    <span class="sliced-product-badge is-<%= item.rebanado_badge.status %>">
+                      <i class="bi <%= item.rebanado_badge.status === 'none' ? 'bi-scissors' : (item.rebanado_badge.status === 'reserved' ? 'bi-lock-fill' : 'bi-layers-fill') %>"></i><%= item.rebanado_badge.label %>
+                    </span>
+                  <% } %>
                   <% if (item.almacen) { %><span>Almacén <strong><%= item.almacen %></strong></span><% } %>
                   <% if (item.sap_line_num !== null && item.sap_line_num !== undefined) { %><span>Línea SAP <strong><%= item.sap_line_num %></strong></span><% } %>
                 </div>

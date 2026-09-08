@@ -1842,6 +1842,92 @@ body.tablero-dark-body .ops-list > .empty-state-card {
 }
 
 /* =========================================================
+   V19.0.2 · Indicador discreto de inventario rebanado
+   ========================================================= */
+.sliced-stock-badge,
+.sliced-product-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: fit-content;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.sliced-stock-badge {
+  min-height: 27px;
+  padding: 0.32rem 0.58rem;
+  font-size: 0.69rem;
+}
+
+.sliced-product-badge {
+  padding: 0.31rem 0.52rem;
+  font-size: 0.67rem;
+}
+
+.sliced-stock-badge.is-available,
+.sliced-product-badge.is-available {
+  color: #23673b;
+  border-color: #b9d9c3;
+  background: #e8f5ec;
+}
+
+.sliced-stock-badge.is-reserved,
+.sliced-product-badge.is-reserved {
+  color: #60417d;
+  border-color: #d4c3e5;
+  background: #f0e9f7;
+}
+
+.sliced-product-badge.is-partial {
+  color: #805c11;
+  border-color: #e4cd8d;
+  background: #fff4d5;
+}
+
+.sliced-product-badge.is-none {
+  color: #766c65;
+  border-color: #dcd4cd;
+  background: #f5f2ef;
+}
+
+.simple-product-tags {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.38rem;
+}
+
+.simple-product-tags .simple-product-cut {
+  align-self: auto;
+  justify-self: auto;
+}
+
+.command-detail-product-meta .sliced-product-badge {
+  border-style: solid;
+  font-size: 0.69rem;
+}
+
+@media (max-width: 860px) {
+  body.tablero-simple-body .simple-product-tags {
+    grid-column: 2;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  body.tablero-simple-body .simple-product-tags {
+    grid-column: 1;
+  }
+}
+
+/* =========================================================
    V19 · Inventario por SKU, cierre y calendario operativo
    ========================================================= */
 .inventory-kpis {

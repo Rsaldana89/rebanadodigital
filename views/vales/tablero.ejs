@@ -162,6 +162,11 @@
         <div class="simple-status-area">
           <span class="simple-status-badge"><i class="bi <%= e.icon %>"></i><%= vale.estado %></span>
           <div class="simple-secondary-badges">
+            <% if (vale.rebanado_badge) { %>
+              <span class="sliced-stock-badge is-<%= vale.rebanado_badge.status %>">
+                <i class="bi <%= vale.rebanado_badge.status === 'reserved' ? 'bi-lock-fill' : 'bi-layers-fill' %>"></i><%= vale.rebanado_badge.label %>
+              </span>
+            <% } %>
             <span class="operator-priority priority-<%= p.cls %>"><i class="bi <%= p.icon %>"></i><%= vale.prioridad %></span>
             <% if (vale.is_overdue) { %>
               <span class="operator-late"><i class="bi bi-exclamation-triangle-fill"></i><%= atrasoTexto %></span>
@@ -226,11 +231,18 @@
                   <small><i class="bi bi-chat-left-text"></i><%= item.observaciones %></small>
                 <% } %>
               </div>
-              <% if (corteTexto) { %>
-                <div class="simple-product-cut"><%= corteTexto %></div>
-              <% } else { %>
-                <div class="simple-product-cut is-empty">Sin corte indicado</div>
-              <% } %>
+              <div class="simple-product-tags">
+                <% if (item.rebanado_badge) { %>
+                  <span class="sliced-product-badge is-<%= item.rebanado_badge.status %>">
+                    <i class="bi <%= item.rebanado_badge.status === 'none' ? 'bi-scissors' : (item.rebanado_badge.status === 'reserved' ? 'bi-lock-fill' : 'bi-layers-fill') %>"></i><%= item.rebanado_badge.label %>
+                  </span>
+                <% } %>
+                <% if (corteTexto) { %>
+                  <div class="simple-product-cut"><%= corteTexto %></div>
+                <% } else { %>
+                  <div class="simple-product-cut is-empty">Sin corte indicado</div>
+                <% } %>
+              </div>
             </div>
           <% }) %>
           <% if (!(vale.productos || []).length) { %>

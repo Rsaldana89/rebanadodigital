@@ -281,7 +281,8 @@ exports.tablero = async (req, res) => {
     );
 
     const rowsWithProducts = await attachProducts(rows);
-    const vales = rowsWithProducts.map(v => {
+    const rowsWithAvailability = await inventoryService.attachSlicedAvailability(rowsWithProducts);
+    const vales = rowsWithAvailability.map(v => {
       const enriched = enrichValeDelivery(v, filtroFecha);
       return {
         ...enriched,
@@ -646,8 +647,9 @@ exports.detalle = async (req, res) => {
     }
 
     const [withProducts] = await attachProducts(vales);
+    const [withAvailability] = await inventoryService.attachSlicedAvailability([withProducts]);
     const now = getMexicoDateParts();
-    const vale = enrichValeDelivery(withProducts, now.isoDate);
+    const vale = enrichValeDelivery(withAvailability, now.isoDate);
     vale.allowed_states = permissionService.getAllowedStateTargets(
       req.permissions,
       req.session.user.role,
