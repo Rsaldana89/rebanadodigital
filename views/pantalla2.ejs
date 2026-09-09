@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#211412">
+  <title>Pantalla almacén · Vista 2 | CHC Rebanado Digital</title>
+  <link rel="manifest" href="/manifest-pantalla.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/rebanado-pantalla-192.png">
+  <link rel="apple-touch-icon" href="/icons/rebanado-pantalla-192.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/institutional.css">
+</head>
+<body class="tv-body tv-warehouse-body tv-warehouse2-body" data-pwa-worker="/sw-pantalla.js" data-pwa-scope="/pantalla">
+  <%
+    const counts = {
+      Pendiente: (estados.Pendiente || []).length,
+      Rebanando: (estados.Rebanando || []).length,
+      Listo: (estados.Listo || []).length,
+      Entregado: (estados.Entregado || []).length
+    };
+    const columns = [
+      { name: 'Entregado', title: 'Entregados', icon: 'bi-truck', note: 'Entregados durante el día', css: 'delivered' },
+      { name: 'Listo', title: 'Listos', icon: 'bi-check2-circle', note: 'Prioridad inmediata para almacén', css: 'ready' },
+      { name: 'Rebanando', title: 'Rebanando', icon: 'bi-gear-wide-connected', note: 'Pedidos que se están preparando', css: 'working' },
+      { name: 'Pendiente', title: 'Pendientes', icon: 'bi-hourglass-split', note: 'Pedidos en espera de iniciar', css: 'pending' }
+    ];
+  %>
+
+  <main class="warehouse2-screen">
+    <header class="warehouse2-header">
+      <div class="warehouse-brand">
+        <span class="brand-monogram brand-monogram-lg">CHC</span>
+        <div>
+          <div class="warehouse-kicker">Pantalla informativa de almacén · Vista 2</div>
+          <h1>Rebanado Digital</h1>
+          <p>Entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> · <strong><%= overdueCount %></strong> vale(s) activo(s) atrasado(s)<% } %></p>
+          <nav class="warehouse-view-switch" aria-label="Cambiar vista de almacén">
+            <a href="/pantalla">Vista 1 · Secciones</a>
+            <a class="is-active" href="/pantalla2">Vista 2 · 4 columnas</a>
+          </nav>
+        </div>
+      </div>
+      <div class="warehouse2-header-right">
+        <% if (overdueCount > 0) { %>
+          <div class="warehouse2-overdue"><i class="bi bi-exclamation-triangle-fill"></i><strong><%= overdueCount %></strong><span>atrasado(s)</span></div>
+        <% } %>
+        <div class="warehouse-clock">
+          <i class="bi bi-clock-fill"></i>
+          <div><strong><%= horaActual %></strong><span>Actualización automática cada 30 s</span></div>
+          <button type="button" class="warehouse-install-button" data-pwa-install hidden title="Instalar esta pantalla como aplicación">
+            <i class="bi bi-download"></i><span>Instalar pantalla</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="warehouse2-columns" aria-label="Estados de vales en cuatro columnas">
+      <% columns.forEach(column => { const columnVales = estados[column.name] || []; %>
+        <section class="warehouse2-column is-<%= column.css %>">
+          <header class="warehouse2-column-header">
+            <div class="warehouse2-column-title">
+              <i class="bi <%= column.icon %>"></i>
+              <div><h2><%= column.title %></h2><p><%= column.note %></p></div>
+            </div>
+            <strong><%= columnVales.length %></strong>
+          </header>
+          <div class="warehouse2-scroll" data-auto-scroll-one-way data-scroll-key="<%= column.css %>">
+            <% if (columnVales.length) { %>
+              <div class="warehouse2-list">
+                <% columnVales.forEach(vale => { %>
+                  <%- include('partials/pantallaValeColumn', { vale }) %>
+                <% }) %>
+              </div>
+            <% } else { %>
+              <div class="warehouse2-empty"><i class="bi bi-inbox"></i><span>Sin vales en este estado</span></div>
+            <% } %>
+          </div>
+        </section>
+      <% }) %>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const storagePrefix = 'chc-pantalla2-scroll-';
+
+      document.querySelectorAll('[data-auto-scroll-one-way]').forEach(scroller => {
+        const key = storagePrefix + (scroller.dataset.scrollKey || 'general');
+        let pauseUntil = Date.now() + 1200;
+        const savedPosition = Number(window.sessionStorage.getItem(`${key}-position`));
+
+        if (Number.isFinite(savedPosition)) {
+          scroller.scrollTop = Math.min(savedPosition, Math.max(0, scroller.scrollHeight - scroller.clientHeight));
+        }
+
+        window.setInterval(() => {
+          if (scroller.scrollHeight <= scroller.clientHeight || Date.now() < pauseUntil) return;
+
+          const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
+          if (atBottom) {
+            pauseUntil = Date.now() + 1400;
+            scroller.scrollTop = 0;
+          } else {
+            scroller.scrollTop += 1;
+          }
+
+          window.sessionStorage.setItem(`${key}-position`, String(scroller.scrollTop));
+        }, 40);
+      });
+
+      window.setTimeout(() => window.location.reload(), 30000);
+    })();
+  </script>
+  <script src="/js/pwa-install.js"></script>
+</body>
+</html>

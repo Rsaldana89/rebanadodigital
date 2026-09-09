@@ -1,0 +1,43 @@
+<%
+  const entregaDisplay = vale.entrega_display || '';
+  const atrasoTexto = vale.days_late === 1 ? '1 día tarde' : `${vale.days_late} días tarde`;
+  const productos = vale.productos || [];
+  const isSiclik = Boolean(vale.external_key) || String(vale.origen || '').toLowerCase() === 'siclik';
+  const salesOrder = vale.sap_docnum || vale.numero_pedido;
+%>
+<article class="warehouse2-vale-card <%= vale.is_overdue ? 'is-overdue' : '' %>">
+  <div class="warehouse2-card-reference">
+    <div>
+      <% if (isSiclik) { %>
+        <small>Pedido / orden de venta</small>
+        <strong><%= salesOrder || 'Sin referencia' %></strong>
+        <span>Vale <%= vale.folio %></span>
+      <% } else { %>
+        <small>Vale manual</small>
+        <strong><%= vale.folio %></strong>
+        <% if (vale.numero_pedido) { %><span>Pedido <%= vale.numero_pedido %></span><% } %>
+      <% } %>
+    </div>
+    <span class="warehouse-priority is-<%= String(vale.prioridad || 'Normal').toLowerCase() %>"><%= vale.prioridad || 'Normal' %></span>
+  </div>
+
+  <h3><%= vale.cliente %></h3>
+
+  <div class="warehouse2-location <%= vale.lugar_entrega ? '' : 'is-missing' %>">
+    <i class="bi bi-geo-alt-fill"></i>
+    <span><small>Lugar de entrega</small><strong><%= vale.lugar_entrega || 'Por confirmar' %></strong></span>
+  </div>
+
+  <div class="warehouse2-products">
+    <% productos.slice(0, 3).forEach(item => { %>
+      <div><strong><%= item.cantidad %></strong><span><%= item.producto %></span><em><%= item.tipo_rebanado || item.presentacion %></em></div>
+    <% }) %>
+    <% if (productos.length > 3) { %><div class="warehouse2-products-more">+ <%= productos.length - 3 %> producto(s) más</div><% } %>
+    <% if (!productos.length) { %><div class="warehouse2-products-more">Sin productos registrados</div><% } %>
+  </div>
+
+  <footer class="warehouse2-card-footer">
+    <span><i class="bi bi-calendar2-check"></i><%= entregaDisplay %></span>
+    <% if (vale.is_overdue) { %><strong><i class="bi bi-exclamation-triangle-fill"></i><%= atrasoTexto %></strong><% } %>
+  </footer>
+</article>

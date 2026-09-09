@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Pantalla Rebanado CHC">
+  <rect width="512" height="512" fill="#211412"/>
+  <rect x="76" y="88" width="360" height="270" rx="34" fill="#38231f" stroke="#e4b85d" stroke-width="18"/>
+  <rect x="104" y="116" width="304" height="214" rx="16" fill="#fffaf5"/>
+  <rect x="128" y="148" width="168" height="26" rx="13" fill="#861c2c"/>
+  <rect x="128" y="194" width="256" height="22" rx="11" fill="#2c9364"/>
+  <rect x="128" y="236" width="218" height="22" rx="11" fill="#3b94bd"/>
+  <rect x="128" y="278" width="236" height="22" rx="11" fill="#d5a73f"/>
+  <path d="M214 358h84v38h58c14 0 26 12 26 26H130c0-14 12-26 26-26h58z" fill="#e4b85d"/>
+  <circle cx="378" cy="153" r="23" fill="#861c2c"/>
+  <path d="m367 153 8 8 15-17" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

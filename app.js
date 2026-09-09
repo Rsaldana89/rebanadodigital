@@ -73,8 +73,9 @@ app.use('/permisos', permissionRoutes);
 app.use('/api/integraciones/sap/rebanado', integrationRoutes);
 
 // Ruta para pantalla informativa accesible sin login
-const { pantallaController } = require('./controllers/valeController');
+const { pantallaController, pantalla2Controller } = require('./controllers/valeController');
 app.get('/pantalla', pantallaController);
+app.get('/pantalla2', pantalla2Controller);
 
 // Health check: Railway puede confirmar que el proceso sigue activo aunque MySQL aún no esté disponible.
 app.get('/health', (req, res) => {

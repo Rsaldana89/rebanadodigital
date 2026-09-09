@@ -749,84 +749,100 @@ exports.detalle = async (req, res) => {
   }
 };
 
-// Pantalla informativa para almacén/CEDIS.
-// Por default muestra vales con fecha de entrega HOY y atrasados activos.
+// Pantallas informativas para almacén/CEDIS.
+// Por default muestran vales con fecha de entrega HOY y atrasados activos.
+async function loadPantallaData(req) {
+  const now = getMexicoDateParts();
+  const filtroFecha = req.query.fecha || now.isoDate;
+
+  const [rows] = await db.query(
+    `SELECT v.id, v.folio, v.origen, v.numero_pedido, v.sap_docnum, v.external_key,
+            v.cliente, v.lugar_entrega,
+            v.prioridad, v.estado, v.updated_at, v.entrega_dias_texto,
+            sh.entregado_at, sh.cancelado_at,
+            DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
+            DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
+            DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt
+     FROM vales v
+     LEFT JOIN (
+       SELECT vale_id,
+              MAX(CASE WHEN estado_nuevo = 'Entregado' THEN created_at END) AS entregado_at,
+              MAX(CASE WHEN estado_nuevo = 'Cancelado' THEN created_at END) AS cancelado_at
+       FROM vale_history
+       WHERE estado_nuevo IN ('Entregado', 'Cancelado')
+       GROUP BY vale_id
+     ) sh ON sh.vale_id = v.id
+     WHERE (
+       v.estado IN ('Pendiente', 'Rebanando', 'Listo')
+       AND (
+         ? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
+                   AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega)
+         OR COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+       )
+     )
+        OR (v.estado = 'Entregado'
+            AND DATE(CONVERT_TZ(COALESCE(sh.entregado_at, v.updated_at), '+00:00', '-06:00')) = ?)
+        OR (v.estado = 'Cancelado'
+            AND DATE(CONVERT_TZ(COALESCE(sh.cancelado_at, v.updated_at), '+00:00', '-06:00')) = ?)
+     ORDER BY
+       CASE WHEN COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+                 AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
+       CASE v.prioridad WHEN 'Alta' THEN 1 WHEN 'Normal' THEN 2 WHEN 'Baja' THEN 3 ELSE 4 END,
+       CASE v.estado WHEN 'Pendiente' THEN 1 WHEN 'Rebanando' THEN 2 WHEN 'Listo' THEN 3 WHEN 'Entregado' THEN 4 WHEN 'Cancelado' THEN 5 ELSE 6 END,
+       COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) ASC,
+       v.cliente ASC`,
+    [filtroFecha, filtroFecha, filtroFecha, filtroFecha, filtroFecha]
+  );
+
+  const withProducts = await attachProducts(rows);
+  const vales = withProducts.map(v => enrichValeDelivery(v, filtroFecha));
+  const overdueCount = vales.filter(v => v.is_overdue).length;
+  const estados = {
+    Listo: [],
+    Rebanando: [],
+    Pendiente: [],
+    Entregado: [],
+    Cancelado: []
+  };
+
+  vales.forEach(vale => {
+    if (!estados[vale.estado]) estados[vale.estado] = [];
+    estados[vale.estado].push(vale);
+  });
+
+  estados.Entregado.sort((a, b) => new Date(b.entregado_at || b.updated_at || 0) - new Date(a.entregado_at || a.updated_at || 0));
+  estados.Cancelado.sort((a, b) => new Date(b.cancelado_at || b.updated_at || 0) - new Date(a.cancelado_at || a.updated_at || 0));
+
+  return {
+    title: 'Pantalla de Almacén',
+    vales,
+    estados,
+    fecha: new Date(),
+    overdueCount,
+    filtroFecha,
+    filtroFechaDisplay: displayDateFromISO(filtroFecha),
+    horaActual: now.displayTime
+  };
+}
+
 exports.pantallaController = async (req, res) => {
   try {
-    const now = getMexicoDateParts();
-    const filtroFecha = req.query.fecha || now.isoDate;
-
-    const [rows] = await db.query(
-      `SELECT v.id, v.folio, v.origen, v.numero_pedido, v.sap_docnum, v.external_key,
-              v.cliente, v.lugar_entrega,
-              v.prioridad, v.estado, v.updated_at, v.entrega_dias_texto,
-              sh.entregado_at, sh.cancelado_at,
-              DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
-              DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
-              DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt
-       FROM vales v
-       LEFT JOIN (
-         SELECT vale_id,
-                MAX(CASE WHEN estado_nuevo = 'Entregado' THEN created_at END) AS entregado_at,
-                MAX(CASE WHEN estado_nuevo = 'Cancelado' THEN created_at END) AS cancelado_at
-         FROM vale_history
-         WHERE estado_nuevo IN ('Entregado', 'Cancelado')
-         GROUP BY vale_id
-       ) sh ON sh.vale_id = v.id
-       WHERE (
-         v.estado IN ('Pendiente', 'Rebanando', 'Listo')
-         AND (
-           ? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
-                     AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega)
-           OR COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
-         )
-       )
-          OR (v.estado = 'Entregado'
-              AND DATE(CONVERT_TZ(COALESCE(sh.entregado_at, v.updated_at), '+00:00', '-06:00')) = ?)
-          OR (v.estado = 'Cancelado'
-              AND DATE(CONVERT_TZ(COALESCE(sh.cancelado_at, v.updated_at), '+00:00', '-06:00')) = ?)
-       ORDER BY
-         CASE WHEN COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
-                   AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
-         CASE v.prioridad WHEN 'Alta' THEN 1 WHEN 'Normal' THEN 2 WHEN 'Baja' THEN 3 ELSE 4 END,
-         CASE v.estado WHEN 'Pendiente' THEN 1 WHEN 'Rebanando' THEN 2 WHEN 'Listo' THEN 3 WHEN 'Entregado' THEN 4 WHEN 'Cancelado' THEN 5 ELSE 6 END,
-         COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) ASC,
-         v.cliente ASC`,
-      [filtroFecha, filtroFecha, filtroFecha, filtroFecha, filtroFecha]
-    );
-
-    const withProducts = await attachProducts(rows);
-    const vales = withProducts.map(v => enrichValeDelivery(v, filtroFecha));
-    const overdueCount = vales.filter(v => v.is_overdue).length;
-    const estados = {
-      Listo: [],
-      Rebanando: [],
-      Pendiente: [],
-      Entregado: [],
-      Cancelado: []
-    };
-
-    vales.forEach(vale => {
-      if (!estados[vale.estado]) estados[vale.estado] = [];
-      estados[vale.estado].push(vale);
-    });
-
-    estados.Entregado.sort((a, b) => new Date(b.entregado_at || b.updated_at || 0) - new Date(a.entregado_at || a.updated_at || 0));
-    estados.Cancelado.sort((a, b) => new Date(b.cancelado_at || b.updated_at || 0) - new Date(a.cancelado_at || a.updated_at || 0));
-
-    return res.render('pantalla', {
-      title: 'Pantalla de Almacén',
-      vales,
-      estados,
-      fecha: new Date(),
-      overdueCount,
-      filtroFecha,
-      filtroFechaDisplay: displayDateFromISO(filtroFecha),
-      horaActual: now.displayTime
-    });
+    return res.render('pantalla', await loadPantallaData(req));
   } catch (err) {
     console.error(err);
     return res.status(500).send('Error al cargar la pantalla informativa');
+  }
+};
+
+// Vista alternativa de almacén: cuatro columnas grandes con desplazamiento
+// vertical continuo en un solo sentido (Entregados, Listos, Rebanando, Pendientes).
+exports.pantalla2Controller = async (req, res) => {
+  try {
+    const data = await loadPantallaData(req);
+    return res.render('pantalla2', { ...data, title: 'Pantalla de Almacén · Vista 2' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send('Error al cargar la pantalla informativa alternativa');
   }
 };
 

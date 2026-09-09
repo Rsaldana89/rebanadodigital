@@ -3,13 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#211412">
   <title>Pantalla informativa | CHC Rebanado Digital</title>
+  <link rel="manifest" href="/manifest-pantalla.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/rebanado-pantalla-192.png">
+  <link rel="apple-touch-icon" href="/icons/rebanado-pantalla-192.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/css/institutional.css">
 </head>
-<body class="tv-body tv-warehouse-body">
+<body class="tv-body tv-warehouse-body" data-pwa-worker="/sw-pantalla.js" data-pwa-scope="/pantalla">
   <%
     const counts = {
       Pendiente: (estados.Pendiente || []).length,
@@ -33,11 +37,18 @@
           <div class="warehouse-kicker">Pantalla informativa de almacén</div>
           <h1>Rebanado Digital</h1>
           <p>Entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> · <strong><%= overdueCount %></strong> vale(s) activo(s) atrasado(s)<% } %></p>
+          <nav class="warehouse-view-switch" aria-label="Cambiar vista de almacén">
+            <a class="is-active" href="/pantalla">Vista 1 · Secciones</a>
+            <a href="/pantalla2">Vista 2 · 4 columnas</a>
+          </nav>
         </div>
       </div>
       <div class="warehouse-clock">
         <i class="bi bi-clock-fill"></i>
         <div><strong><%= horaActual %></strong><span>Actualización automática cada 30 s</span></div>
+        <button type="button" class="warehouse-install-button" data-pwa-install hidden title="Instalar esta pantalla como aplicación">
+          <i class="bi bi-download"></i><span>Instalar pantalla</span>
+        </button>
       </div>
     </header>
 
@@ -193,5 +204,6 @@
       window.setTimeout(() => window.location.reload(), 30000);
     })();
   </script>
+  <script src="/js/pwa-install.js"></script>
 </body>
 </html>

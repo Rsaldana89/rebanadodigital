@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Rebanado Digital CHC">
+  <rect width="512" height="512" fill="#861c2c"/>
+  <circle cx="256" cy="212" r="150" fill="#a92d40" opacity=".72"/>
+  <path d="M126 310h260v56c0 23-19 42-42 42H168c-23 0-42-19-42-42z" fill="#f4d27e"/>
+  <path d="M154 286h204c15 0 28 12 28 28H126c0-16 13-28 28-28z" fill="#fff7e8"/>
+  <text x="256" y="230" fill="#fff" font-family="Arial, sans-serif" font-size="92" font-weight="900" text-anchor="middle">CHC</text>
+  <path d="M183 334h146" stroke="#861c2c" stroke-width="18" stroke-linecap="round"/>
+</svg>

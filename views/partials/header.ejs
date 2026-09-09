@@ -3,13 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#861c2c">
   <title><%= title %> | CHC Rebanado Digital</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/rebanado-app-192.png">
+  <link rel="apple-touch-icon" href="/icons/rebanado-app-192.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/css/institutional.css">
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>" data-pwa-worker="/sw.js" data-pwa-scope="/">
   <nav class="navbar navbar-expand-lg main-navbar">
     <div class="container-fluid px-lg-4">
       <a class="navbar-brand brand" href="/dashboard">
@@ -57,6 +61,7 @@
 
         <ul class="navbar-nav align-items-lg-center gap-2 mt-3 mt-lg-0">
           <% if (user) { %>
+            <li class="nav-item"><button type="button" class="nav-link pwa-nav-install" data-pwa-install hidden><i class="bi bi-download"></i>Instalar app</button></li>
             <li class="nav-item">
               <span class="navbar-user-pill"><i class="bi bi-person-circle"></i><%= user.name %></span>
             </li>
