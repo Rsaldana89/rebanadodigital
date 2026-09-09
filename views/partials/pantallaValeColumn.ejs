@@ -4,6 +4,8 @@
   const productos = vale.productos || [];
   const isSiclik = Boolean(vale.external_key) || String(vale.origen || '').toLowerCase() === 'siclik';
   const salesOrder = vale.sap_docnum || vale.numero_pedido;
+  const showListoTime = Boolean(vale.listo_time) && ['Listo', 'Entregado'].includes(vale.estado);
+  const showDeliveredTime = Boolean(vale.entregado_time) && vale.estado === 'Entregado';
 %>
 <article class="warehouse2-vale-card <%= vale.is_overdue ? 'is-overdue' : '' %>">
   <div class="warehouse2-card-reference">
@@ -40,4 +42,10 @@
     <span><i class="bi bi-calendar2-check"></i><%= entregaDisplay %></span>
     <% if (vale.is_overdue) { %><strong><i class="bi bi-exclamation-triangle-fill"></i><%= atrasoTexto %></strong><% } %>
   </footer>
+  <% if (showListoTime || showDeliveredTime) { %>
+    <div class="warehouse2-state-times">
+      <% if (showListoTime) { %><span class="is-ready"><i class="bi bi-check2-circle"></i>Listo <strong><%= vale.listo_time %></strong></span><% } %>
+      <% if (showDeliveredTime) { %><span class="is-delivered"><i class="bi bi-truck"></i>Entregado <strong><%= vale.entregado_time %></strong></span><% } %>
+    </div>
+  <% } %>
 </article>

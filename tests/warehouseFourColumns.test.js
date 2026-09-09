@@ -76,7 +76,7 @@ ejs.renderFile(view, {
   assert(html.includes('window.localStorage.removeItem(THEME_KEY)'));
   assert(html.includes('data-warehouse-theme="dark"'));
   assert(html.includes('warehouse-theme-light'));
-  assert(html.includes('/css/institutional.css?v=19.0.11'));
+  assert(html.includes('/css/institutional.css?v=19.0.12'));
   assert(html.includes('Vista 1 · 4 columnas'));
   assert(html.includes('Vista 2 · Secciones'));
 

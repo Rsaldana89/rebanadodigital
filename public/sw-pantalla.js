@@ -1,9 +1,9 @@
-const CACHE_NAME = 'chc-rebanado-pantalla-v19.0.11';
+const CACHE_NAME = 'chc-rebanado-pantalla-v19.0.12';
 const LAST_SCREEN = '/pantalla-ultima-vista';
 const STATIC_FILES = [
   '/offline-pantalla.html',
-  '/css/styles.css?v=19.0.11',
-  '/css/institutional.css?v=19.0.11',
+  '/css/styles.css?v=19.0.12',
+  '/css/institutional.css?v=19.0.12',
   '/js/pwa-install.js',
   '/manifest-pantalla.webmanifest',
   '/icons/rebanado-pantalla-192.png',

@@ -28,14 +28,30 @@ exports.index = async (req, res) => {
     const now = getMexicoDateParts();
 
     const [counts] = await db.query(
-      `SELECT estado, COUNT(*) AS total
-       FROM vales
-       WHERE (? BETWEEN COALESCE(entrega_fecha_inicio, fecha_entrega)
-                    AND COALESCE(entrega_fecha_fin, entrega_fecha_inicio, fecha_entrega))
-          OR (COALESCE(entrega_fecha_fin, entrega_fecha_inicio, fecha_entrega) < ?
-              AND estado IN ('Pendiente', 'Rebanando', 'Listo'))
-       GROUP BY estado`,
-      [fechaTrabajo, fechaTrabajo]
+      `SELECT v.estado, COUNT(*) AS total
+       FROM vales v
+       LEFT JOIN (
+         SELECT vale_id,
+                MAX(CASE WHEN estado_nuevo = 'Entregado' THEN created_at END) AS entregado_at,
+                MAX(CASE WHEN estado_nuevo = 'Cancelado' THEN created_at END) AS cancelado_at
+         FROM vale_history
+         WHERE estado_nuevo IN ('Entregado', 'Cancelado')
+         GROUP BY vale_id
+       ) sh ON sh.vale_id = v.id
+       WHERE (
+         v.estado IN ('Pendiente', 'Rebanando', 'Listo')
+         AND (
+           ? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
+                     AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega)
+           OR COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+         )
+       )
+          OR (v.estado = 'Entregado'
+              AND DATE(CONVERT_TZ(COALESCE(sh.entregado_at, v.updated_at), '+00:00', '-06:00')) = ?)
+          OR (v.estado = 'Cancelado'
+              AND DATE(CONVERT_TZ(COALESCE(sh.cancelado_at, v.updated_at), '+00:00', '-06:00')) = ?)
+       GROUP BY v.estado`,
+      [fechaTrabajo, fechaTrabajo, fechaTrabajo, fechaTrabajo]
     );
 
     const [overdueRows] = await db.query(

@@ -64,6 +64,18 @@ function buildStateChangeMap(historyRows = []) {
   return stateChanges;
 }
 
+function enrichValeStateTimes(vale) {
+  const listo = formatMexicoDateTime(vale.listo_at);
+  const entregado = formatMexicoDateTime(vale.entregado_at);
+  return {
+    ...vale,
+    listo_time: listo?.time || null,
+    entregado_time: entregado?.time || null,
+    listo_datetime_display: listo?.display || null,
+    entregado_datetime_display: entregado?.display || null
+  };
+}
+
 function asArray(value) {
   if (Array.isArray(value)) return value;
   if (value === undefined || value === null) return [];
@@ -251,7 +263,7 @@ function buildValeFormData(body = {}, fallback = {}) {
 }
 
 // Muestra el tablero operativo de vales.
-// Por default filtra la fecha de entrega de HOY e incluye atrasados activos.
+// Por default muestra activos de HOY + atrasados y conserva finalizados durante la fecha de trabajo.
 exports.tablero = async (req, res) => {
   try {
     const now = getMexicoDateParts();
@@ -262,13 +274,31 @@ exports.tablero = async (req, res) => {
               DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
               DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
               DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt,
-              u.name AS creado_por
+              u.name AS creado_por,
+              sh.listo_at, sh.entregado_at, sh.cancelado_at
        FROM vales v
        LEFT JOIN users u ON v.created_by = u.id
-       WHERE (? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
-                    AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega))
-          OR (COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
-              AND v.estado IN ('Pendiente', 'Rebanando', 'Listo'))
+       LEFT JOIN (
+         SELECT vale_id,
+                MAX(CASE WHEN estado_nuevo = 'Listo' THEN created_at END) AS listo_at,
+                MAX(CASE WHEN estado_nuevo = 'Entregado' THEN created_at END) AS entregado_at,
+                MAX(CASE WHEN estado_nuevo = 'Cancelado' THEN created_at END) AS cancelado_at
+         FROM vale_history
+         WHERE estado_nuevo IN ('Listo', 'Entregado', 'Cancelado')
+         GROUP BY vale_id
+       ) sh ON sh.vale_id = v.id
+       WHERE (
+         v.estado IN ('Pendiente', 'Rebanando', 'Listo')
+         AND (
+           ? BETWEEN COALESCE(v.entrega_fecha_inicio, v.fecha_entrega)
+                     AND COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega)
+           OR COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
+         )
+       )
+          OR (v.estado = 'Entregado'
+              AND DATE(CONVERT_TZ(COALESCE(sh.entregado_at, v.updated_at), '+00:00', '-06:00')) = ?)
+          OR (v.estado = 'Cancelado'
+              AND DATE(CONVERT_TZ(COALESCE(sh.cancelado_at, v.updated_at), '+00:00', '-06:00')) = ?)
        ORDER BY
          CASE WHEN COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
                    AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
@@ -277,13 +307,13 @@ exports.tablero = async (req, res) => {
          COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) ASC,
          v.cliente ASC,
          v.created_at ASC`,
-      [filtroFecha, filtroFecha, filtroFecha]
+      [filtroFecha, filtroFecha, filtroFecha, filtroFecha, filtroFecha]
     );
 
     const rowsWithProducts = await attachProducts(rows);
     const rowsWithAvailability = await inventoryService.attachSlicedAvailability(rowsWithProducts);
     const vales = rowsWithAvailability.map(v => {
-      const enriched = enrichValeDelivery(v, filtroFecha);
+      const enriched = enrichValeStateTimes(enrichValeDelivery(v, filtroFecha));
       return {
         ...enriched,
         allowed_states: permissionService.getAllowedStateTargets(req.permissions, req.session.user.role, enriched.estado)
@@ -750,7 +780,7 @@ exports.detalle = async (req, res) => {
 };
 
 // Pantallas informativas para almacén/CEDIS.
-// Por default muestran vales con fecha de entrega HOY y atrasados activos.
+// Por default muestran activos de HOY + atrasados y finalizados durante la fecha de trabajo.
 async function loadPantallaData(req) {
   const now = getMexicoDateParts();
   const filtroFecha = req.query.fecha || now.isoDate;
@@ -759,17 +789,18 @@ async function loadPantallaData(req) {
     `SELECT v.id, v.folio, v.origen, v.numero_pedido, v.sap_docnum, v.external_key,
             v.cliente, v.lugar_entrega,
             v.prioridad, v.estado, v.updated_at, v.entrega_dias_texto,
-            sh.entregado_at, sh.cancelado_at,
+            sh.listo_at, sh.entregado_at, sh.cancelado_at,
             DATE_FORMAT(v.fecha_entrega, '%Y-%m-%d') AS fecha_entrega_fmt,
             DATE_FORMAT(v.entrega_fecha_inicio, '%Y-%m-%d') AS entrega_fecha_inicio_fmt,
             DATE_FORMAT(v.entrega_fecha_fin, '%Y-%m-%d') AS entrega_fecha_fin_fmt
      FROM vales v
      LEFT JOIN (
        SELECT vale_id,
+              MAX(CASE WHEN estado_nuevo = 'Listo' THEN created_at END) AS listo_at,
               MAX(CASE WHEN estado_nuevo = 'Entregado' THEN created_at END) AS entregado_at,
               MAX(CASE WHEN estado_nuevo = 'Cancelado' THEN created_at END) AS cancelado_at
        FROM vale_history
-       WHERE estado_nuevo IN ('Entregado', 'Cancelado')
+       WHERE estado_nuevo IN ('Listo', 'Entregado', 'Cancelado')
        GROUP BY vale_id
      ) sh ON sh.vale_id = v.id
      WHERE (
@@ -795,7 +826,7 @@ async function loadPantallaData(req) {
   );
 
   const withProducts = await attachProducts(rows);
-  const vales = withProducts.map(v => enrichValeDelivery(v, filtroFecha));
+  const vales = withProducts.map(v => enrichValeStateTimes(enrichValeDelivery(v, filtroFecha)));
   const overdueCount = vales.filter(v => v.is_overdue).length;
   const estados = {
     Listo: [],
@@ -853,5 +884,6 @@ exports._test = {
   calendarMonthBounds,
   summarizeCalendarRows,
   formatMexicoDateTime,
-  buildStateChangeMap
+  buildStateChangeMap,
+  enrichValeStateTimes
 };

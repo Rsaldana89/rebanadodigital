@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chc-rebanado-app-v19.0.7';
+const CACHE_NAME = 'chc-rebanado-app-v19.0.12';
 const STATIC_FILES = [
   '/offline.html',
   '/css/styles.css',

@@ -126,7 +126,7 @@
   <% if (!allVales.length) { %>
     <div class="empty-state empty-state-card">
       <i class="bi bi-inbox"></i>
-      <div>No hay vales programados ni atrasados visibles para <strong><%= filtroFechaDisplay %></strong>.</div>
+      <div>No hay vales activos ni movimientos finalizados visibles para <strong><%= filtroFechaDisplay %></strong>.</div>
     </div>
   <% } %>
 
@@ -167,6 +167,12 @@
               <span class="sliced-stock-badge is-<%= vale.rebanado_badge.status %>">
                 <i class="bi <%= vale.rebanado_badge.status === 'reserved' ? 'bi-lock-fill' : 'bi-layers-fill' %>"></i><%= vale.rebanado_badge.label %>
               </span>
+            <% } %>
+            <% if (vale.listo_time && ['Listo','Entregado'].includes(vale.estado)) { %>
+              <span class="operator-state-time is-ready"><i class="bi bi-check2-circle"></i>Listo <strong><%= vale.listo_time %></strong></span>
+            <% } %>
+            <% if (vale.entregado_time && vale.estado === 'Entregado') { %>
+              <span class="operator-state-time is-delivered"><i class="bi bi-truck"></i>Entregado <strong><%= vale.entregado_time %></strong></span>
             <% } %>
             <span class="operator-priority priority-<%= p.cls %>"><i class="bi <%= p.icon %>"></i><%= vale.prioridad %></span>
             <% if (vale.is_overdue) { %>

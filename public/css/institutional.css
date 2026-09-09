@@ -7297,3 +7297,123 @@ body.tv-warehouse2-body.warehouse-theme-light .warehouse2-empty {
   color: #82736b !important;
 }
 body.tv-warehouse2-body.warehouse-theme-light .warehouse2-empty i { color: var(--warehouse2-color) !important; }
+
+/* =========================================================
+   V19.0.12 · Horas visibles por cambio de estado
+   ========================================================= */
+.operator-state-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 28px;
+  padding: 0.34rem 0.58rem;
+  border: 1px solid rgba(80, 69, 61, 0.16);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.72);
+  color: #5b4f49;
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.operator-state-time strong {
+  font-weight: 950;
+}
+
+.operator-state-time.is-ready {
+  border-color: rgba(47,154,99,0.24);
+  background: rgba(219,244,228,0.88);
+  color: #17633d;
+}
+
+.operator-state-time.is-delivered {
+  border-color: rgba(95,125,139,0.28);
+  background: rgba(223,234,240,0.92);
+  color: #334f5a;
+}
+
+.warehouse2-state-times,
+.warehouse-state-times,
+.warehouse-compact-state-times {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.warehouse2-state-times {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px dashed rgba(255,255,255,0.09);
+}
+
+.warehouse2-state-times span,
+.warehouse-state-times span,
+.warehouse-compact-state-times span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.warehouse2-state-times span {
+  padding: 3px 6px;
+  background: rgba(255,255,255,0.07);
+  color: #c9bbb3;
+  font-size: 0.52rem;
+}
+
+.warehouse2-state-times span.is-ready { color: #67d49a; }
+.warehouse2-state-times span.is-delivered { color: #a9bdc9; }
+.warehouse2-state-times strong,
+.warehouse-state-times strong,
+.warehouse-compact-state-times strong { font-weight: 950; }
+
+.warehouse-state-times {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px dashed rgba(83,66,57,0.13);
+}
+
+.warehouse-state-times span {
+  padding: 4px 7px;
+  background: rgba(247,242,237,0.92);
+  color: #5c514b;
+  font-size: 0.64rem;
+}
+
+.warehouse-compact-state-times {
+  margin-top: 6px;
+}
+
+.warehouse-compact-state-times span {
+  padding: 3px 6px;
+  background: rgba(255,255,255,0.06);
+  color: #c9bbb3;
+  font-size: 0.54rem;
+}
+
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-state-times,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-state-times {
+  border-top-color: #eadfd8;
+}
+
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-state-times span,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-state-times span {
+  background: #f6f0ec;
+  color: #6d5e57;
+}
+
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-state-times span.is-ready,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-state-times span.is-ready {
+  background: #e4f5eb;
+  color: #267c55;
+}
+
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-state-times span.is-delivered,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-state-times span.is-delivered {
+  background: #e7eef2;
+  color: #526b78;
+}
