@@ -1,9 +1,9 @@
-const CACHE_NAME = 'chc-rebanado-pantalla-v19.0.10';
+const CACHE_NAME = 'chc-rebanado-pantalla-v19.0.11';
 const LAST_SCREEN = '/pantalla-ultima-vista';
 const STATIC_FILES = [
   '/offline-pantalla.html',
-  '/css/styles.css',
-  '/css/institutional.css',
+  '/css/styles.css?v=19.0.11',
+  '/css/institutional.css?v=19.0.11',
   '/js/pwa-install.js',
   '/manifest-pantalla.webmanifest',
   '/icons/rebanado-pantalla-192.png',
@@ -44,6 +44,16 @@ self.addEventListener('fetch', event => {
   }
 
   if (url.origin === self.location.origin && /\.(?:css|js|png|svg|webmanifest)$/.test(url.pathname)) {
-    event.respondWith(caches.open(CACHE_NAME).then(cache => cache.match(event.request).then(cached => cached || fetch(event.request))));
+    // Network-first evita que una versión anterior de la PWA deje estilos viejos pegados.
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      try {
+        const response = await fetch(event.request, { cache: 'no-store' });
+        if (response.ok) await cache.put(event.request, response.clone());
+        return response;
+      } catch (error) {
+        return (await cache.match(event.request)) || Response.error();
+      }
+    })());
   }
 });

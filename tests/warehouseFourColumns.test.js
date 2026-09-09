@@ -72,7 +72,11 @@ ejs.renderFile(view, {
   assert(app.includes("app.get('/pantalla', pantallaController)"));
   assert(html.includes('data-warehouse-theme-toggle'));
   assert(html.includes("chc-pantalla-informativa-theme"));
-  assert(html.includes("window.localStorage.setItem(THEME_KEY, nextTheme)"));
+  assert(html.includes("window.localStorage.setItem(THEME_KEY, 'light')"));
+  assert(html.includes('window.localStorage.removeItem(THEME_KEY)'));
+  assert(html.includes('data-warehouse-theme="dark"'));
+  assert(html.includes('warehouse-theme-light'));
+  assert(html.includes('/css/institutional.css?v=19.0.11'));
   assert(html.includes('Vista 1 · 4 columnas'));
   assert(html.includes('Vista 2 · Secciones'));
 

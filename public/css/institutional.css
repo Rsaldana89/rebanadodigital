@@ -7138,3 +7138,162 @@ html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-theme-togg
     flex: 1 1 auto;
   }
 }
+
+
+/* =========================================================
+   V19.0.11 · Corrección de tema de Pantalla informativa
+   Oscuro por defecto. El modo claro se aplica a TODA la vista
+   y se refuerza con una clase de body para evitar conflictos de
+   especificidad/caché de versiones anteriores.
+   ========================================================= */
+body.tv-warehouse2-body.warehouse-theme-light {
+  color: #2b221e !important;
+  background:
+    radial-gradient(circle at 6% 4%, rgba(181, 122, 22, 0.10), transparent 26rem),
+    radial-gradient(circle at 96% 14%, rgba(134, 28, 44, 0.08), transparent 30rem),
+    linear-gradient(145deg, #f3eeea 0%, #eee8e3 48%, #f7f3ef 100%) !important;
+}
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-header {
+  border-color: #ded2ca !important;
+  background: rgba(255, 252, 249, 0.98) !important;
+  box-shadow: 0 14px 32px rgba(63, 43, 34, 0.11) !important;
+}
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-kicker { color: #a16d1a !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-brand h1,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-header .warehouse-brand h1 { color: #2b221e !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-brand p,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-header .warehouse-brand p { color: #766861 !important; }
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-view-switch a {
+  border-color: #ddd2c9 !important;
+  background: #fff !important;
+  color: #75665f !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-view-switch a:hover,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-view-switch a.is-active {
+  border-color: #d7b766 !important;
+  background: #fff7e5 !important;
+  color: #835915 !important;
+}
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-clock {
+  border-color: #dfc78f !important;
+  background: #fffaf0 !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-clock > i { color: #b57a16 !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-clock strong { color: #332824 !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-clock span { color: #806f66 !important; }
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-theme-toggle {
+  border-color: #d8cbc1 !important;
+  background: #fff !important;
+  color: #66574f !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-theme-toggle i { color: #8b2333 !important; }
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-install-button {
+  border-color: #d8b5bc !important;
+  background: #fff3f5 !important;
+  color: #861c2c !important;
+}
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-overdue {
+  border-color: #e2be6d !important;
+  background: #fff6df !important;
+  color: #9a6510 !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-overdue i,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-overdue strong { color: #a8680a !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-overdue span { color: #8b6c38 !important; }
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column {
+  --warehouse2-color: #73808d;
+  --warehouse2-soft: #eef2f5;
+  --warehouse2-soft-strong: #e4eaf0;
+  --warehouse2-border: #cfd6dc;
+  border-color: #ddd3cb !important;
+  background: rgba(252, 249, 246, 0.99) !important;
+  box-shadow: 0 13px 28px rgba(63, 43, 34, 0.10) !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column.is-delivered {
+  --warehouse2-color: #6f7f8f; --warehouse2-soft: #f0f3f6; --warehouse2-soft-strong: #e4e9ee; --warehouse2-border: #cbd3da;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column.is-ready {
+  --warehouse2-color: #238258; --warehouse2-soft: #eef8f3; --warehouse2-soft-strong: #dff1e7; --warehouse2-border: #b8d9c8;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column.is-working {
+  --warehouse2-color: #287ca5; --warehouse2-soft: #eef7fb; --warehouse2-soft-strong: #dceef6; --warehouse2-border: #b7d7e6;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column.is-pending {
+  --warehouse2-color: #b57a16; --warehouse2-soft: #fff8e9; --warehouse2-soft-strong: #faedca; --warehouse2-border: #e4ca8a;
+}
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column-header {
+  border-bottom-color: var(--warehouse2-border) !important;
+  box-shadow: inset 0 4px var(--warehouse2-color) !important;
+  background: linear-gradient(90deg, var(--warehouse2-soft-strong), var(--warehouse2-soft) 58%, #fff) !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column-title > i {
+  background: var(--warehouse2-color) !important;
+  color: #fff !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column-title h2 { color: #2b221e !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column-title p { color: #776a63 !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-column-header > strong {
+  border-color: var(--warehouse2-border) !important;
+  background: #fff !important;
+  color: var(--warehouse2-color) !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-scroll {
+  background: linear-gradient(180deg, rgba(248,244,240,0.72), rgba(252,250,248,0.98)) !important;
+}
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-vale-card {
+  border-color: #ded4cc !important;
+  border-left-color: var(--warehouse2-color) !important;
+  background: #fff !important;
+  color: #2d2420 !important;
+  box-shadow: 0 6px 15px rgba(67, 46, 36, 0.07) !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-vale-card.is-overdue {
+  border-color: #e0a342 !important;
+  border-left-color: #d38b20 !important;
+  background: linear-gradient(90deg, #fff8e9 0%, #fff 34%) !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-card-reference { border-bottom-color: #eee6e0 !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-card-reference small { color: #8a786f !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-card-reference strong { color: var(--warehouse2-color) !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-card-reference > div > span { color: #8b7b73 !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-vale-card h3 { color: #281f1b !important; }
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-location {
+  border-color: #e1c7bb !important;
+  background: #fff8f4 !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-location > i { color: #a62b3d !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-location small { color: #8a756b !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-location strong { color: #46352e !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-location.is-missing {
+  border-color: #dfb665 !important;
+  background: #fff9e9 !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-location.is-missing strong { color: #946113 !important; }
+
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-products > div:not(.warehouse2-products-more) { border-bottom-color: #eee7e2 !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-products > div > strong { color: #6d1d2a !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-products > div > span { color: #4e413b !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-products > div > em,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-products-more { color: #7b6c65 !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-card-footer {
+  border-top-color: #eadfd8 !important;
+  color: #6d5e57 !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-card-footer strong { color: #a7670b !important; }
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-empty {
+  border-color: #d9cfc7 !important;
+  background: rgba(255,255,255,0.72) !important;
+  color: #82736b !important;
+}
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-empty i { color: var(--warehouse2-color) !important; }
