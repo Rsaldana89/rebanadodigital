@@ -6819,3 +6819,263 @@ body.tv-warehouse2-body {
   .warehouse2-header-right { align-items: stretch; flex-direction: column; }
   .warehouse2-column { min-height: 62vh; }
 }
+
+/* =========================================================
+   V19.0.9 · Pantalla almacén 2 · tema claro
+   Inspirado en las secciones claras de Pantalla informativa 1
+   ========================================================= */
+body.tv-warehouse2-body {
+  color: #2b221e;
+  background:
+    radial-gradient(circle at 6% 4%, rgba(181, 122, 22, 0.10), transparent 26rem),
+    radial-gradient(circle at 96% 14%, rgba(134, 28, 44, 0.08), transparent 30rem),
+    linear-gradient(145deg, #f3eeea 0%, #eee8e3 48%, #f7f3ef 100%) !important;
+}
+
+body.tv-warehouse2-body .warehouse2-header {
+  border-color: #ded2ca;
+  background: rgba(255, 252, 249, 0.96);
+  box-shadow: 0 14px 32px rgba(63, 43, 34, 0.11);
+}
+
+body.tv-warehouse2-body .warehouse-kicker {
+  color: #a16d1a;
+}
+
+body.tv-warehouse2-body .warehouse-brand h1,
+body.tv-warehouse2-body .warehouse2-header .warehouse-brand h1 {
+  color: #2b221e;
+}
+
+body.tv-warehouse2-body .warehouse-brand p,
+body.tv-warehouse2-body .warehouse2-header .warehouse-brand p {
+  color: #766861;
+}
+
+body.tv-warehouse2-body .warehouse-view-switch a {
+  border-color: #ddd2c9;
+  background: #fff;
+  color: #75665f;
+}
+
+body.tv-warehouse2-body .warehouse-view-switch a:hover,
+body.tv-warehouse2-body .warehouse-view-switch a.is-active {
+  border-color: #d7b766;
+  background: #fff7e5;
+  color: #835915;
+}
+
+body.tv-warehouse2-body .warehouse-clock {
+  border-color: #dfc78f;
+  background: #fffaf0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.75);
+}
+
+body.tv-warehouse2-body .warehouse-clock > i {
+  color: #b57a16;
+}
+
+body.tv-warehouse2-body .warehouse-clock strong {
+  color: #332824;
+}
+
+body.tv-warehouse2-body .warehouse-clock span {
+  color: #806f66;
+}
+
+body.tv-warehouse2-body .warehouse-install-button {
+  border-color: #d8b5bc;
+  background: #fff3f5;
+  color: #861c2c;
+}
+
+body.tv-warehouse2-body .warehouse-install-button:hover {
+  border-color: #be7b87;
+  background: #fde9ed;
+}
+
+body.tv-warehouse2-body .warehouse2-overdue {
+  border-color: #e2be6d;
+  background: #fff6df;
+  color: #9a6510;
+}
+
+body.tv-warehouse2-body .warehouse2-overdue i,
+body.tv-warehouse2-body .warehouse2-overdue strong {
+  color: #a8680a;
+}
+
+body.tv-warehouse2-body .warehouse2-overdue span {
+  color: #8b6c38;
+}
+
+body.tv-warehouse2-body .warehouse2-column {
+  --warehouse2-color: #73808d;
+  --warehouse2-soft: #eef2f5;
+  --warehouse2-soft-strong: #e4eaf0;
+  --warehouse2-border: #cfd6dc;
+  border-color: #ddd3cb;
+  background: rgba(252, 249, 246, 0.98);
+  box-shadow: 0 13px 28px rgba(63, 43, 34, 0.10);
+}
+
+body.tv-warehouse2-body .warehouse2-column.is-delivered {
+  --warehouse2-color: #6f7f8f;
+  --warehouse2-soft: #f0f3f6;
+  --warehouse2-soft-strong: #e4e9ee;
+  --warehouse2-border: #cbd3da;
+}
+
+body.tv-warehouse2-body .warehouse2-column.is-ready {
+  --warehouse2-color: #238258;
+  --warehouse2-soft: #eef8f3;
+  --warehouse2-soft-strong: #dff1e7;
+  --warehouse2-border: #b8d9c8;
+}
+
+body.tv-warehouse2-body .warehouse2-column.is-working {
+  --warehouse2-color: #287ca5;
+  --warehouse2-soft: #eef7fb;
+  --warehouse2-soft-strong: #dceef6;
+  --warehouse2-border: #b7d7e6;
+}
+
+body.tv-warehouse2-body .warehouse2-column.is-pending {
+  --warehouse2-color: #b57a16;
+  --warehouse2-soft: #fff8e9;
+  --warehouse2-soft-strong: #faedca;
+  --warehouse2-border: #e4ca8a;
+}
+
+body.tv-warehouse2-body .warehouse2-column-header {
+  border-bottom-color: var(--warehouse2-border);
+  box-shadow: inset 0 4px var(--warehouse2-color);
+  background: linear-gradient(90deg, var(--warehouse2-soft-strong), var(--warehouse2-soft) 58%, #fff);
+}
+
+body.tv-warehouse2-body .warehouse2-column-title > i {
+  background: var(--warehouse2-color);
+  color: #fff;
+  box-shadow: 0 5px 11px color-mix(in srgb, var(--warehouse2-color) 18%, transparent);
+}
+
+body.tv-warehouse2-body .warehouse2-column-title h2 {
+  color: #2b221e;
+}
+
+body.tv-warehouse2-body .warehouse2-column-title p {
+  color: #776a63;
+}
+
+body.tv-warehouse2-body .warehouse2-column-header > strong {
+  border-color: var(--warehouse2-border);
+  background: #fff;
+  color: var(--warehouse2-color);
+  box-shadow: 0 2px 7px rgba(70, 50, 40, 0.06);
+}
+
+body.tv-warehouse2-body .warehouse2-scroll {
+  background: linear-gradient(180deg, rgba(248,244,240,0.62), rgba(252,250,248,0.96));
+  scrollbar-color: color-mix(in srgb, var(--warehouse2-color) 42%, #d9d0ca) transparent;
+}
+
+body.tv-warehouse2-body .warehouse2-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--warehouse2-color) 42%, #d9d0ca);
+}
+
+body.tv-warehouse2-body .warehouse2-vale-card {
+  border-color: #ded4cc;
+  border-left-color: var(--warehouse2-color);
+  background: #fff;
+  color: #2d2420;
+  box-shadow: 0 6px 15px rgba(67, 46, 36, 0.07);
+}
+
+body.tv-warehouse2-body .warehouse2-vale-card.is-overdue {
+  border-color: #e0a342;
+  border-left-color: #d38b20;
+  background: linear-gradient(90deg, #fff8e9 0%, #fff 34%);
+  box-shadow: inset 3px 0 #d38b20, 0 6px 15px rgba(67, 46, 36, 0.07);
+}
+
+body.tv-warehouse2-body .warehouse2-card-reference {
+  border-bottom-color: #eee6e0;
+}
+
+body.tv-warehouse2-body .warehouse2-card-reference small {
+  color: #8a786f;
+}
+
+body.tv-warehouse2-body .warehouse2-card-reference strong {
+  color: var(--warehouse2-color);
+}
+
+body.tv-warehouse2-body .warehouse2-card-reference > div > span {
+  color: #8b7b73;
+}
+
+body.tv-warehouse2-body .warehouse2-vale-card h3 {
+  color: #281f1b;
+}
+
+body.tv-warehouse2-body .warehouse2-location {
+  border-color: #e1c7bb;
+  background: #fff8f4;
+}
+
+body.tv-warehouse2-body .warehouse2-location > i {
+  color: #a62b3d;
+}
+
+body.tv-warehouse2-body .warehouse2-location small {
+  color: #8a756b;
+}
+
+body.tv-warehouse2-body .warehouse2-location strong {
+  color: #46352e;
+}
+
+body.tv-warehouse2-body .warehouse2-location.is-missing {
+  border-color: #dfb665;
+  background: #fff9e9;
+}
+
+body.tv-warehouse2-body .warehouse2-location.is-missing strong {
+  color: #946113;
+}
+
+body.tv-warehouse2-body .warehouse2-products > div:not(.warehouse2-products-more) {
+  border-bottom-color: #eee7e2;
+}
+
+body.tv-warehouse2-body .warehouse2-products > div > strong {
+  color: #6d1d2a;
+}
+
+body.tv-warehouse2-body .warehouse2-products > div > span {
+  color: #4e413b;
+}
+
+body.tv-warehouse2-body .warehouse2-products > div > em,
+body.tv-warehouse2-body .warehouse2-products-more {
+  color: #7b6c65;
+}
+
+body.tv-warehouse2-body .warehouse2-card-footer {
+  border-top-color: #eadfd8;
+  color: #6d5e57;
+}
+
+body.tv-warehouse2-body .warehouse2-card-footer strong {
+  color: #a7670b;
+}
+
+body.tv-warehouse2-body .warehouse2-empty {
+  border-color: #d9cfc7;
+  background: rgba(255,255,255,0.58);
+  color: #82736b;
+}
+
+body.tv-warehouse2-body .warehouse2-empty i {
+  color: var(--warehouse2-color);
+}
