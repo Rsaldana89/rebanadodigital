@@ -1,90 +1,201 @@
 <%- include('../partials/header', { title: 'Reportes', user: user, success_msg: success_msg, error_msg: error_msg }) %>
 
-<div class="page-header">
+<div class="page-header reports-page-header">
   <div class="row align-items-center g-3">
     <div class="col-lg-8">
-      <div class="page-kicker">Consulta</div>
-      <h1 class="page-title">Reportes de vales</h1>
-      <p class="page-subtitle">Cada resultado representa un pedido; el CSV incluye un renglón por producto.</p>
+      <div class="page-kicker">Análisis operativo</div>
+      <h1 class="page-title">Reportes de Rebanado</h1>
+      <p class="page-subtitle">Consulta operación, productos y merma por día o periodo y expórtalo directamente a Excel.</p>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+      <span class="reports-period-pill"><i class="bi bi-calendar3"></i><%= displayDate(filtros.fecha_inicio) %> — <%= displayDate(filtros.fecha_fin) %></span>
     </div>
   </div>
 </div>
 
-<div class="form-shell mb-4">
-  <form class="row g-3" method="get" action="/reportes">
-    <div class="col-md-3">
-      <label class="form-label">Estado</label>
-      <select name="estado" class="form-select">
-        <% ['Todos','Pendiente','Rebanando','Listo','Entregado','Cancelado'].forEach(option => { %>
-          <option value="<%= option %>" <%= filtros.estado === option ? 'selected' : '' %>><%= option %></option>
-        <% }) %>
-      </select>
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">Fecha inicio</label>
-      <input type="date" name="fecha_inicio" value="<%= filtros.fecha_inicio || '' %>" class="form-control">
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">Fecha fin</label>
-      <input type="date" name="fecha_fin" value="<%= filtros.fecha_fin || '' %>" class="form-control">
-    </div>
-    <div class="col-md-3 d-flex align-items-end gap-2 flex-wrap">
-      <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1"></i>Filtrar</button>
-      <button class="btn btn-soft" type="submit" name="exportar" value="csv"><i class="bi bi-download me-1"></i>Exportar productos</button>
-    </div>
+<div class="report-type-grid mb-4">
+  <a class="report-type-card <%= filtros.tipo === 'vales' ? 'is-active' : '' %>" href="/reportes?tipo=vales&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>&estado=<%= encodeURIComponent(filtros.estado) %>">
+    <span class="report-type-icon report-type-icon-vales"><i class="bi bi-receipt-cutoff"></i></span>
+    <span class="report-type-copy"><strong>Vales del periodo</strong><small>Seguimiento por estado, entrega y horas de Listo / Entregado.</small></span>
+    <i class="bi bi-chevron-right report-type-arrow"></i>
+  </a>
+  <a class="report-type-card <%= filtros.tipo === 'productos' ? 'is-active' : '' %>" href="/reportes?tipo=productos&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>">
+    <span class="report-type-icon report-type-icon-productos"><i class="bi bi-bar-chart-line"></i></span>
+    <span class="report-type-copy"><strong>Productos rebanados</strong><small>Ranking de los productos más y menos surtidos.</small></span>
+    <i class="bi bi-chevron-right report-type-arrow"></i>
+  </a>
+  <a class="report-type-card <%= filtros.tipo === 'merma' ? 'is-active' : '' %>" href="/reportes?tipo=merma&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>">
+    <span class="report-type-icon report-type-icon-merma"><i class="bi bi-graph-down-arrow"></i></span>
+    <span class="report-type-copy"><strong>Merma y rendimiento</strong><small>Merma manual, de cierre y proporción contra rebanado.</small></span>
+    <i class="bi bi-chevron-right report-type-arrow"></i>
+  </a>
+</div>
+
+<div class="form-shell report-filter-shell mb-4">
+  <form class="row g-3 align-items-end" method="get" action="/reportes">
+    <input type="hidden" name="tipo" value="<%= filtros.tipo %>">
+    <% if (filtros.tipo === 'vales') { %>
+      <div class="col-md-2">
+        <label class="form-label">Estado</label>
+        <select name="estado" class="form-select">
+          <% estados.forEach(option => { %>
+            <option value="<%= option %>" <%= filtros.estado === option ? 'selected' : '' %>><%= option %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Fecha inicio</label>
+        <input type="date" name="fecha_inicio" value="<%= filtros.fecha_inicio %>" class="form-control">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Fecha fin</label>
+        <input type="date" name="fecha_fin" value="<%= filtros.fecha_fin %>" class="form-control">
+      </div>
+      <div class="col-md-6 d-flex gap-2 flex-wrap align-items-center">
+    <% } else { %>
+      <div class="col-md-3">
+        <label class="form-label">Fecha inicio</label>
+        <input type="date" name="fecha_inicio" value="<%= filtros.fecha_inicio %>" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Fecha fin</label>
+        <input type="date" name="fecha_fin" value="<%= filtros.fecha_fin %>" class="form-control">
+      </div>
+      <div class="col-md-6 d-flex gap-2 flex-wrap align-items-center">
+    <% } %>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1"></i>Consultar</button>
+        <button class="btn btn-soft report-excel-button" type="submit" name="exportar" value="xlsx"><i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel</button>
+      </div>
   </form>
+
+  <div class="report-quick-ranges mt-3">
+    <span>Accesos rápidos:</span>
+    <a href="/reportes?tipo=<%= filtros.tipo %>&fecha_inicio=<%= quickRanges.hoy.fecha_inicio %>&fecha_fin=<%= quickRanges.hoy.fecha_fin %><%= filtros.tipo === 'vales' ? '&estado=' + encodeURIComponent(filtros.estado) : '' %>">Hoy</a>
+    <a href="/reportes?tipo=<%= filtros.tipo %>&fecha_inicio=<%= quickRanges.siete.fecha_inicio %>&fecha_fin=<%= quickRanges.siete.fecha_fin %><%= filtros.tipo === 'vales' ? '&estado=' + encodeURIComponent(filtros.estado) : '' %>">Últimos 7 días</a>
+    <a href="/reportes?tipo=<%= filtros.tipo %>&fecha_inicio=<%= quickRanges.mes.fecha_inicio %>&fecha_fin=<%= quickRanges.mes.fecha_fin %><%= filtros.tipo === 'vales' ? '&estado=' + encodeURIComponent(filtros.estado) : '' %>">Mes actual</a>
+  </div>
 </div>
 
-<div class="content-card data-table-card">
-  <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
-    <div>
-      <h2 class="section-title mb-1">Resultados</h2>
-      <p class="section-subtitle"><%= vales.length %> vale(s) encontrado(s).</p>
+<% if (filtros.tipo === 'vales') { %>
+  <div class="report-summary-grid mb-4">
+    <div class="report-summary-card"><span class="report-summary-icon"><i class="bi bi-receipt"></i></span><div><small>Vales del periodo</small><strong><%= data.summary.total %></strong></div></div>
+    <div class="report-summary-card report-summary-pending"><span class="report-summary-icon"><i class="bi bi-hourglass-split"></i></span><div><small>Pendientes</small><strong><%= data.summary.Pendiente %></strong></div></div>
+    <div class="report-summary-card report-summary-working"><span class="report-summary-icon"><i class="bi bi-gear-wide-connected"></i></span><div><small>Rebanando</small><strong><%= data.summary.Rebanando %></strong></div></div>
+    <div class="report-summary-card report-summary-ready"><span class="report-summary-icon"><i class="bi bi-check-circle"></i></span><div><small>Listos</small><strong><%= data.summary.Listo %></strong></div></div>
+    <div class="report-summary-card report-summary-delivered"><span class="report-summary-icon"><i class="bi bi-truck"></i></span><div><small>Entregados</small><strong><%= data.summary.Entregado %></strong></div></div>
+    <div class="report-summary-card report-summary-cancelled"><span class="report-summary-icon"><i class="bi bi-x-circle"></i></span><div><small>Cancelados</small><strong><%= data.summary.Cancelado %></strong></div></div>
+  </div>
+
+  <div class="content-card data-table-card">
+    <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap">
+      <div>
+        <div class="section-kicker">Detalle</div>
+        <h2 class="section-title mb-1">Vales del periodo</h2>
+        <p class="section-subtitle">Los finalizados se contabilizan por la fecha real de Entregado/Cancelado; los activos por su fecha o rango de entrega.</p>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-modern align-middle command-report-table report-table-vales">
+        <thead><tr><th>Folio / pedido</th><th>Cliente y entrega</th><th>Productos</th><th>Prioridad</th><th>Estado</th><th>Fecha operativa</th><th>Horas</th><th></th></tr></thead>
+        <tbody>
+          <% if (!data.vales.length) { %><tr><td colspan="8"><div class="empty-state py-4"><i class="bi bi-inbox"></i><div>No hay vales para el periodo seleccionado.</div></div></td></tr><% } %>
+          <% data.vales.forEach(v => { %>
+            <tr>
+              <td><strong><%= v.folio %></strong><% if (v.numero_pedido) { %><div class="small text-muted">Pedido <%= v.numero_pedido %></div><% } %></td>
+              <td><strong class="report-client-name"><%= v.cliente %></strong><div class="report-delivery-place"><i class="bi bi-geo-alt-fill"></i><%= v.lugar_entrega || 'Por confirmar' %></div></td>
+              <td><div class="report-products-summary"><strong><%= v.total_productos %> producto(s)</strong><% (v.productos || []).slice(0, 2).forEach(item => { %><span><%= Number(item.cantidad).toFixed(2) %> · <%= item.producto %></span><% }) %><% if ((v.productos || []).length > 2) { %><span>+ <%= v.productos.length - 2 %> más</span><% } %></div></td>
+              <td><span class="report-priority report-priority-<%= String(v.prioridad || 'Normal').toLowerCase() %>"><%= v.prioridad %></span></td>
+              <td><span class="report-state report-state-<%= String(v.estado).toLowerCase() %>"><%= v.estado %></span></td>
+              <td><strong><%= displayDate(v.fecha_operacion_fmt) %></strong><div class="small text-muted"><%= v.entrega_texto %></div></td>
+              <td><div class="report-time-stack"><% if (v.listo_display) { %><span><i class="bi bi-check2-circle"></i>Listo <strong><%= v.listo_display.slice(-5) %></strong></span><% } %><% if (v.entregado_display) { %><span><i class="bi bi-truck"></i>Entregado <strong><%= v.entregado_display.slice(-5) %></strong></span><% } %><% if (v.cancelado_display) { %><span><i class="bi bi-x-circle"></i>Cancelado <strong><%= v.cancelado_display.slice(-5) %></strong></span><% } %><% if (!v.listo_display && !v.entregado_display && !v.cancelado_display) { %><span class="text-muted">—</span><% } %></div></td>
+              <td><a href="/vales/<%= v.id %>" class="btn btn-sm btn-soft">Detalle</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
   </div>
-  <div class="table-responsive">
-    <table class="table table-modern align-middle command-report-table">
-      <thead>
-        <tr>
-          <th>Folio / Pedido</th>
-          <th>Cliente</th>
-          <th>Lugar de entrega</th>
-          <th>Productos</th>
-          <th>Prioridad</th>
-          <th>Estado</th>
-          <th>Entrega</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (!vales.length) { %>
-          <tr>
-            <td colspan="8">
-              <div class="empty-state py-3"><i class="bi bi-inbox"></i><div>No hay registros para los filtros seleccionados.</div></div>
-            </td>
-          </tr>
-        <% } %>
-        <% vales.forEach(v => { %>
-          <tr>
-            <td><strong><%= v.folio %></strong><% if (v.numero_pedido) { %><div class="small text-muted">Pedido <%= v.numero_pedido %></div><% } %></td>
-            <td><%= v.cliente %></td>
-            <td><span class="report-delivery-place"><i class="bi bi-geo-alt-fill"></i><%= v.lugar_entrega || 'Por confirmar' %></span></td>
-            <td>
-              <div class="report-products-summary">
-                <strong><%= v.total_productos || 0 %> producto(s)</strong>
-                <% (v.productos || []).slice(0, 3).forEach(item => { %><span><%= item.producto %></span><% }) %>
-                <% if ((v.productos || []).length > 3) { %><span>+ <%= v.productos.length - 3 %> más</span><% } %>
-              </div>
-            </td>
-            <td><%= v.prioridad %></td>
-            <td><%= v.estado %></td>
-            <td><%= v.entrega_dias_texto || v.fecha_entrega_fmt || '' %></td>
-            <td><a href="/vales/<%= v.id %>" class="btn btn-sm btn-soft">Detalle</a></td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
+<% } %>
+
+<% if (filtros.tipo === 'productos') { %>
+  <div class="report-summary-grid report-summary-grid-products mb-4">
+    <div class="report-summary-card"><span class="report-summary-icon"><i class="bi bi-box-seam"></i></span><div><small>Productos distintos</small><strong><%= data.summary.productos %></strong></div></div>
+    <div class="report-summary-card report-summary-ready"><span class="report-summary-icon"><i class="bi bi-receipt"></i></span><div><small>Vales con producto</small><strong><%= data.summary.vales %></strong></div></div>
+    <div class="report-summary-card report-summary-working"><span class="report-summary-icon"><i class="bi bi-layers"></i></span><div><small>Cantidad surtida</small><strong><%= data.summary.cantidad.toFixed(2) %></strong></div></div>
+    <div class="report-summary-card report-summary-top"><span class="report-summary-icon"><i class="bi bi-trophy"></i></span><div><small>Más solicitado</small><strong class="report-summary-product"><%= data.summary.top ? data.summary.top.producto : 'Sin datos' %></strong></div></div>
   </div>
-</div>
+
+  <% if (data.products.length) { %>
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="content-card report-ranking-card h-100">
+          <div class="section-kicker">Top 5</div><h2 class="section-title">Más rebanados</h2>
+          <div class="report-ranking-list">
+            <% data.topProducts.forEach((item, index) => { %>
+              <div class="report-ranking-item"><span class="report-rank-number"><%= index + 1 %></span><div><strong><%= item.producto %></strong><small>SKU <%= item.sku %> · <%= item.vales %> vale(s)</small></div><span class="report-ranking-value"><%= item.cantidad_surtida.toFixed(2) %></span></div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="content-card report-ranking-card h-100">
+          <div class="section-kicker">Bottom 5</div><h2 class="section-title">Menos rebanados</h2>
+          <div class="report-ranking-list report-ranking-list-low">
+            <% data.bottomProducts.forEach((item, index) => { %>
+              <div class="report-ranking-item"><span class="report-rank-number"><%= index + 1 %></span><div><strong><%= item.producto %></strong><small>SKU <%= item.sku %> · <%= item.vales %> vale(s)</small></div><span class="report-ranking-value"><%= item.cantidad_surtida.toFixed(2) %></span></div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="content-card data-table-card">
+    <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap"><div><div class="section-kicker">Ranking completo</div><h2 class="section-title mb-1">Productos entregados</h2><p class="section-subtitle">La cantidad se toma de los vales realmente marcados como Entregados durante el periodo.</p></div></div>
+    <div class="table-responsive">
+      <table class="table table-modern align-middle report-product-table">
+        <thead><tr><th>#</th><th>SKU / producto</th><th>Tipo de rebanado</th><th>Vales</th><th>Cantidad surtida</th><th>Rebanado nuevo</th><th>De rebanado disponible</th><th>Participación</th></tr></thead>
+        <tbody>
+          <% if (!data.products.length) { %><tr><td colspan="8"><div class="empty-state py-4"><i class="bi bi-bar-chart"></i><div>No hay productos entregados en este periodo.</div></div></td></tr><% } %>
+          <% data.products.forEach(item => { %>
+            <tr><td><span class="report-rank-badge"><%= item.rank %></span></td><td><strong><%= item.producto %></strong><div class="small text-muted">SKU <%= item.sku %> · <%= item.clientes %> cliente(s)</div></td><td><%= item.tipos_rebanado || 'Estándar' %></td><td><%= item.vales %></td><td><strong><%= item.cantidad_surtida.toFixed(2) %></strong></td><td><%= item.rebanado_nuevo.toFixed(2) %></td><td><%= item.rebanado_previo_usado.toFixed(2) %></td><td><div class="report-share"><span><%= (item.participacion * 100).toFixed(1) %>%</span><div><i style="width:<%= Math.max(3, item.participacion * 100) %>%"></i></div></div></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<% if (filtros.tipo === 'merma') { %>
+  <div class="report-summary-grid report-summary-grid-merma mb-4">
+    <div class="report-summary-card report-summary-waste"><span class="report-summary-icon"><i class="bi bi-trash3"></i></span><div><small>Merma registrada</small><strong><%= data.summary.merma.toFixed(2) %></strong></div></div>
+    <div class="report-summary-card"><span class="report-summary-icon"><i class="bi bi-boxes"></i></span><div><small>Productos con merma</small><strong><%= data.summary.productos %></strong></div></div>
+    <div class="report-summary-card report-summary-working"><span class="report-summary-icon"><i class="bi bi-activity"></i></span><div><small>Eventos de merma</small><strong><%= data.summary.eventos %></strong></div></div>
+    <div class="report-summary-card report-summary-ready"><span class="report-summary-icon"><i class="bi bi-percent"></i></span><div><small>Merma / rebanado</small><strong><%= data.summary.porcentaje === null ? '—' : (data.summary.porcentaje * 100).toFixed(2) + '%' %></strong></div></div>
+  </div>
+
+  <div class="content-card data-table-card mb-4">
+    <div class="d-flex justify-content-between align-items-center gap-3 mb-3 flex-wrap"><div><div class="section-kicker">Rendimiento</div><h2 class="section-title mb-1">Merma por producto</h2><p class="section-subtitle">Integra la merma capturada manualmente y la registrada durante los cierres de Rebanado.</p></div></div>
+    <div class="table-responsive">
+      <table class="table table-modern align-middle report-waste-table">
+        <thead><tr><th>SKU / producto</th><th>Merma total</th><th>Manual</th><th>Cierre</th><th>Rebanado registrado</th><th>% merma</th><th>Eventos</th></tr></thead>
+        <tbody>
+          <% if (!data.waste.length) { %><tr><td colspan="7"><div class="empty-state py-4"><i class="bi bi-check-circle"></i><div>No hay merma registrada en este periodo.</div></div></td></tr><% } %>
+          <% data.waste.forEach(item => { %>
+            <tr><td><strong><%= item.producto %></strong><div class="small text-muted">SKU <%= item.sku %></div></td><td><strong class="report-waste-number"><%= item.merma_total.toFixed(2) %></strong></td><td><%= item.merma_manual.toFixed(2) %></td><td><%= item.merma_cierre.toFixed(2) %></td><td><%= item.rebanado_periodo.toFixed(2) %></td><td><span class="report-waste-rate <%= item.porcentaje_merma !== null && item.porcentaje_merma >= 0.05 ? 'is-high' : '' %>"><%= item.porcentaje_merma === null ? '—' : (item.porcentaje_merma * 100).toFixed(2) + '%' %></span></td><td><%= item.eventos %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="content-card data-table-card">
+    <div class="mb-3"><div class="section-kicker">Auditoría</div><h2 class="section-title mb-1">Detalle de movimientos de merma</h2><p class="section-subtitle">Permite identificar fecha, origen, usuario y observaciones de cada registro.</p></div>
+    <div class="table-responsive"><table class="table table-modern align-middle"><thead><tr><th>Fecha</th><th>SKU / producto</th><th>Origen</th><th>Cantidad</th><th>Referencia</th><th>Usuario</th><th>Observaciones</th></tr></thead><tbody>
+      <% if (!data.detail.length) { %><tr><td colspan="7"><div class="empty-state py-3"><div>Sin movimientos para mostrar.</div></div></td></tr><% } %>
+      <% data.detail.forEach(item => { %><tr><td><%= item.fecha %></td><td><strong><%= item.producto %></strong><div class="small text-muted"><%= item.sku %></div></td><td><span class="report-origin-pill"><%= item.tipo === 'CIERRE_REBANADO' ? 'Cierre' : 'Manual' %></span></td><td><strong><%= Number(item.cantidad_merma).toFixed(2) %></strong></td><td><%= item.referencia || '—' %></td><td><%= item.usuario || '—' %></td><td><%= item.observaciones || '—' %></td></tr><% }) %>
+    </tbody></table></div>
+  </div>
+<% } %>
 
 <%- include('../partials/footer') %>
