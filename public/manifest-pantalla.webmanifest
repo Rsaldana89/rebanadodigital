@@ -2,14 +2,14 @@
   "id": "/pantalla",
   "name": "Pantalla Rebanado CHC",
   "short_name": "Pantalla CHC",
-  "description": "Pantalla informativa de vales para almacén con dos vistas operativas.",
+  "description": "Pantalla informativa de vales para almacén. Vista principal en cuatro columnas con tema claro u oscuro.",
   "lang": "es-MX",
   "start_url": "/pantalla?source=pwa",
   "scope": "/pantalla",
   "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#211412",
-  "theme_color": "#211412",
+  "background_color": "#f3eeea",
+  "theme_color": "#f3eeea",
   "icons": [
     { "src": "/icons/rebanado-pantalla-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/icons/rebanado-pantalla-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

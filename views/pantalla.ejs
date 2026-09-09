@@ -1,9 +1,21 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-warehouse-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#211412">
+  <meta name="theme-color" content="#f3eeea" data-warehouse-theme-color>
+  <script>
+    (() => {
+      try {
+        const savedTheme = window.localStorage.getItem('chc-pantalla-informativa-theme');
+        if (savedTheme === 'dark' || savedTheme === 'light') {
+          document.documentElement.dataset.warehouseTheme = savedTheme;
+        }
+      } catch (error) {
+        // Si el navegador bloquea el almacenamiento, se conserva el tema claro por defecto.
+      }
+    })();
+  </script>
   <title>Pantalla informativa | CHC Rebanado Digital</title>
   <link rel="manifest" href="/manifest-pantalla.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/rebanado-pantalla-192.png">
@@ -13,166 +25,116 @@
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/css/institutional.css">
 </head>
-<body class="tv-body tv-warehouse-body" data-pwa-worker="/sw-pantalla.js" data-pwa-scope="/pantalla">
+<body class="tv-body tv-warehouse-body tv-warehouse2-body" data-pwa-worker="/sw-pantalla.js" data-pwa-scope="/pantalla">
   <%
     const counts = {
       Pendiente: (estados.Pendiente || []).length,
       Rebanando: (estados.Rebanando || []).length,
       Listo: (estados.Listo || []).length,
-      Entregado: (estados.Entregado || []).length,
-      Cancelado: (estados.Cancelado || []).length
+      Entregado: (estados.Entregado || []).length
     };
-    const activeSections = [
-      { name: 'Listo', title: 'Listos para entregar', icon: 'bi-check2-circle', note: 'Prioridad inmediata para almacén' },
-      { name: 'Rebanando', title: 'En rebanado', icon: 'bi-gear-wide-connected', note: 'Pedidos que se están preparando' },
-      { name: 'Pendiente', title: 'Pendientes', icon: 'bi-hourglass-split', note: 'Pedidos en espera de iniciar' }
+    const columns = [
+      { name: 'Entregado', title: 'Entregados', icon: 'bi-truck', note: 'Entregados durante el día', css: 'delivered' },
+      { name: 'Listo', title: 'Listos', icon: 'bi-check2-circle', note: 'Prioridad inmediata para almacén', css: 'ready' },
+      { name: 'Rebanando', title: 'Rebanando', icon: 'bi-gear-wide-connected', note: 'Pedidos que se están preparando', css: 'working' },
+      { name: 'Pendiente', title: 'Pendientes', icon: 'bi-hourglass-split', note: 'Pedidos en espera de iniciar', css: 'pending' }
     ];
   %>
 
-  <main class="warehouse-screen">
-    <header class="warehouse-header">
+  <main class="warehouse2-screen">
+    <header class="warehouse2-header">
       <div class="warehouse-brand">
         <span class="brand-monogram brand-monogram-lg">CHC</span>
         <div>
-          <div class="warehouse-kicker">Pantalla informativa de almacén</div>
+          <div class="warehouse-kicker">Pantalla informativa de almacén · Vista 1</div>
           <h1>Rebanado Digital</h1>
           <p>Entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> · <strong><%= overdueCount %></strong> vale(s) activo(s) atrasado(s)<% } %></p>
           <nav class="warehouse-view-switch" aria-label="Cambiar vista de almacén">
-            <a class="is-active" href="/pantalla">Vista 1 · Secciones</a>
-            <a href="/pantalla2">Vista 2 · 4 columnas</a>
+            <a class="is-active" href="/pantalla">Vista 1 · 4 columnas</a>
+            <a href="/pantalla2">Vista 2 · Secciones</a>
           </nav>
         </div>
       </div>
-      <div class="warehouse-clock">
-        <i class="bi bi-clock-fill"></i>
-        <div><strong><%= horaActual %></strong><span>Actualización automática cada 30 s</span></div>
-        <button type="button" class="warehouse-install-button" data-pwa-install hidden title="Instalar esta pantalla como aplicación">
-          <i class="bi bi-download"></i><span>Instalar pantalla</span>
+      <div class="warehouse2-header-right">
+        <% if (overdueCount > 0) { %>
+          <div class="warehouse2-overdue"><i class="bi bi-exclamation-triangle-fill"></i><strong><%= overdueCount %></strong><span>atrasado(s)</span></div>
+        <% } %>
+        <button type="button" class="warehouse-theme-toggle" data-warehouse-theme-toggle aria-pressed="false" title="Cambiar tema de esta pantalla">
+          <i class="bi bi-moon-stars-fill" data-theme-icon></i>
+          <span data-theme-label>Tema oscuro</span>
         </button>
+        <div class="warehouse-clock">
+          <i class="bi bi-clock-fill"></i>
+          <div><strong><%= horaActual %></strong><span>Actualización automática cada 30 s</span></div>
+          <button type="button" class="warehouse-install-button" data-pwa-install hidden title="Instalar esta pantalla como aplicación">
+            <i class="bi bi-download"></i><span>Instalar pantalla</span>
+          </button>
+        </div>
       </div>
     </header>
 
-    <section class="warehouse-status-strip" aria-label="Resumen por estado">
-      <div class="warehouse-status-pill is-ready"><i class="bi bi-check2-circle"></i><span>Listos</span><strong><%= counts.Listo %></strong></div>
-      <div class="warehouse-status-pill is-working"><i class="bi bi-gear-wide-connected"></i><span>Rebanando</span><strong><%= counts.Rebanando %></strong></div>
-      <div class="warehouse-status-pill is-pending"><i class="bi bi-hourglass-split"></i><span>Pendientes</span><strong><%= counts.Pendiente %></strong></div>
-      <div class="warehouse-status-pill is-delivered"><i class="bi bi-truck"></i><span>Entregados</span><strong><%= counts.Entregado %></strong></div>
-      <div class="warehouse-status-pill is-cancelled"><i class="bi bi-x-circle"></i><span>Cancelados</span><strong><%= counts.Cancelado %></strong></div>
+    <section class="warehouse2-columns" aria-label="Estados de vales en cuatro columnas">
+      <% columns.forEach(column => { const columnVales = estados[column.name] || []; %>
+        <section class="warehouse2-column is-<%= column.css %>">
+          <header class="warehouse2-column-header">
+            <div class="warehouse2-column-title">
+              <i class="bi <%= column.icon %>"></i>
+              <div><h2><%= column.title %></h2><p><%= column.note %></p></div>
+            </div>
+            <strong><%= columnVales.length %></strong>
+          </header>
+          <div class="warehouse2-scroll" data-auto-scroll-one-way data-scroll-key="<%= column.css %>">
+            <% if (columnVales.length) { %>
+              <div class="warehouse2-list">
+                <% columnVales.forEach(vale => { %>
+                  <%- include('partials/pantallaValeColumn', { vale }) %>
+                <% }) %>
+              </div>
+            <% } else { %>
+              <div class="warehouse2-empty"><i class="bi bi-inbox"></i><span>Sin vales en este estado</span></div>
+            <% } %>
+          </div>
+        </section>
+      <% }) %>
     </section>
-
-    <% if (overdueCount > 0) { %>
-      <div class="warehouse-overdue-alert"><i class="bi bi-exclamation-triangle-fill"></i><span><strong><%= overdueCount %> vale(s)</strong> siguen activos después de su fecha de entrega.</span></div>
-    <% } %>
-
-    <div class="warehouse-layout">
-      <section class="warehouse-active-column" aria-label="Vales activos">
-        <% activeSections.forEach(section => { const sectionVales = estados[section.name] || []; %>
-          <section class="warehouse-state-section is-<%= section.name.toLowerCase() %>">
-            <header class="warehouse-section-header">
-              <div class="warehouse-section-title"><i class="bi <%= section.icon %>"></i><div><h2><%= section.title %></h2><p><%= section.note %></p></div></div>
-              <strong class="warehouse-section-count"><%= sectionVales.length %></strong>
-            </header>
-            <% if (sectionVales.length) { %>
-              <div class="warehouse-card-grid">
-                <% sectionVales.forEach(vale => { %>
-                  <%- include('partials/pantallaValeCard', { vale }) %>
-                <% }) %>
-              </div>
-            <% } else { %>
-              <div class="warehouse-section-empty"><i class="bi bi-check-circle"></i>Sin vales en este estado</div>
-            <% } %>
-          </section>
-        <% }) %>
-      </section>
-
-      <aside class="warehouse-history-column" aria-label="Seguimiento rápido por estado">
-        <header class="warehouse-history-header">
-          <div><span>Seguimiento del día</span><strong>Estados siempre visibles</strong></div>
-          <i class="bi bi-arrow-down-up" title="Desplazamiento automático"></i>
-        </header>
-
-        <section class="warehouse-side-panel is-delivered" aria-label="Entregados hoy">
-          <header class="warehouse-side-state-heading">
-            <span><i class="bi bi-truck"></i>Entregados</span>
-            <strong><%= counts.Entregado %></strong>
-          </header>
-          <div class="warehouse-history-scroll" data-auto-scroll data-scroll-key="delivered">
-            <% if ((estados.Entregado || []).length) { %>
-              <div class="warehouse-history-list">
-                <% estados.Entregado.forEach(vale => { %>
-                  <%- include('partials/pantallaValeCompact', { vale, showProducts: false }) %>
-                <% }) %>
-              </div>
-            <% } else { %>
-              <div class="warehouse-history-empty">Aún no hay entregados hoy.</div>
-            <% } %>
-          </div>
-        </section>
-
-        <section class="warehouse-side-panel is-ready" aria-label="Listos para entregar">
-          <header class="warehouse-side-state-heading">
-            <span><i class="bi bi-check2-circle"></i>Listos</span>
-            <strong><%= counts.Listo %></strong>
-          </header>
-          <div class="warehouse-history-scroll" data-auto-scroll data-scroll-key="ready">
-            <% if ((estados.Listo || []).length) { %>
-              <div class="warehouse-history-list">
-                <% estados.Listo.forEach(vale => { %>
-                  <%- include('partials/pantallaValeCompact', { vale, showProducts: false }) %>
-                <% }) %>
-              </div>
-            <% } else { %>
-              <div class="warehouse-history-empty">No hay vales listos.</div>
-            <% } %>
-          </div>
-        </section>
-
-        <section class="warehouse-side-panel is-working" aria-label="Vales en rebanado">
-          <header class="warehouse-side-state-heading">
-            <span><i class="bi bi-gear-wide-connected"></i>Rebanando</span>
-            <strong><%= counts.Rebanando %></strong>
-          </header>
-          <div class="warehouse-history-scroll" data-auto-scroll data-scroll-key="working">
-            <% if ((estados.Rebanando || []).length) { %>
-              <div class="warehouse-history-list">
-                <% estados.Rebanando.forEach(vale => { %>
-                  <%- include('partials/pantallaValeCompact', { vale, showProducts: false }) %>
-                <% }) %>
-              </div>
-            <% } else { %>
-              <div class="warehouse-history-empty">No hay vales rebanando.</div>
-            <% } %>
-          </div>
-        </section>
-
-        <section class="warehouse-side-panel is-cancelled" aria-label="Cancelados hoy">
-          <header class="warehouse-side-state-heading">
-            <span><i class="bi bi-x-circle"></i>Cancelados</span>
-            <strong><%= counts.Cancelado %></strong>
-          </header>
-          <div class="warehouse-history-scroll" data-auto-scroll data-scroll-key="cancelled">
-            <% if ((estados.Cancelado || []).length) { %>
-              <div class="warehouse-history-list">
-                <% estados.Cancelado.forEach(vale => { %>
-                  <%- include('partials/pantallaValeCompact', { vale, showProducts: false }) %>
-                <% }) %>
-              </div>
-            <% } else { %>
-              <div class="warehouse-history-empty">No hay cancelados hoy.</div>
-            <% } %>
-          </div>
-        </section>
-      </aside>
-    </div>
   </main>
 
   <script>
     (() => {
-      const storagePrefix = 'chc-pantalla-scroll-';
+      const THEME_KEY = 'chc-pantalla-informativa-theme';
+      const themeButton = document.querySelector('[data-warehouse-theme-toggle]');
+      const themeMeta = document.querySelector('[data-warehouse-theme-color]');
 
-      document.querySelectorAll('[data-auto-scroll]').forEach(scroller => {
+      const applyTheme = (theme, persist = false) => {
+        const nextTheme = theme === 'dark' ? 'dark' : 'light';
+        document.documentElement.dataset.warehouseTheme = nextTheme;
+        if (themeMeta) themeMeta.setAttribute('content', nextTheme === 'dark' ? '#211412' : '#f3eeea');
+
+        if (themeButton) {
+          const isDark = nextTheme === 'dark';
+          themeButton.setAttribute('aria-pressed', String(isDark));
+          const icon = themeButton.querySelector('[data-theme-icon]');
+          const label = themeButton.querySelector('[data-theme-label]');
+          if (icon) icon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+          if (label) label.textContent = isDark ? 'Tema claro' : 'Tema oscuro';
+          themeButton.title = isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
+        }
+
+        if (persist) {
+          try { window.localStorage.setItem(THEME_KEY, nextTheme); } catch (error) {}
+        }
+      };
+
+      applyTheme(document.documentElement.dataset.warehouseTheme || 'light');
+      themeButton?.addEventListener('click', () => {
+        const current = document.documentElement.dataset.warehouseTheme || 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark', true);
+      });
+
+      const storagePrefix = 'chc-pantalla-scroll-columnas-';
+
+      document.querySelectorAll('[data-auto-scroll-one-way]').forEach(scroller => {
         const key = storagePrefix + (scroller.dataset.scrollKey || 'general');
-        let direction = Number(window.sessionStorage.getItem(`${key}-direction`)) || 1;
         let pauseUntil = Date.now() + 1200;
         const savedPosition = Number(window.sessionStorage.getItem(`${key}-position`));
 
@@ -184,20 +146,14 @@
           if (scroller.scrollHeight <= scroller.clientHeight || Date.now() < pauseUntil) return;
 
           const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
-          const atTop = scroller.scrollTop <= 0;
-
-          if (atBottom && direction > 0) {
-            direction = -1;
+          if (atBottom) {
             pauseUntil = Date.now() + 1400;
-          } else if (atTop && direction < 0) {
-            direction = 1;
-            pauseUntil = Date.now() + 1400;
+            scroller.scrollTop = 0;
           } else {
-            scroller.scrollTop += direction;
+            scroller.scrollTop += 1;
           }
 
           window.sessionStorage.setItem(`${key}-position`, String(scroller.scrollTop));
-          window.sessionStorage.setItem(`${key}-direction`, String(direction));
         }, 40);
       });
 

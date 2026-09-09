@@ -4,7 +4,7 @@ const path = require('path');
 const ejs = require('ejs');
 
 const root = path.resolve(__dirname, '..');
-const view = path.join(root, 'views', 'pantalla2.ejs');
+const view = path.join(root, 'views', 'pantalla.ejs');
 
 function vale(folio, estado, siclik = false) {
   return {
@@ -69,7 +69,12 @@ ejs.renderFile(view, {
   assert(html.includes('window.location.reload(), 30000'));
 
   const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
-  assert(app.includes("app.get('/pantalla2', pantalla2Controller)"));
+  assert(app.includes("app.get('/pantalla', pantallaController)"));
+  assert(html.includes('data-warehouse-theme-toggle'));
+  assert(html.includes("chc-pantalla-informativa-theme"));
+  assert(html.includes("window.localStorage.setItem(THEME_KEY, nextTheme)"));
+  assert(html.includes('Vista 1 · 4 columnas'));
+  assert(html.includes('Vista 2 · Secciones'));
 
-  console.log('Pruebas de Pantalla almacén 2 en cuatro columnas: OK');
+  console.log('Pruebas de Pantalla almacén principal en cuatro columnas y tema persistente: OK');
 });

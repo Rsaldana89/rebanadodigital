@@ -827,19 +827,19 @@ async function loadPantallaData(req) {
 
 exports.pantallaController = async (req, res) => {
   try {
-    return res.render('pantalla', await loadPantallaData(req));
+    return res.render('pantalla', { ...(await loadPantallaData(req)), title: 'Pantalla de Almacén · Vista 1' });
   } catch (err) {
     console.error(err);
     return res.status(500).send('Error al cargar la pantalla informativa');
   }
 };
 
-// Vista alternativa de almacén: cuatro columnas grandes con desplazamiento
-// vertical continuo en un solo sentido (Entregados, Listos, Rebanando, Pendientes).
+// Vista alternativa de almacén: conserva la pantalla por secciones para comparación.
+// La vista principal /pantalla ahora usa cuatro columnas con scroll continuo.
 exports.pantalla2Controller = async (req, res) => {
   try {
     const data = await loadPantallaData(req);
-    return res.render('pantalla2', { ...data, title: 'Pantalla de Almacén · Vista 2' });
+    return res.render('pantalla2', { ...data, title: 'Pantalla de Almacén · Vista 2 · Secciones' });
   } catch (err) {
     console.error(err);
     return res.status(500).send('Error al cargar la pantalla informativa alternativa');
