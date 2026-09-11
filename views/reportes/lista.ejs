@@ -13,25 +13,60 @@
   </div>
 </div>
 
-<div class="report-type-grid mb-4">
-  <a class="report-type-card <%= filtros.tipo === 'vales' ? 'is-active' : '' %>" href="/reportes?tipo=vales&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>&estado=<%= encodeURIComponent(filtros.estado) %>">
-    <span class="report-type-icon report-type-icon-vales"><i class="bi bi-receipt-cutoff"></i></span>
-    <span class="report-type-copy"><strong>Vales del periodo</strong><small>Seguimiento por estado, entrega y horas de Listo / Entregado.</small></span>
-    <i class="bi bi-chevron-right report-type-arrow"></i>
-  </a>
-  <a class="report-type-card <%= filtros.tipo === 'productos' ? 'is-active' : '' %>" href="/reportes?tipo=productos&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>">
-    <span class="report-type-icon report-type-icon-productos"><i class="bi bi-bar-chart-line"></i></span>
-    <span class="report-type-copy"><strong>Productos rebanados</strong><small>Ranking de los productos más y menos surtidos.</small></span>
-    <i class="bi bi-chevron-right report-type-arrow"></i>
-  </a>
-  <a class="report-type-card <%= filtros.tipo === 'merma' ? 'is-active' : '' %>" href="/reportes?tipo=merma&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>">
-    <span class="report-type-icon report-type-icon-merma"><i class="bi bi-graph-down-arrow"></i></span>
-    <span class="report-type-copy"><strong>Merma y rendimiento</strong><small>Merma manual, de cierre y proporción contra rebanado.</small></span>
-    <i class="bi bi-chevron-right report-type-arrow"></i>
-  </a>
-</div>
+<section class="report-selector-shell mb-4" aria-label="Tipos de reporte">
+  <div class="report-selector-heading">
+    <div>
+      <div class="section-kicker">Selecciona qué quieres analizar</div>
+      <h2>¿Qué reporte necesitas?</h2>
+      <p>Los tres usan el mismo periodo. Cambia de reporte sin perder las fechas seleccionadas.</p>
+    </div>
+    <span class="report-selector-current"><i class="bi bi-eye"></i> Reporte actual</span>
+  </div>
+
+  <div class="report-selector-grid">
+    <a class="report-selector-option report-option-vales <%= filtros.tipo === 'vales' ? 'is-active' : '' %>" href="/reportes?tipo=vales&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>&estado=<%= encodeURIComponent(filtros.estado) %>">
+      <span class="report-option-index">1</span>
+      <span class="report-option-icon"><i class="bi bi-receipt-cutoff"></i></span>
+      <span class="report-option-copy">
+        <small>OPERACIÓN</small>
+        <strong>Vales del periodo</strong>
+        <span>Qué vales se atendieron, su estado y las horas de Listo / Entregado.</span>
+      </span>
+      <span class="report-option-action"><%= filtros.tipo === 'vales' ? 'Viendo' : 'Abrir' %> <i class="bi bi-chevron-right"></i></span>
+    </a>
+
+    <a class="report-selector-option report-option-products <%= filtros.tipo === 'productos' ? 'is-active' : '' %>" href="/reportes?tipo=productos&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>">
+      <span class="report-option-index">2</span>
+      <span class="report-option-icon"><i class="bi bi-bar-chart-line"></i></span>
+      <span class="report-option-copy">
+        <small>CONSUMO</small>
+        <strong>Productos rebanados</strong>
+        <span>Qué productos se surtieron más, cuáles menos y en cuántos vales aparecieron.</span>
+      </span>
+      <span class="report-option-action"><%= filtros.tipo === 'productos' ? 'Viendo' : 'Abrir' %> <i class="bi bi-chevron-right"></i></span>
+    </a>
+
+    <a class="report-selector-option report-option-waste <%= filtros.tipo === 'merma' ? 'is-active' : '' %>" href="/reportes?tipo=merma&fecha_inicio=<%= filtros.fecha_inicio %>&fecha_fin=<%= filtros.fecha_fin %>">
+      <span class="report-option-index">3</span>
+      <span class="report-option-icon"><i class="bi bi-graph-down-arrow"></i></span>
+      <span class="report-option-copy">
+        <small>CONTROL</small>
+        <strong>Merma y rendimiento</strong>
+        <span>Cuánta merma hubo, en qué productos y qué proporción representa contra lo rebanado.</span>
+      </span>
+      <span class="report-option-action"><%= filtros.tipo === 'merma' ? 'Viendo' : 'Abrir' %> <i class="bi bi-chevron-right"></i></span>
+    </a>
+  </div>
+</section>
 
 <div class="form-shell report-filter-shell mb-4">
+  <div class="report-filter-heading">
+    <div>
+      <div class="section-kicker">Filtros</div>
+      <h3><%= filtros.tipo === 'vales' ? 'Consulta de vales' : (filtros.tipo === 'productos' ? 'Consulta de productos rebanados' : 'Consulta de merma') %></h3>
+    </div>
+    <span><i class="bi bi-calendar-range"></i> Elige un día o un periodo</span>
+  </div>
   <form class="row g-3 align-items-end" method="get" action="/reportes">
     <input type="hidden" name="tipo" value="<%= filtros.tipo %>">
     <% if (filtros.tipo === 'vales') { %>
@@ -64,7 +99,7 @@
       <div class="col-md-6 d-flex gap-2 flex-wrap align-items-center">
     <% } %>
         <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1"></i>Consultar</button>
-        <button class="btn btn-soft report-excel-button" type="submit" name="exportar" value="xlsx"><i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel</button>
+        <button class="btn btn-soft report-excel-button" type="submit" name="exportar" value="xlsx"><i class="bi bi-file-earmark-excel me-1"></i>Descargar .xlsx</button>
       </div>
   </form>
 

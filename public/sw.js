@@ -1,13 +1,13 @@
-const CACHE_NAME = 'chc-rebanado-app-v19.0.12';
+const CACHE_NAME = 'chc-rebanado-app-v19.0.14';
 const STATIC_FILES = [
   '/offline.html',
-  '/css/styles.css',
-  '/css/institutional.css',
+  '/css/styles.css?v=19.0.14',
+  '/css/institutional.css?v=19.0.14',
   '/js/app.js',
   '/js/pwa-install.js',
   '/manifest.webmanifest',
-  '/icons/rebanado-app-192.png',
-  '/icons/rebanado-app-512.png'
+  '/icons/rebanado-digital-v2-192.png',
+  '/icons/rebanado-digital-v2-512.png'
 ];
 
 self.addEventListener('install', event => {
