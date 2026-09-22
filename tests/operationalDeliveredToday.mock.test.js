@@ -71,7 +71,7 @@ const res = {
   assert.match(boardSql, /MAX\(CASE WHEN estado_nuevo = 'Listo' THEN created_at END\)/);
   assert.match(boardSql, /v\.estado = 'Entregado'/);
   assert.match(boardSql, /DATE\(CONVERT_TZ\(COALESCE\(sh\.entregado_at, v\.updated_at\), '\+00:00', '-06:00'\)\) = \?/);
-  assert.deepStrictEqual(boardParams, Array(5).fill('2026-09-09'));
+  assert.deepStrictEqual(boardParams, Array(4).fill('2026-09-09'));
   assert.strictEqual(res.rendered.view, 'vales/tablero');
   assert.strictEqual(res.rendered.data.estados.Entregado.length, 1);
   assert.strictEqual(res.rendered.data.estados.Entregado[0].fecha_entrega_fmt, '2026-09-07');

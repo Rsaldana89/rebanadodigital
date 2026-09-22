@@ -72,7 +72,7 @@ const res = {
   assert.match(pantallaSql, /MAX\(CASE WHEN estado_nuevo = 'Entregado' THEN created_at END\)/);
   assert.match(pantallaSql, /DATE\(CONVERT_TZ\(COALESCE\(sh\.entregado_at, v\.updated_at\), '\+00:00', '-06:00'\)\) = \?/);
   assert.match(pantallaSql, /v\.estado = 'Cancelado'/);
-  assert.deepStrictEqual(pantallaParams, Array(5).fill('2026-09-08'));
+  assert.deepStrictEqual(pantallaParams, Array(4).fill('2026-09-08'));
   assert.strictEqual(res.rendered.view, 'pantalla');
   assert.strictEqual(res.rendered.data.estados.Entregado.length, 1);
   assert.strictEqual(res.rendered.data.estados.Entregado[0].folio, 'VM-2609-0091');

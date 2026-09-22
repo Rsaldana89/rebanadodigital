@@ -74,7 +74,7 @@ const DEFAULTS = {
     'vales.create': false,
     'vales.edit': false,
     'vales.delete': false,
-    'vales.state.pending': false,
+    'vales.state.pending': true,
     'vales.state.rebanando': true,
     'vales.state.listo': true,
     'vales.state.entregado': false,
@@ -169,6 +169,19 @@ async function initializePermissions() {
 
   // El administrador siempre conserva control total.
   await db.query(`UPDATE role_permissions SET allowed = 1 WHERE role = 'administrador'`);
+
+  // V19.0.15 · Acuerdos operativos del 21 de septiembre.
+  // Rebanado puede corregir hacia atrás hasta Pendiente, pero nunca entregar.
+  await db.query(
+    `UPDATE role_permissions
+     SET allowed = CASE
+       WHEN permission_code = 'vales.state.pending' THEN 1
+       WHEN permission_code IN ('vales.state.entregado', 'vales.state.manage_all') THEN 0
+       ELSE allowed
+     END
+     WHERE role = 'rebanado'
+       AND permission_code IN ('vales.state.pending', 'vales.state.entregado', 'vales.state.manage_all')`
+  );
 }
 
 async function getRolePermissionMatrix() {
@@ -210,10 +223,18 @@ async function getEffectivePermissions(user) {
     [user.role, user.id]
   );
 
-  return rows.reduce((acc, row) => {
+  const effective = rows.reduce((acc, row) => {
     acc[row.code] = Boolean(row.allowed);
     return acc;
   }, {});
+
+  if (user.role === 'rebanado') {
+    effective['vales.state.pending'] = true;
+    effective['vales.state.entregado'] = false;
+    effective['vales.state.manage_all'] = false;
+  }
+
+  return effective;
 }
 
 async function getUserPermissionOverrides(userId) {
@@ -235,8 +256,36 @@ function hasPermission(permissionMap, code) {
 
 function getAllowedStateTargets(permissionMap, role, currentState) {
   const allStates = Object.keys(STATE_PERMISSION);
-  const canManageAll = hasPermission(permissionMap, 'vales.state.manage_all');
 
+  // Un vale ya entregado sólo puede cancelarse por CEDIS o Administrador.
+  // Esta corrección revierte el consumo de inventario en valeController.
+  // Almacén y Rebanado no pueden modificar un vale después de entregarlo.
+  if (currentState === 'Entregado') {
+    const canCancelDelivered = ['administrador', 'cedis'].includes(role)
+      && hasPermission(permissionMap, STATE_PERMISSION.Cancelado);
+    return canCancelDelivered ? ['Cancelado'] : [];
+  }
+
+  // Rebanado tiene un flujo controlado: puede avanzar normalmente y corregir
+  // Listo -> Rebanando -> Pendiente. Entregado queda reservado a Almacén/CEDIS.
+  if (role === 'rebanado') {
+    const rebanadoTransitions = {
+      Pendiente: ['Rebanando', 'Cancelado'],
+      Rebanando: ['Pendiente', 'Listo', 'Cancelado'],
+      Listo: ['Rebanando', 'Cancelado'],
+      Entregado: [],
+      Cancelado: []
+    };
+
+    const transitionTargets = rebanadoTransitions[currentState] || [];
+    return transitionTargets.filter(state => {
+      if (state === 'Entregado') return false;
+      if (state === 'Pendiente') return true;
+      return hasPermission(permissionMap, STATE_PERMISSION[state]);
+    });
+  }
+
+  const canManageAll = hasPermission(permissionMap, 'vales.state.manage_all');
   let transitionTargets;
   if (canManageAll) {
     transitionTargets = allStates;

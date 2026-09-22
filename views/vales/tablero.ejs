@@ -138,8 +138,10 @@
     const searchText = `${vale.folio} ${vale.numero_pedido || ''} ${vale.cliente} ${vale.lugar_entrega || ''} ${vale.productos_busqueda || ''} ${vale.prioridad} ${vale.estado} ${entregaDisplay} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
     const allowedStates = vale.allowed_states || [];
     const canAdvance = e.siguiente ? allowedStates.includes(e.siguiente) : false;
-    const canCancel = !['Entregado','Cancelado'].includes(vale.estado) && allowedStates.includes('Cancelado');
-    const showMoreMenu = canCancel || canEditVale || canDeleteVale;
+    const canCancel = vale.estado !== 'Cancelado' && allowedStates.includes('Cancelado');
+    const previousState = vale.estado === 'Listo' ? 'Rebanando' : (vale.estado === 'Rebanando' ? 'Pendiente' : null);
+    const canStepBack = previousState ? allowedStates.includes(previousState) : false;
+    const showMoreMenu = canStepBack || canCancel || canEditVale || canDeleteVale;
     const cardReturnUrl = `${returnUrl}&focus=${vale.id}#vale-${vale.id}`;
   %>
     <article
@@ -295,6 +297,13 @@
             <div class="operator-more-panel command-more-panel">
               <% if (canEditVale) { %>
                 <a href="/vales/<%= vale.id %>/editar?return_url=<%= encodeURIComponent(cardReturnUrl) %>" data-board-return-link data-focus-id="<%= vale.id %>"><i class="bi bi-pencil-square"></i>Editar comanda</a>
+              <% } %>
+              <% if (canStepBack) { %>
+                <form method="post" action="/vales/<%= vale.id %>/estado" class="operator-state-form" data-focus-id="<%= vale.id %>" data-confirm="¿Regresar este vale de <%= vale.estado %> a <%= previousState %>?">
+                  <input type="hidden" name="return_url" value="<%= cardReturnUrl %>">
+                  <input type="hidden" name="nuevo_estado" value="<%= previousState %>">
+                  <button type="submit"><i class="bi bi-arrow-counterclockwise"></i>Regresar a <%= previousState %></button>
+                </form>
               <% } %>
               <% if (canCancel) { %>
                 <form method="post" action="/vales/<%= vale.id %>/estado" class="operator-state-form" data-focus-id="<%= vale.id %>" data-confirm="¿Cancelar este vale completo?">

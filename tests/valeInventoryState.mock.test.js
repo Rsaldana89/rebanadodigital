@@ -51,7 +51,8 @@ function request(nextState) {
     permissions: {
       'vales.state.manage_all': true,
       'vales.state.entregado': true,
-      'vales.state.rebanando': true
+      'vales.state.rebanando': true,
+      'vales.state.cancelado': true
     },
     session: { user: { id: 7, role: 'cedis' } }
   };
@@ -65,10 +66,10 @@ function request(nextState) {
   assert.strictEqual(currentState, 'Entregado');
 
   const reopenedResponse = response();
-  await controller.cambiarEstado(request('Rebanando'), reopenedResponse);
+  await controller.cambiarEstado(request('Cancelado'), reopenedResponse);
   assert.strictEqual(reopenedResponse.redirectUrl, '/vales/25');
   assert.strictEqual(inventoryCalls[1].type, 'reverse');
-  assert.strictEqual(currentState, 'Rebanando');
+  assert.strictEqual(currentState, 'Cancelado');
   assert.strictEqual(committed, 2);
   assert.strictEqual(rolledBack, 0);
   console.log('Pruebas de estados de vale ligados al inventario: OK');

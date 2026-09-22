@@ -1,0 +1,22 @@
+<%
+  const isSiclik = Boolean(vale.external_key) || String(vale.origen || '').toLowerCase() === 'siclik';
+  const salesOrder = vale.sap_docnum || vale.numero_pedido;
+%>
+<article class="warehouse2-delivered-card">
+  <div class="warehouse2-delivered-reference">
+    <% if (isSiclik) { %>
+      <small>Pedido / orden</small>
+      <strong><%= salesOrder || vale.folio %></strong>
+      <span><%= vale.folio %></span>
+    <% } else { %>
+      <small>Vale</small>
+      <strong><%= vale.folio %></strong>
+      <% if (vale.numero_pedido) { %><span><%= vale.numero_pedido %></span><% } %>
+    <% } %>
+  </div>
+  <h3><%= vale.cliente %></h3>
+  <div class="warehouse2-delivered-time">
+    <i class="bi bi-check2-circle"></i>
+    <span>Entregado <strong><%= vale.entregado_time || '' %></strong></span>
+  </div>
+</article>

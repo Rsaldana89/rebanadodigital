@@ -7,6 +7,30 @@ const inventoryService = require('../services/inventoryService');
 
 const VALID_STATES = ['Pendiente', 'Rebanando', 'Listo', 'Entregado', 'Cancelado'];
 
+
+const PRIORITY_WEIGHT = { Alta: 1, Normal: 2, Baja: 3 };
+
+function sortActiveValesByPriority(items = []) {
+  return items.sort((a, b) => {
+    const priorityDiff = (PRIORITY_WEIGHT[a.prioridad] || 4) - (PRIORITY_WEIGHT[b.prioridad] || 4);
+    if (priorityDiff !== 0) return priorityDiff;
+
+    const aDate = a.entrega_fecha_fin_fmt || a.entrega_fecha_inicio_fmt || a.fecha_entrega_fmt || '9999-12-31';
+    const bDate = b.entrega_fecha_fin_fmt || b.entrega_fecha_inicio_fmt || b.fecha_entrega_fmt || '9999-12-31';
+    const dateDiff = String(aDate).localeCompare(String(bDate));
+    if (dateDiff !== 0) return dateDiff;
+
+    return String(a.folio || '').localeCompare(String(b.folio || ''), 'es-MX', { numeric: true });
+  });
+}
+
+function sortStateBuckets(estados) {
+  ['Pendiente', 'Rebanando', 'Listo'].forEach(state => sortActiveValesByPriority(estados[state] || []));
+  (estados.Entregado || []).sort((a, b) => new Date(b.entregado_at || b.updated_at || 0) - new Date(a.entregado_at || a.updated_at || 0));
+  (estados.Cancelado || []).sort((a, b) => new Date(b.cancelado_at || b.updated_at || 0) - new Date(a.cancelado_at || a.updated_at || 0));
+  return estados;
+}
+
 function getMexicoDateParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Mexico_City',
@@ -300,14 +324,12 @@ exports.tablero = async (req, res) => {
           OR (v.estado = 'Cancelado'
               AND DATE(CONVERT_TZ(COALESCE(sh.cancelado_at, v.updated_at), '+00:00', '-06:00')) = ?)
        ORDER BY
-         CASE WHEN COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
-                   AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
-         CASE v.prioridad WHEN 'Alta' THEN 1 WHEN 'Normal' THEN 2 WHEN 'Baja' THEN 3 ELSE 4 END,
          CASE v.estado WHEN 'Pendiente' THEN 1 WHEN 'Rebanando' THEN 2 WHEN 'Listo' THEN 3 WHEN 'Entregado' THEN 4 WHEN 'Cancelado' THEN 5 ELSE 6 END,
-         COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) ASC,
+         CASE v.prioridad WHEN 'Alta' THEN 1 WHEN 'Normal' THEN 2 WHEN 'Baja' THEN 3 ELSE 4 END,
+         COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) ASC,
          v.cliente ASC,
          v.created_at ASC`,
-      [filtroFecha, filtroFecha, filtroFecha, filtroFecha, filtroFecha]
+      [filtroFecha, filtroFecha, filtroFecha, filtroFecha]
     );
 
     const rowsWithProducts = await attachProducts(rows);
@@ -332,6 +354,8 @@ exports.tablero = async (req, res) => {
       if (!estados[v.estado]) estados[v.estado] = [];
       estados[v.estado].push(v);
     });
+
+    sortStateBuckets(estados);
 
     const overdueCount = vales.filter(v => v.is_overdue).length;
     const syncStatus = ['administrador', 'cedis'].includes(req.session.user.role)
@@ -816,13 +840,11 @@ async function loadPantallaData(req) {
         OR (v.estado = 'Cancelado'
             AND DATE(CONVERT_TZ(COALESCE(sh.cancelado_at, v.updated_at), '+00:00', '-06:00')) = ?)
      ORDER BY
-       CASE WHEN COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) < ?
-                 AND v.estado IN ('Pendiente', 'Rebanando', 'Listo') THEN 0 ELSE 1 END,
-       CASE v.prioridad WHEN 'Alta' THEN 1 WHEN 'Normal' THEN 2 WHEN 'Baja' THEN 3 ELSE 4 END,
        CASE v.estado WHEN 'Pendiente' THEN 1 WHEN 'Rebanando' THEN 2 WHEN 'Listo' THEN 3 WHEN 'Entregado' THEN 4 WHEN 'Cancelado' THEN 5 ELSE 6 END,
-       COALESCE(v.entrega_fecha_inicio, v.fecha_entrega) ASC,
+       CASE v.prioridad WHEN 'Alta' THEN 1 WHEN 'Normal' THEN 2 WHEN 'Baja' THEN 3 ELSE 4 END,
+       COALESCE(v.entrega_fecha_fin, v.entrega_fecha_inicio, v.fecha_entrega) ASC,
        v.cliente ASC`,
-    [filtroFecha, filtroFecha, filtroFecha, filtroFecha, filtroFecha]
+    [filtroFecha, filtroFecha, filtroFecha, filtroFecha]
   );
 
   const withProducts = await attachProducts(rows);
@@ -841,8 +863,7 @@ async function loadPantallaData(req) {
     estados[vale.estado].push(vale);
   });
 
-  estados.Entregado.sort((a, b) => new Date(b.entregado_at || b.updated_at || 0) - new Date(a.entregado_at || a.updated_at || 0));
-  estados.Cancelado.sort((a, b) => new Date(b.cancelado_at || b.updated_at || 0) - new Date(a.cancelado_at || a.updated_at || 0));
+  sortStateBuckets(estados);
 
   return {
     title: 'Pantalla de Almacén',

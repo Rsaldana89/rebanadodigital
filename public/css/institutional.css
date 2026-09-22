@@ -7978,3 +7978,113 @@ body.tv-warehouse2-body.warehouse-theme-light .warehouse2-state-times span.is-de
   .report-option-icon { width: 40px; height: 40px; }
   .report-option-action { grid-column: 2 / 4; }
 }
+
+
+/* =========================================================
+   V19.0.15 · Ajustes post-demo 21 septiembre
+   Entregados compactos + más espacio para trabajo activo.
+   ========================================================= */
+@media (min-width: 1201px) {
+  body.tv-warehouse2-body .warehouse2-columns {
+    grid-template-columns: minmax(175px, 0.62fr) minmax(0, 1.12fr) minmax(0, 1.12fr) minmax(0, 1.14fr);
+  }
+}
+
+body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-scroll {
+  padding: 7px;
+}
+
+body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-list {
+  gap: 7px;
+}
+
+.warehouse2-delivered-card {
+  min-width: 0;
+  padding: 9px 9px 8px;
+  border: 1px solid rgba(255,255,255,0.13);
+  border-left: 4px solid var(--warehouse2-color);
+  border-radius: 11px;
+  background: rgba(255,255,255,0.065);
+  color: #f6efeb;
+  box-shadow: 0 6px 14px rgba(9,5,4,0.12);
+}
+
+.warehouse2-delivered-reference small,
+.warehouse2-delivered-reference strong,
+.warehouse2-delivered-reference span {
+  display: block;
+}
+
+.warehouse2-delivered-reference small {
+  color: #b6a69f;
+  font-size: 0.47rem;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.warehouse2-delivered-reference strong {
+  margin-top: 2px;
+  color: var(--warehouse2-color);
+  font-size: clamp(0.78rem, 0.92vw, 1.02rem);
+  font-weight: 950;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.warehouse2-delivered-reference span {
+  margin-top: 2px;
+  color: #aa9c95;
+  font-size: 0.49rem;
+  font-weight: 780;
+  overflow-wrap: anywhere;
+}
+
+.warehouse2-delivered-card h3 {
+  margin: 7px 0 6px;
+  color: #fff;
+  font-size: clamp(0.66rem, 0.72vw, 0.80rem);
+  font-weight: 950;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.warehouse2-delivered-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.09);
+  color: #c4d1dc;
+  font-size: 0.52rem;
+  font-weight: 800;
+}
+
+.warehouse2-delivered-time i { color: var(--warehouse2-color); }
+.warehouse2-delivered-time strong { color: #fff; font-weight: 950; }
+
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered-card,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-card {
+  border-color: #d8dfe5 !important;
+  border-left-color: var(--warehouse2-color) !important;
+  background: #fff !important;
+  color: #2d2420 !important;
+  box-shadow: 0 5px 12px rgba(67,46,36,0.06) !important;
+}
+
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered-reference small,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-reference small { color: #7f7772 !important; }
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered-reference strong,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-reference strong { color: #637587 !important; }
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered-reference span,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-reference span { color: #8b7d76 !important; }
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered-card h3,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-card h3 { color: #2b221e !important; }
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered-time,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-time {
+  border-top-color: #e8e0db !important;
+  color: #6f7b86 !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered-time strong,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-time strong { color: #33404b !important; }

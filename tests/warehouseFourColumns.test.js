@@ -61,6 +61,10 @@ ejs.renderFile(view, {
   assert(html.includes('Pedido / orden de venta'));
   assert(html.includes('238001'));
   assert(html.includes('Jamón Americano CORONEL'));
+  assert(html.includes('warehouse2-delivered-card'));
+  assert(!html.substring(delivered, ready).includes('warehouse2-products'));
+  assert(!html.substring(delivered, ready).includes('Lugar de entrega'));
+  assert(html.substring(delivered, ready).includes('Entregado'));
   assert(html.includes('Centro, Querétaro'));
   assert(html.includes('1 día tarde'));
   assert(html.includes("scroller.scrollTop += 1"));
@@ -76,7 +80,7 @@ ejs.renderFile(view, {
   assert(html.includes('window.localStorage.removeItem(THEME_KEY)'));
   assert(html.includes('data-warehouse-theme="dark"'));
   assert(html.includes('warehouse-theme-light'));
-  assert(html.includes('/css/institutional.css?v=19.0.12'));
+  assert(html.includes('/css/institutional.css?v=19.0.15'));
   assert(html.includes('Vista 1 · 4 columnas'));
   assert(html.includes('Vista 2 · Secciones'));
 
