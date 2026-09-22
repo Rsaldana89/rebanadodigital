@@ -8090,7 +8090,7 @@ html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered
 body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-time strong { color: #33404b !important; }
 
 /* =========================================================
-   V19.0.18 · Estado CORONELBOT integrado al encabezado
+   V19.0.19 · Estado CORONELBOT integrado al encabezado
    Misma familia visual que Atrasados / Tema / Reloj.
    ========================================================= */
 .warehouse-sync-badge {
@@ -8117,7 +8117,12 @@ body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-time strong 
   border-radius: 9px;
   background: rgba(50, 164, 108, 0.16);
   color: #65d59d;
-  font-size: 0.95rem;
+  font-size: 1.02rem;
+}
+
+.warehouse-sync-badge .warehouse-sync-icon .bi-robot {
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
 }
 
 .warehouse-sync-copy {

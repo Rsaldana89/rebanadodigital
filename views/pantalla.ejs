@@ -21,8 +21,8 @@
   <link rel="apple-touch-icon" href="/icons/rebanado-pantalla-192.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="/css/styles.css?v=19.0.18">
-  <link rel="stylesheet" href="/css/institutional.css?v=19.0.18">
+  <link rel="stylesheet" href="/css/styles.css?v=19.0.19">
+  <link rel="stylesheet" href="/css/institutional.css?v=19.0.19">
 </head>
 <body class="tv-body tv-warehouse-body tv-warehouse2-body" data-pwa-worker="/sw-pantalla.js" data-pwa-scope="/pantalla">
   <%
@@ -70,7 +70,7 @@
           ].filter(Boolean).join(' · ');
         %>
           <div class="warehouse-sync-badge <%= syncHealthy ? 'is-healthy' : 'is-alert' %> <%= syncUnavailable ? 'is-unavailable' : '' %>" title="<%= syncTooltip || 'Estado de CORONELBOT' %>" aria-label="Estado de sincronización CORONELBOT: <%= syncLabel %>">
-            <span class="warehouse-sync-icon"><i class="bi <%= syncHealthy ? 'bi-cloud-check-fill' : 'bi-cloud-exclamation-fill' %>"></i></span>
+            <span class="warehouse-sync-icon" aria-hidden="true"><i class="bi bi-robot"></i></span>
             <div class="warehouse-sync-copy">
               <span class="warehouse-sync-name">CORONELBOT</span>
               <span class="warehouse-sync-detail"><%= syncDetail %></span>
