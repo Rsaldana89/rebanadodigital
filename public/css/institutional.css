@@ -8088,4 +8088,185 @@ body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-time {
 }
 html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse2-delivered-time strong,
 body.tv-warehouse2-body.warehouse-theme-light .warehouse2-delivered-time strong { color: #33404b !important; }
-\n\n/* =========================================================\n   V19.0.17 · Estado CORONELBOT en Pantalla de Almacén\n   Indicador compacto y visible en ambas vistas informativas.\n   ========================================================= */\n.warehouse-sync-badge {\n  display: flex;\n  min-width: 142px;\n  min-height: 44px;\n  align-items: center;\n  gap: 8px;\n  padding: 7px 10px;\n  border: 1px solid rgba(67, 184, 128, 0.34);\n  border-radius: 12px;\n  background: rgba(24, 113, 76, 0.20);\n  color: #dff7ea;\n  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.025);\n}\n\n.warehouse-sync-badge > i {\n  flex: 0 0 auto;\n  color: #5ad29a;\n  font-size: 1.02rem;\n}\n\n.warehouse-sync-badge > div {\n  display: grid;\n  min-width: 0;\n  gap: 2px;\n}\n\n.warehouse-sync-badge strong,\n.warehouse-sync-badge span { display: block; white-space: nowrap; }\n\n.warehouse-sync-badge strong {\n  color: #e9fff2;\n  font-size: 0.62rem;\n  font-weight: 950;\n  line-height: 1;\n  letter-spacing: 0.015em;\n}\n\n.warehouse-sync-badge span {\n  color: #a9d6bf;\n  font-size: 0.53rem;\n  font-weight: 760;\n  line-height: 1.05;\n}\n\n.warehouse-sync-badge.is-alert {\n  border-color: rgba(240, 172, 67, 0.42);\n  background: rgba(139, 82, 14, 0.25);\n}\n.warehouse-sync-badge.is-alert > i { color: #f4bd5e; }\n.warehouse-sync-badge.is-alert strong { color: #fff0c7; }\n.warehouse-sync-badge.is-alert span { color: #e0bd7d; }\n\n.warehouse-sync-badge.is-unavailable {\n  border-color: rgba(170, 177, 186, 0.32);\n  background: rgba(105, 112, 120, 0.18);\n}\n.warehouse-sync-badge.is-unavailable > i { color: #bdc5cd; }\n.warehouse-sync-badge.is-unavailable strong { color: #eef1f3; }\n.warehouse-sync-badge.is-unavailable span { color: #bac0c5; }\n\n/* Tema claro de Vista 1 */\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge {\n  border-color: #afd8c2 !important;\n  background: #edf8f2 !important;\n  color: #205f43 !important;\n  box-shadow: 0 2px 7px rgba(70,50,40,0.05) !important;\n}\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge > i,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge > i { color: #27865b !important; }\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge strong,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge strong { color: #1f6848 !important; }\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge span,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge span { color: #547766 !important; }\n\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge.is-alert,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-alert {\n  border-color: #e5c276 !important;\n  background: #fff7e4 !important;\n}\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge.is-alert > i,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-alert > i { color: #ae710e !important; }\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge.is-alert strong,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-alert strong { color: #8b5b0e !important; }\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge.is-alert span,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-alert span { color: #886d3a !important; }\n\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge.is-unavailable,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-unavailable {\n  border-color: #cfd5d9 !important;\n  background: #f3f5f6 !important;\n}\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge.is-unavailable > i,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-unavailable > i { color: #7d8992 !important; }\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge.is-unavailable strong,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-unavailable strong { color: #5c656c !important; }\nhtml[data-warehouse-theme=\"light\"] body.tv-warehouse2-body .warehouse-sync-badge.is-unavailable span,\nbody.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-unavailable span { color: #778087 !important; }\n\n/* Vista 2 no usa el selector claro/oscuro, pero comparte el encabezado operativo. */\n.warehouse2-header-right-legacy { margin-left: auto; }\n\n@media (max-width: 1180px) {\n  .warehouse-sync-badge { min-width: 128px; }\n  .warehouse-sync-badge span { display: none; }\n}\n\n@media (max-width: 900px) {\n  .warehouse-sync-badge { flex: 1 1 auto; min-width: 0; justify-content: center; }\n  .warehouse2-header-right-legacy { width: 100%; }\n}\n
+
+/* =========================================================
+   V19.0.18 · Estado CORONELBOT integrado al encabezado
+   Misma familia visual que Atrasados / Tema / Reloj.
+   ========================================================= */
+.warehouse-sync-badge {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  min-width: 206px;
+  min-height: 48px;
+  gap: 8px;
+  padding: 7px 10px 7px 8px;
+  border: 1px solid rgba(89, 202, 145, 0.28);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.055);
+  color: #f4ece7;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+}
+
+.warehouse-sync-badge .warehouse-sync-icon {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: rgba(50, 164, 108, 0.16);
+  color: #65d59d;
+  font-size: 0.95rem;
+}
+
+.warehouse-sync-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.warehouse-sync-name,
+.warehouse-sync-detail {
+  display: block;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.warehouse-sync-name {
+  color: #f6eee9;
+  font-size: 0.58rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.055em;
+}
+
+.warehouse-sync-detail {
+  max-width: 124px;
+  overflow: hidden;
+  color: #b9aca5;
+  font-size: 0.51rem;
+  font-weight: 720;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+}
+
+.warehouse-sync-state {
+  display: inline-flex;
+  min-width: 34px;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  border: 1px solid rgba(93, 205, 149, 0.28);
+  border-radius: 999px;
+  background: rgba(43, 146, 97, 0.14);
+  color: #82e0ae;
+  font-size: 0.49rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.035em;
+}
+
+.warehouse-sync-badge.is-alert {
+  border-color: rgba(244,190,80,0.35);
+  background: rgba(117,74,13,0.20);
+}
+.warehouse-sync-badge.is-alert .warehouse-sync-icon {
+  background: rgba(244,190,80,0.13);
+  color: #f1c565;
+}
+.warehouse-sync-badge.is-alert .warehouse-sync-state {
+  border-color: rgba(244,190,80,0.34);
+  background: rgba(244,190,80,0.10);
+  color: #f4ce77;
+}
+.warehouse-sync-badge.is-alert .warehouse-sync-detail { color: #d1b675; }
+
+.warehouse-sync-badge.is-unavailable {
+  border-color: rgba(185,191,198,0.24);
+  background: rgba(255,255,255,0.045);
+}
+.warehouse-sync-badge.is-unavailable .warehouse-sync-icon {
+  background: rgba(170,177,186,0.10);
+  color: #bdc5cd;
+}
+.warehouse-sync-badge.is-unavailable .warehouse-sync-state {
+  border-color: rgba(185,191,198,0.22);
+  background: rgba(170,177,186,0.08);
+  color: #ced3d8;
+}
+.warehouse-sync-badge.is-unavailable .warehouse-sync-detail { color: #aeb4ba; }
+
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge {
+  border-color: #d8cbc1 !important;
+  background: #fff !important;
+  color: #66574f !important;
+  box-shadow: 0 2px 7px rgba(70,50,40,0.06) !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge .warehouse-sync-icon,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge .warehouse-sync-icon {
+  background: #e9f7ef !important;
+  color: #27865b !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-name,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-name { color: #473c36 !important; }
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-detail,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-detail { color: #776961 !important; }
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-state,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-state {
+  border-color: #b8dec9 !important;
+  background: #edf8f2 !important;
+  color: #24754e !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge.is-alert,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-alert {
+  border-color: #e4c579 !important;
+  background: #fff9ea !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge.is-alert .warehouse-sync-icon,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-alert .warehouse-sync-icon {
+  background: #fff1c9 !important;
+  color: #a9690b !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge.is-alert .warehouse-sync-state,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-alert .warehouse-sync-state {
+  border-color: #e4c579 !important;
+  background: #fff3d1 !important;
+  color: #8a590e !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge.is-alert .warehouse-sync-detail,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-alert .warehouse-sync-detail { color: #866d3d !important; }
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge.is-unavailable,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-unavailable {
+  border-color: #d7dadd !important;
+  background: #f7f8f8 !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge.is-unavailable .warehouse-sync-icon,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-unavailable .warehouse-sync-icon {
+  background: #eceff1 !important;
+  color: #7b8790 !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sync-badge.is-unavailable .warehouse-sync-state,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-unavailable .warehouse-sync-state {
+  border-color: #d4d9dc !important;
+  background: #eef1f3 !important;
+  color: #657079 !important;
+}
+
+@media (max-width: 1420px) {
+  .warehouse-sync-badge { min-width: 158px; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 6px; }
+  .warehouse-sync-badge .warehouse-sync-icon { width: 28px; height: 28px; }
+  .warehouse-sync-detail { max-width: 72px; }
+}
+@media (max-width: 1180px) {
+  .warehouse-sync-badge { min-width: 126px; grid-template-columns: 28px minmax(0, 1fr); }
+  .warehouse-sync-state { display: none; }
+  .warehouse-sync-detail { max-width: 84px; }
+}
+@media (max-width: 900px) {
+  .warehouse-sync-badge { min-width: 0; }
+  .warehouse2-header-right-legacy { width: 100%; }
+}
+
