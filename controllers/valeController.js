@@ -865,6 +865,20 @@ async function loadPantallaData(req) {
 
   sortStateBuckets(estados);
 
+  // La pantalla de almacén es una superficie operativa permanente; por eso
+  // también muestra el estado de CORONELBOT aunque no haya una sesión de
+  // administrador/CEDIS abierta. getStatusForUi() es tolerante a migraciones
+  // pendientes o fallas de consulta y nunca debe impedir cargar el tablero.
+  const syncStatus = await syncService.getStatusForUi();
+  const syncLastContact = formatMexicoDateTime(syncStatus?.lastContactAt);
+  const syncLastSuccess = formatMexicoDateTime(syncStatus?.lastSuccessAt);
+  const syncHealthy = Boolean(
+    syncStatus?.ok
+    && !syncStatus?.stale
+    && syncStatus?.lastStatus !== 'partial_error'
+    && !syncStatus?.lastError
+  );
+
   return {
     title: 'Pantalla de Almacén',
     vales,
@@ -873,7 +887,13 @@ async function loadPantallaData(req) {
     overdueCount,
     filtroFecha,
     filtroFechaDisplay: displayDateFromISO(filtroFecha),
-    horaActual: now.displayTime
+    horaActual: now.displayTime,
+    syncStatus,
+    syncHealthy,
+    syncLastContactDisplay: syncLastContact?.display || null,
+    syncLastContactTime: syncLastContact?.time || null,
+    syncLastSuccessDisplay: syncLastSuccess?.display || null,
+    syncLastSuccessTime: syncLastSuccess?.time || null
   };
 }
 

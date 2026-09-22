@@ -1,6 +1,6 @@
 {
   "name": "chc-rebanado-digital",
-  "version": "19.0.16",
+  "version": "19.0.17",
   "description": "Sistema CHC de vales, pantalla de almacén, inventario y reportes operativos de Rebanado",
   "main": "app.js",
   "packageManager": "npm@11.6.2",
