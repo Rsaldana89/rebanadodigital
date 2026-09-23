@@ -1,15 +1,15 @@
-const CACHE_NAME = 'chc-rebanado-pantalla-v19.0.22';
+const CACHE_NAME = 'chc-rebanado-pantalla-v19.0.23';
 const LAST_SCREEN = '/pantalla-ultima-vista';
 const STATIC_FILES = [
   '/offline-pantalla.html',
-  '/css/styles.css?v=19.0.22',
-  '/css/institutional.css?v=19.0.22',
+  '/css/styles.css?v=19.0.23',
+  '/css/institutional.css?v=19.0.23',
   '/js/pwa-install.js',
-  '/js/state-chime.js?v=19.0.22',
+  '/js/state-chime.js?v=19.0.23',
   '/manifest-pantalla.webmanifest',
   '/icons/rebanado-pantalla-192.png',
   '/icons/rebanado-pantalla-512.png',
-  '/icons/chc-corporate-logo.svg?v=19.0.22'
+  '/icons/hermanos-coronel-logo.jpg?v=19.0.23'
 ];
 
 self.addEventListener('install', event => {
@@ -45,7 +45,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (url.origin === self.location.origin && /\.(?:css|js|png|svg|webmanifest)$/.test(url.pathname)) {
+  if (url.origin === self.location.origin && /\.(?:css|js|png|jpe?g|svg|webmanifest)$/.test(url.pathname)) {
     // Network-first evita que una versión anterior de la PWA deje estilos viejos pegados.
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);

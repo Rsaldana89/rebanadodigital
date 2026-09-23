@@ -80,9 +80,9 @@ ejs.renderFile(view, {
   assert(html.includes('window.localStorage.removeItem(THEME_KEY)'));
   assert(html.includes('data-warehouse-theme="dark"'));
   assert(html.includes('warehouse-theme-light'));
-  assert(html.includes('/css/institutional.css?v=19.0.22'));
+  assert(html.includes('/css/institutional.css?v=19.0.23'));
   assert(html.includes('Pantalla informativa de almacén'));
-  assert(html.includes('/icons/chc-corporate-logo.svg?v=19.0.22'));
+  assert(html.includes('/icons/hermanos-coronel-logo.jpg?v=19.0.23'));
   assert(html.includes('alt="Cremería Hermanos Coronel"'));
   assert(!html.includes('Vista 2 · Secciones'));
   assert(!html.includes('warehouse-view-switch'));
@@ -93,7 +93,9 @@ ejs.renderFile(view, {
   assert(css.includes('grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.12fr) minmax(0, 1.12fr) minmax(0, 1.14fr)'));
   assert(css.includes('font-size: clamp(0.88rem, 0.94vw, 1.06rem)'));
   assert(css.includes('font-size: clamp(0.69rem, 0.72vw, 0.82rem)'));
-  assert(css.includes('V19.0.22 · Identidad CHC + lectura en TV'));
+  assert(css.includes('V19.0.23 · Logo oficial CHC + tipografía TV ampliada'));
+  assert(css.includes('font-size: clamp(0.95rem, 1.00vw, 1.12rem)'));
+  assert(css.includes('font-size: clamp(0.76rem, 0.79vw, 0.88rem)'));
   assert(css.includes('.warehouse-corporate-logo'));
   assert(app.includes("app.get('/pantalla2', (req, res) => res.redirect('/pantalla'))"));
 

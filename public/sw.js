@@ -1,11 +1,11 @@
-const CACHE_NAME = 'chc-rebanado-app-v19.0.22';
+const CACHE_NAME = 'chc-rebanado-app-v19.0.23';
 const STATIC_FILES = [
   '/offline.html',
-  '/css/styles.css?v=19.0.22',
-  '/css/institutional.css?v=19.0.22',
+  '/css/styles.css?v=19.0.23',
+  '/css/institutional.css?v=19.0.23',
   '/js/app.js',
   '/js/pwa-install.js',
-  '/js/state-chime.js?v=19.0.22',
+  '/js/state-chime.js?v=19.0.23',
   '/manifest.webmanifest',
   '/icons/rebanado-digital-v2-192.png',
   '/icons/rebanado-digital-v2-512.png'
@@ -32,7 +32,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (url.origin === self.location.origin && /\.(?:css|js|png|svg|webmanifest)$/.test(url.pathname)) {
+  if (url.origin === self.location.origin && /\.(?:css|js|png|jpe?g|svg|webmanifest)$/.test(url.pathname)) {
     event.respondWith(caches.open(CACHE_NAME).then(cache => cache.match(event.request).then(cached => cached || fetch(event.request).then(response => {
       cache.put(event.request, response.clone());
       return response;
