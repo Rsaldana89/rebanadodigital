@@ -8343,7 +8343,7 @@ body.tv-warehouse2-body.warehouse-theme-light .warehouse-sound-toggle i { color:
 
 
 /* =========================================================
-   V19.0.21 · Pantalla única TV/4K · proporciones de escritorio
+   V19.0.22 · Pantalla única TV/4K · proporciones de escritorio
    La pantalla informativa usa un lienzo lógico de 1920 px y
    conserva la distribución horizontal aun en WebView/Google TV.
    ========================================================= */
@@ -8405,4 +8405,25 @@ body.tv-warehouse2-body .warehouse2-location strong {
 body.tv-warehouse2-body .warehouse2-delivered-card h3 {
   font-size: clamp(0.76rem, 0.82vw, 0.94rem);
   line-height: 1.16;
+}
+
+
+/* =========================================================
+   V19.0.22 · Identidad CHC + lectura en TV
+   Logotipo corporativo en la cabecera de /pantalla.
+   ========================================================= */
+body.tv-warehouse2-body .warehouse-corporate-logo {
+  display: block;
+  width: clamp(108px, 6.4vw, 126px);
+  height: auto;
+  flex: 0 0 auto;
+  border-radius: 18px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(25, 6, 8, 0.28));
+}
+
+@media (max-width: 1200px) and (orientation: landscape) {
+  body.tv-warehouse2-body .warehouse-corporate-logo {
+    width: 112px;
+  }
 }

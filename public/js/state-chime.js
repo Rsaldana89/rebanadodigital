@@ -97,18 +97,35 @@
     }
   }
 
-  function tone(ctx, frequency, start, duration, gainValue) {
+  function tone(ctx, destination, frequency, start, duration, gainValue, type = 'triangle') {
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
-    oscillator.type = 'sine';
+    oscillator.type = type;
     oscillator.frequency.setValueAtTime(frequency, start);
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.018);
+    gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.012);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, gainValue * 0.58), start + Math.max(0.05, duration * 0.42));
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
     oscillator.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(destination);
     oscillator.start(start);
-    oscillator.stop(start + duration + 0.02);
+    oscillator.stop(start + duration + 0.025);
+  }
+
+  function createChimeOutput(ctx, start, masterLevel) {
+    const master = ctx.createGain();
+    const compressor = ctx.createDynamicsCompressor();
+
+    master.gain.setValueAtTime(masterLevel, start);
+    compressor.threshold.setValueAtTime(-18, start);
+    compressor.knee.setValueAtTime(16, start);
+    compressor.ratio.setValueAtTime(5, start);
+    compressor.attack.setValueAtTime(0.004, start);
+    compressor.release.setValueAtTime(0.18, start);
+
+    master.connect(compressor);
+    compressor.connect(ctx.destination);
+    return master;
   }
 
   async function playChime({ preview = false } = {}) {
@@ -119,10 +136,27 @@
     try {
       const ctx = ensureAudioContext();
       const now = ctx.currentTime + 0.015;
-      // Campanita breve tipo turno: dos notas limpias, perceptibles sin ser estridentes.
-      tone(ctx, 880, now, 0.24, preview ? 0.055 : 0.075);
-      tone(ctx, 1174.66, now + 0.16, 0.34, preview ? 0.05 : 0.07);
-      tone(ctx, 1567.98, now + 0.34, 0.38, preview ? 0.035 : 0.055);
+      const isWarehouse = scope === 'warehouse';
+      const previewScale = preview ? 0.88 : 1;
+      const output = createChimeOutput(ctx, now, isWarehouse ? 0.98 : 0.78);
+
+      if (isWarehouse) {
+        // V19.0.22: alerta de almacén más fuerte y evidente para TV.
+        // Frecuencias medias + armónicos para que se escuche bien en bocinas pequeñas.
+        tone(ctx, output, 659.25, now,        0.34, 0.34 * previewScale, 'triangle');
+        tone(ctx, output, 1318.51, now,       0.24, 0.13 * previewScale, 'sine');
+        tone(ctx, output, 880.00, now + 0.21, 0.38, 0.36 * previewScale, 'triangle');
+        tone(ctx, output, 1760.00, now + 0.21,0.27, 0.13 * previewScale, 'sine');
+        tone(ctx, output, 1046.50, now + 0.46,0.48, 0.39 * previewScale, 'triangle');
+        tone(ctx, output, 2093.00, now + 0.46,0.34, 0.14 * previewScale, 'sine');
+        tone(ctx, output, 1318.51, now + 0.79,0.34, 0.28 * previewScale, 'triangle');
+      } else {
+        // En el tablero operativo también se refuerza, pero con menor intensidad que la TV.
+        tone(ctx, output, 740.00, now,        0.30, 0.24 * previewScale, 'triangle');
+        tone(ctx, output, 987.77, now + 0.18, 0.34, 0.25 * previewScale, 'triangle');
+        tone(ctx, output, 1318.51, now + 0.39,0.40, 0.22 * previewScale, 'triangle');
+      }
+
       audioBlocked = false;
       updateButtons();
       return true;
