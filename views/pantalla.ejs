@@ -2,7 +2,7 @@
 <html lang="es" data-warehouse-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1920, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#211412" data-warehouse-theme-color>
   <script>
     (() => {
@@ -19,12 +19,27 @@
   <link rel="manifest" href="/manifest-pantalla.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/rebanado-pantalla-192.png">
   <link rel="apple-touch-icon" href="/icons/rebanado-pantalla-192.png">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="/css/styles.css?v=19.0.23">
-  <link rel="stylesheet" href="/css/institutional.css?v=19.0.23">
+  <link rel="stylesheet" href="/css/styles.css?v=19.0.24">
+  <link rel="stylesheet" href="/css/institutional.css?v=19.0.24">
 </head>
 <body class="tv-body tv-warehouse-body tv-warehouse2-body" data-pwa-worker="/sw-pantalla.js" data-pwa-scope="/pantalla">
+  <svg class="tv-icon-sprite" aria-hidden="true" focusable="false">
+    <symbol id="icon-truck" viewBox="0 0 24 24"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+    <symbol id="icon-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.6 2.6L16.5 9"/></symbol>
+    <symbol id="icon-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="7"/></symbol>
+    <symbol id="icon-hourglass" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M8 3c0 4 1 6 4 9-3 3-4 5-4 9M16 3c0 4-1 6-4 9 3 3 4 5 4 9"/></symbol>
+    <symbol id="icon-inbox" viewBox="0 0 24 24"><path d="M4 7h16l2 8v4H2v-4z"/><path d="M2 15h5l2 2h6l2-2h5"/></symbol>
+    <symbol id="icon-robot" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 3v4M9 11h.01M15 11h.01M8 15h8"/></symbol>
+    <symbol id="icon-warning" viewBox="0 0 24 24"><path d="M12 3 22 20H2z"/><path d="M12 9v5M12 17h.01"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 15.5A8 8 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5z"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></symbol>
+    <symbol id="icon-bell-off" viewBox="0 0 24 24"><path d="m3 3 18 18M18 9a6 6 0 0 0-9.4-5M6.3 6.3A6 6 0 0 0 6 9c0 7-3 7-3 9h15M10 21h4"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+    <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="9" r="2.2"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 15l2 2 5-5"/></symbol>
+  </svg>
   <%
     const counts = {
       Pendiente: (estados.Pendiente || []).length,
@@ -43,11 +58,11 @@
   <main class="warehouse2-screen" data-state-chime-scope="warehouse" data-state-chime-endpoint="/pantalla/estados" data-state-chime-poll-ms="8000">
     <header class="warehouse2-header">
       <div class="warehouse-brand">
-        <img class="warehouse-corporate-logo" src="/icons/hermanos-coronel-logo.jpg?v=19.0.23" alt="Cremería Hermanos Coronel">
+        <img class="warehouse-corporate-logo" src="/icons/hermanos-coronel-logo.jpg?v=19.0.24" alt="Cremería Hermanos Coronel">
         <div>
           <div class="warehouse-kicker">Pantalla informativa de almacén</div>
           <h1>Rebanado Digital</h1>
-          <p>Entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> · <strong><%= overdueCount %></strong> vale(s) activo(s) atrasado(s)<% } %></p>
+          <p>Entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> · <strong><%= overdueCount %></strong> atrasado(s)<% } %></p>
         </div>
       </div>
       <div class="warehouse2-header-right">
@@ -66,7 +81,7 @@
           ].filter(Boolean).join(' · ');
         %>
           <div class="warehouse-sync-badge <%= syncHealthy ? 'is-healthy' : 'is-alert' %> <%= syncUnavailable ? 'is-unavailable' : '' %>" title="<%= syncTooltip || 'Estado de CORONELBOT' %>" aria-label="Estado de sincronización CORONELBOT: <%= syncLabel %>">
-            <span class="warehouse-sync-icon" aria-hidden="true"><i class="bi bi-robot"></i></span>
+            <span class="warehouse-sync-icon" aria-hidden="true"><svg class="tv-svg-icon"><use href="#icon-robot"></use></svg></span>
             <div class="warehouse-sync-copy">
               <span class="warehouse-sync-name">CORONELBOT</span>
               <span class="warehouse-sync-detail"><%= syncDetail %></span>
@@ -75,21 +90,21 @@
           </div>
         <% } %>
         <% if (overdueCount > 0) { %>
-          <div class="warehouse2-overdue"><i class="bi bi-exclamation-triangle-fill"></i><strong><%= overdueCount %></strong><span>atrasado(s)</span></div>
+          <div class="warehouse2-overdue"><svg class="tv-svg-icon"><use href="#icon-warning"></use></svg><strong><%= overdueCount %></strong><span>atrasado(s)</span></div>
         <% } %>
         <button type="button" class="warehouse-theme-toggle" data-warehouse-theme-toggle aria-pressed="false" title="Cambiar tema de esta pantalla">
-          <i class="bi bi-sun-fill" data-theme-icon></i>
+          <svg class="tv-svg-icon" data-theme-icon><use href="#icon-sun"></use></svg>
           <span data-theme-label>Tema claro</span>
         </button>
         <button type="button" class="warehouse-sound-toggle" data-state-chime-toggle aria-pressed="true" title="Campanita al cambiar el estado de un vale">
-          <i class="bi bi-bell-fill" data-state-chime-icon></i>
+          <svg class="tv-svg-icon" data-state-chime-icon><use href="#icon-bell"></use></svg>
           <span data-state-chime-label>Sonido</span>
         </button>
         <div class="warehouse-clock">
-          <i class="bi bi-clock-fill"></i>
-          <div><strong><%= horaActual %></strong><span>Actualización automática cada 30 s</span></div>
+          <svg class="tv-svg-icon"><use href="#icon-clock"></use></svg>
+          <div><strong><%= horaActual %></strong><span class="warehouse-clock-long">Actualización automática cada 30 s</span><span class="warehouse-clock-short">Auto 30 s</span></div>
           <button type="button" class="warehouse-install-button" data-pwa-install hidden title="Instalar esta pantalla como aplicación">
-            <i class="bi bi-download"></i><span>Instalar pantalla</span>
+            <svg class="tv-svg-icon"><use href="#icon-download"></use></svg><span>Instalar pantalla</span>
           </button>
         </div>
       </div>
@@ -100,7 +115,7 @@
         <section class="warehouse2-column is-<%= column.css %>">
           <header class="warehouse2-column-header">
             <div class="warehouse2-column-title">
-              <i class="bi <%= column.icon %>"></i>
+              <svg class="tv-svg-icon warehouse2-state-icon"><use href="#icon-<%= column.icon === 'bi-truck' ? 'truck' : column.icon === 'bi-check2-circle' ? 'check-circle' : column.icon === 'bi-gear-wide-connected' ? 'gear' : 'hourglass' %>"></use></svg>
               <div><h2><%= column.title %></h2><p><%= column.note %></p></div>
             </div>
             <strong><%= columnVales.length %></strong>
@@ -117,7 +132,7 @@
                 <% }) %>
               </div>
             <% } else { %>
-              <div class="warehouse2-empty"><i class="bi bi-inbox"></i><span>Sin vales en este estado</span></div>
+              <div class="warehouse2-empty"><svg class="tv-svg-icon"><use href="#icon-inbox"></use></svg><span>Sin vales en este estado</span></div>
             <% } %>
           </div>
         </section>
@@ -145,7 +160,7 @@
           themeButton.setAttribute('aria-pressed', String(!isDark));
           const icon = themeButton.querySelector('[data-theme-icon]');
           const label = themeButton.querySelector('[data-theme-label]');
-          if (icon) icon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+          if (icon) { const use = icon.querySelector('use'); if (use) use.setAttribute('href', isDark ? '#icon-sun' : '#icon-moon'); }
           if (label) label.textContent = isDark ? 'Tema claro' : 'Tema oscuro';
           themeButton.title = isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
         }
@@ -197,7 +212,7 @@
       window.setTimeout(() => window.location.reload(), 30000);
     })();
   </script>
-  <script src="/js/state-chime.js?v=19.0.23"></script>
+  <script src="/js/state-chime.js?v=19.0.24"></script>
   <script src="/js/pwa-install.js"></script>
 </body>
 </html>

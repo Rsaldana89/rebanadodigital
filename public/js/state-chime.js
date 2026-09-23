@@ -176,15 +176,15 @@
       button.setAttribute('aria-pressed', String(enabled));
 
       if (!enabled) {
-        if (icon) icon.className = 'bi bi-bell-slash-fill';
+        if (icon) { const use = icon.querySelector('use'); if (use) use.setAttribute('href', '#icon-bell-off'); else icon.className = 'bi bi-bell-slash-fill'; }
         if (label) label.textContent = 'Sin sonido';
         button.title = 'Activar campanita al cambiar el estado de un vale';
       } else if (audioBlocked) {
-        if (icon) icon.className = 'bi bi-bell-fill';
+        if (icon) { const use = icon.querySelector('use'); if (use) use.setAttribute('href', '#icon-bell'); else icon.className = 'bi bi-bell-fill'; }
         if (label) label.textContent = 'Activar sonido';
         button.title = 'El navegador bloqueó el audio. Haz clic para activarlo.';
       } else {
-        if (icon) icon.className = 'bi bi-bell-fill';
+        if (icon) { const use = icon.querySelector('use'); if (use) use.setAttribute('href', '#icon-bell'); else icon.className = 'bi bi-bell-fill'; }
         if (label) label.textContent = 'Sonido';
         button.title = 'Campanita activa al cambiar el estado de un vale';
       }

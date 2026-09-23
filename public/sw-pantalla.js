@@ -1,15 +1,15 @@
-const CACHE_NAME = 'chc-rebanado-pantalla-v19.0.23';
+const CACHE_NAME = 'chc-rebanado-pantalla-v19.0.24';
 const LAST_SCREEN = '/pantalla-ultima-vista';
 const STATIC_FILES = [
   '/offline-pantalla.html',
-  '/css/styles.css?v=19.0.23',
-  '/css/institutional.css?v=19.0.23',
+  '/css/styles.css?v=19.0.24',
+  '/css/institutional.css?v=19.0.24',
   '/js/pwa-install.js',
-  '/js/state-chime.js?v=19.0.23',
+  '/js/state-chime.js?v=19.0.24',
   '/manifest-pantalla.webmanifest',
   '/icons/rebanado-pantalla-192.png',
   '/icons/rebanado-pantalla-512.png',
-  '/icons/hermanos-coronel-logo.jpg?v=19.0.23'
+  '/icons/hermanos-coronel-logo.jpg?v=19.0.24'
 ];
 
 self.addEventListener('install', event => {
