@@ -9000,3 +9000,97 @@ body.tv-warehouse2-body .warehouse2-location > span {
 body.tv-warehouse2-body .warehouse2-location > span {
   flex: 1 1 auto;
 }
+
+
+/* =========================================================
+   V19.0.25 - TV title adaptation for narrow delivered column
+   Prevent clipping in Google TV / Fully Kiosk while preserving
+   the fixed four-column desktop layout.
+   ========================================================= */
+body.tv-warehouse2-body .warehouse2-column-header {
+  min-width: 0;
+}
+body.tv-warehouse2-body .warehouse2-column-title {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+body.tv-warehouse2-body .warehouse2-column-title > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+body.tv-warehouse2-body .warehouse2-column-title h2,
+body.tv-warehouse2-body .warehouse2-column-title p {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Extra adaptation for the narrow Entregados column */
+body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-header {
+  gap: 6px;
+  padding-right: 7px;
+}
+body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title {
+  gap: 6px;
+}
+body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title > .warehouse2-state-icon {
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  border-radius: 9px;
+}
+body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title h2 {
+  font-size: clamp(13px, 0.9vw, 17px);
+}
+body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title p {
+  font-size: clamp(8px, 0.5vw, 10px);
+  margin-top: 2px;
+}
+body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-header > strong {
+  min-width: 30px;
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+  padding: 0 5px;
+}
+
+@media (max-width: 1500px) and (orientation: landscape) {
+  body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title h2 {
+    font-size: 12.5px;
+  }
+  body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title p {
+    font-size: 7.5px;
+  }
+}
+
+@media (max-width: 1120px) and (orientation: landscape) {
+  body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-header {
+    gap: 5px;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title {
+    gap: 5px;
+  }
+  body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title > .warehouse2-state-icon {
+    width: 24px;
+    height: 24px;
+    padding: 5px;
+    border-radius: 8px;
+  }
+  body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title h2 {
+    font-size: 11px;
+    line-height: 1;
+  }
+  body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-title p {
+    font-size: 7px;
+    margin-top: 1px;
+  }
+  body.tv-warehouse2-body .warehouse2-column.is-delivered .warehouse2-column-header > strong {
+    min-width: 26px;
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+}
