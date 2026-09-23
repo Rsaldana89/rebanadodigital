@@ -80,9 +80,18 @@ ejs.renderFile(view, {
   assert(html.includes('window.localStorage.removeItem(THEME_KEY)'));
   assert(html.includes('data-warehouse-theme="dark"'));
   assert(html.includes('warehouse-theme-light'));
-  assert(html.includes('/css/institutional.css?v=19.0.15'));
-  assert(html.includes('Vista 1 · 4 columnas'));
-  assert(html.includes('Vista 2 · Secciones'));
+  assert(html.includes('/css/institutional.css?v=19.0.21'));
+  assert(html.includes('Pantalla informativa de almacén'));
+  assert(!html.includes('Vista 2 · Secciones'));
+  assert(!html.includes('warehouse-view-switch'));
+  assert(html.includes('width=1920, initial-scale=1.0'));
+
+  const css = fs.readFileSync(path.join(root, 'public', 'css', 'institutional.css'), 'utf8');
+  assert(css.includes('V19.0.21 · Pantalla única TV/4K'));
+  assert(css.includes('grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.12fr) minmax(0, 1.12fr) minmax(0, 1.14fr)'));
+  assert(css.includes('font-size: clamp(0.88rem, 0.94vw, 1.06rem)'));
+  assert(css.includes('font-size: clamp(0.69rem, 0.72vw, 0.82rem)'));
+  assert(app.includes("app.get('/pantalla2', (req, res) => res.redirect('/pantalla'))"));
 
   console.log('Pruebas de Pantalla almacén principal en cuatro columnas y tema persistente: OK');
 });

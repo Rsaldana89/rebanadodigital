@@ -56,6 +56,9 @@
         <i class="bi bi-plus-lg"></i><span>Nuevo vale</span>
       </a>
     <% } %>
+    <button type="button" class="operator-screen-link operator-sound-link" data-state-chime-toggle aria-pressed="true" title="Campanita al cambiar el estado de un vale">
+      <i class="bi bi-bell-fill" data-state-chime-icon></i><span data-state-chime-label>Sonido</span>
+    </button>
     <a href="/pantalla?fecha=<%= filtroFecha %>" target="_blank" class="operator-screen-link" title="Abrir pantalla de almacén">
       <i class="bi bi-display"></i><span>Pantalla</span>
     </a>
@@ -122,7 +125,7 @@
   </div>
 </section>
 
-<section class="ops-list simple-vale-grid" id="opsList" aria-live="polite">
+<section class="ops-list simple-vale-grid" id="opsList" aria-live="polite" data-state-chime-scope="operator" data-state-chime-endpoint="/vales/estados/actuales" data-state-chime-poll-ms="8000">
   <% if (!allVales.length) { %>
     <div class="empty-state empty-state-card">
       <i class="bi bi-inbox"></i>

@@ -37,7 +37,6 @@ const loginView = read('views/login.ejs');
 const headerView = read('views/partials/header.ejs');
 const footerView = read('views/partials/footer.ejs');
 const screenView = read('views/pantalla.ejs');
-const screenView2 = read('views/pantalla2.ejs');
 const installer = read('public/js/pwa-install.js');
 
 assert(loginView.includes('href="/manifest.webmanifest"'));
@@ -48,9 +47,6 @@ assert(footerView.includes('/js/pwa-install.js'));
 assert(screenView.includes('href="/manifest-pantalla.webmanifest"'));
 assert(screenView.includes('data-pwa-worker="/sw-pantalla.js"'));
 assert(screenView.includes('Instalar pantalla'));
-assert(screenView2.includes('href="/manifest-pantalla.webmanifest"'));
-assert(screenView2.includes('data-pwa-worker="/sw-pantalla.js"'));
-assert(screenView2.includes('Instalar pantalla'));
 assert(installer.includes('beforeinstallprompt'));
 assert(installer.includes('navigator.serviceWorker.register'));
 assert(fs.existsSync(path.join(root, 'public/sw.js')));

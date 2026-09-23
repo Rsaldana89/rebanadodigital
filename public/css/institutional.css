@@ -8275,3 +8275,134 @@ body.tv-warehouse2-body.warehouse-theme-light .warehouse-sync-badge.is-unavailab
   .warehouse2-header-right-legacy { width: 100%; }
 }
 
+
+
+/* =========================================================
+   V19.0.20 · Campanita de cambio de estado
+   ========================================================= */
+.warehouse-sound-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.07);
+  color: #f3e9e3;
+  font-size: 0.64rem;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+.warehouse-sound-toggle:hover {
+  border-color: rgba(226,188,107,0.42);
+  background: rgba(226,188,107,0.13);
+  transform: translateY(-1px);
+}
+.warehouse-sound-toggle i { color: #f1cb72; font-size: 0.92rem; }
+.warehouse-sound-toggle.is-muted { opacity: 0.72; }
+.warehouse-sound-toggle.needs-activation {
+  border-color: rgba(240,185,74,0.62);
+  background: rgba(240,185,74,0.14);
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sound-toggle,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sound-toggle {
+  border-color: #d8cbc1 !important;
+  background: #fff !important;
+  color: #66574f !important;
+  box-shadow: 0 2px 7px rgba(70,50,40,0.06);
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sound-toggle:hover,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sound-toggle:hover {
+  border-color: #d7b766 !important;
+  background: #fff7e5 !important;
+  color: #835915 !important;
+}
+html[data-warehouse-theme="light"] body.tv-warehouse2-body .warehouse-sound-toggle i,
+body.tv-warehouse2-body.warehouse-theme-light .warehouse-sound-toggle i { color: #8b2333 !important; }
+
+.operator-sound-link {
+  appearance: none;
+  cursor: pointer;
+}
+.operator-sound-link.is-muted { color: #887b72; background: #f3eee8; }
+.operator-sound-link.needs-activation {
+  color: #8b5a08;
+  border-color: #e0bb66;
+  background: #fff6df;
+}
+.operator-sound-link.needs-activation i { color: #b8780e; }
+
+@media (max-width: 900px) {
+  .warehouse-sound-toggle { flex: 1 1 auto; }
+}
+
+
+/* =========================================================
+   V19.0.21 · Pantalla única TV/4K · proporciones de escritorio
+   La pantalla informativa usa un lienzo lógico de 1920 px y
+   conserva la distribución horizontal aun en WebView/Google TV.
+   ========================================================= */
+body.tv-warehouse2-body .warehouse2-columns {
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.12fr) minmax(0, 1.12fr) minmax(0, 1.14fr);
+}
+
+/* La vista /pantalla es un tablero horizontal dedicado: no debe
+   convertirse a 2 o 1 columnas por breakpoints de tablet/móvil. */
+@media (max-width: 1200px) and (orientation: landscape) {
+  body.tv-warehouse2-body {
+    overflow: hidden;
+  }
+
+  body.tv-warehouse2-body .warehouse2-screen {
+    height: 100vh;
+    min-height: 0;
+  }
+
+  body.tv-warehouse2-body .warehouse2-header {
+    min-height: 105px;
+    align-items: center;
+    flex-direction: row;
+  }
+
+  body.tv-warehouse2-body .warehouse2-header-right {
+    width: auto;
+    align-items: center;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  body.tv-warehouse2-body .warehouse2-columns {
+    grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.12fr) minmax(0, 1.12fr) minmax(0, 1.14fr);
+  }
+
+  body.tv-warehouse2-body .warehouse2-column {
+    min-height: 0;
+  }
+
+  body.tv-warehouse2-body .warehouse-theme-toggle,
+  body.tv-warehouse2-body .warehouse-sound-toggle {
+    flex: 0 0 auto;
+  }
+}
+
+/* Lectura a distancia: cliente y lugar de entrega ligeramente mayores. */
+body.tv-warehouse2-body .warehouse2-vale-card h3 {
+  font-size: clamp(0.88rem, 0.94vw, 1.06rem);
+  line-height: 1.18;
+}
+
+body.tv-warehouse2-body .warehouse2-location strong {
+  font-size: clamp(0.69rem, 0.72vw, 0.82rem);
+  line-height: 1.22;
+  font-weight: 850;
+}
+
+body.tv-warehouse2-body .warehouse2-delivered-card h3 {
+  font-size: clamp(0.76rem, 0.82vw, 0.94rem);
+  line-height: 1.16;
+}

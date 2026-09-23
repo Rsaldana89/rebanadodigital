@@ -2,7 +2,7 @@
 <html lang="es" data-warehouse-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=1920, initial-scale=1.0">
   <meta name="theme-color" content="#211412" data-warehouse-theme-color>
   <script>
     (() => {
@@ -21,8 +21,8 @@
   <link rel="apple-touch-icon" href="/icons/rebanado-pantalla-192.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="/css/styles.css?v=19.0.19">
-  <link rel="stylesheet" href="/css/institutional.css?v=19.0.19">
+  <link rel="stylesheet" href="/css/styles.css?v=19.0.21">
+  <link rel="stylesheet" href="/css/institutional.css?v=19.0.21">
 </head>
 <body class="tv-body tv-warehouse-body tv-warehouse2-body" data-pwa-worker="/sw-pantalla.js" data-pwa-scope="/pantalla">
   <%
@@ -40,18 +40,14 @@
     ];
   %>
 
-  <main class="warehouse2-screen">
+  <main class="warehouse2-screen" data-state-chime-scope="warehouse" data-state-chime-endpoint="/pantalla/estados" data-state-chime-poll-ms="8000">
     <header class="warehouse2-header">
       <div class="warehouse-brand">
         <span class="brand-monogram brand-monogram-lg">CHC</span>
         <div>
-          <div class="warehouse-kicker">Pantalla informativa de almacén · Vista 1</div>
+          <div class="warehouse-kicker">Pantalla informativa de almacén</div>
           <h1>Rebanado Digital</h1>
           <p>Entrega <strong><%= filtroFechaDisplay %></strong><% if (overdueCount > 0) { %> · <strong><%= overdueCount %></strong> vale(s) activo(s) atrasado(s)<% } %></p>
-          <nav class="warehouse-view-switch" aria-label="Cambiar vista de almacén">
-            <a class="is-active" href="/pantalla">Vista 1 · 4 columnas</a>
-            <a href="/pantalla2">Vista 2 · Secciones</a>
-          </nav>
         </div>
       </div>
       <div class="warehouse2-header-right">
@@ -84,6 +80,10 @@
         <button type="button" class="warehouse-theme-toggle" data-warehouse-theme-toggle aria-pressed="false" title="Cambiar tema de esta pantalla">
           <i class="bi bi-sun-fill" data-theme-icon></i>
           <span data-theme-label>Tema claro</span>
+        </button>
+        <button type="button" class="warehouse-sound-toggle" data-state-chime-toggle aria-pressed="true" title="Campanita al cambiar el estado de un vale">
+          <i class="bi bi-bell-fill" data-state-chime-icon></i>
+          <span data-state-chime-label>Sonido</span>
         </button>
         <div class="warehouse-clock">
           <i class="bi bi-clock-fill"></i>
@@ -197,6 +197,7 @@
       window.setTimeout(() => window.location.reload(), 30000);
     })();
   </script>
+  <script src="/js/state-chime.js?v=19.0.21"></script>
   <script src="/js/pwa-install.js"></script>
 </body>
 </html>

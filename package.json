@@ -1,6 +1,6 @@
 {
   "name": "chc-rebanado-digital",
-  "version": "19.0.19",
+  "version": "19.0.21",
   "description": "Sistema CHC de vales, pantalla de almacén, inventario y reportes operativos de Rebanado",
   "main": "app.js",
   "packageManager": "npm@11.6.2",
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "node tests/valeFolioService.test.js && node tests/manualValeProducts.test.js && node tests/locationController.mock.test.js && node tests/integrationHelpers.test.js && node tests/valeDeliveryService.test.js && node tests/settingsService.mock.test.js && node tests/syncService.mock.test.js && node tests/inventoryRules.test.js && node tests/inventoryFlow.mock.test.js && node tests/inventoryClose.mock.test.js && node tests/valeInventoryState.mock.test.js && node tests/calendarSummary.test.js && node tests/stateChangeTimes.test.js && node tests/slicedAvailability.test.js && node tests/warehousePrioritySidebar.test.js && node tests/warehouseFourColumns.test.js && node tests/warehouseStateChangeDate.mock.test.js && node tests/operationalDeliveredToday.mock.test.js && node tests/dashboardDeliveredToday.mock.test.js && node tests/permissionTransitions.test.js && node tests/cancelDeliveredPermissions.test.js && node tests/priorityOrderByState.mock.test.js && node tests/inventoryAdjustment.mock.test.js && node tests/valeDelete.mock.test.js && node tests/adminControlsViews.test.js && node tests/pwaSetup.test.js && node tests/reportXlsx.test.js && node tests/reportFilters.test.js"
+    "test": "node tests/valeFolioService.test.js && node tests/manualValeProducts.test.js && node tests/locationController.mock.test.js && node tests/integrationHelpers.test.js && node tests/valeDeliveryService.test.js && node tests/settingsService.mock.test.js && node tests/syncService.mock.test.js && node tests/inventoryRules.test.js && node tests/inventoryFlow.mock.test.js && node tests/inventoryClose.mock.test.js && node tests/valeInventoryState.mock.test.js && node tests/calendarSummary.test.js && node tests/stateChangeTimes.test.js && node tests/slicedAvailability.test.js && node tests/warehousePrioritySidebar.test.js && node tests/warehouseFourColumns.test.js && node tests/warehouseStateChangeDate.mock.test.js && node tests/operationalDeliveredToday.mock.test.js && node tests/dashboardDeliveredToday.mock.test.js && node tests/permissionTransitions.test.js && node tests/cancelDeliveredPermissions.test.js && node tests/priorityOrderByState.mock.test.js && node tests/inventoryAdjustment.mock.test.js && node tests/valeDelete.mock.test.js && node tests/adminControlsViews.test.js && node tests/pwaSetup.test.js && node tests/reportXlsx.test.js && node tests/reportFilters.test.js && node tests/stateChimeSetup.test.js"
   },
   "dependencies": {
     "express": "^4.19.2",

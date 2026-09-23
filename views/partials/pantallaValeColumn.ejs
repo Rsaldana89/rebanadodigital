@@ -7,7 +7,7 @@
   const showListoTime = Boolean(vale.listo_time) && ['Listo', 'Entregado'].includes(vale.estado);
   const showDeliveredTime = Boolean(vale.entregado_time) && vale.estado === 'Entregado';
 %>
-<article class="warehouse2-vale-card <%= vale.is_overdue ? 'is-overdue' : '' %>">
+<article class="warehouse2-vale-card <%= vale.is_overdue ? 'is-overdue' : '' %>" data-vale-id="<%= vale.id %>" data-status="<%= vale.estado %>">
   <div class="warehouse2-card-reference">
     <div>
       <% if (isSiclik) { %>

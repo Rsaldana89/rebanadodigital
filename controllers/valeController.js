@@ -897,24 +897,43 @@ async function loadPantallaData(req) {
   };
 }
 
-exports.pantallaController = async (req, res) => {
+
+// Estado mínimo de los vales visibles para detectar cambios sin recargar toda la pantalla.
+// La respuesta sólo expone ID + estado y limita la consulta a IDs numéricos solicitados.
+exports.stateSnapshot = async (req, res) => {
   try {
-    return res.render('pantalla', { ...(await loadPantallaData(req)), title: 'Pantalla de Almacén · Vista 1' });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send('Error al cargar la pantalla informativa');
+    const ids = String(req.query.ids || '')
+      .split(',')
+      .map(value => Number(value.trim()))
+      .filter(value => Number.isInteger(value) && value > 0)
+      .slice(0, 250);
+
+    if (!ids.length) return res.json({ ok: true, items: [] });
+
+    const placeholders = ids.map(() => '?').join(',');
+    const [rows] = await db.query(
+      `SELECT id, estado
+       FROM vales
+       WHERE id IN (${placeholders})`,
+      ids
+    );
+
+    return res.json({
+      ok: true,
+      items: rows.map(row => ({ id: row.id, estado: row.estado }))
+    });
+  } catch (error) {
+    console.error('Error al consultar estados de vales:', error);
+    return res.status(500).json({ ok: false, message: 'No fue posible consultar los estados.' });
   }
 };
 
-// Vista alternativa de almacén: conserva la pantalla por secciones para comparación.
-// La vista principal /pantalla ahora usa cuatro columnas con scroll continuo.
-exports.pantalla2Controller = async (req, res) => {
+exports.pantallaController = async (req, res) => {
   try {
-    const data = await loadPantallaData(req);
-    return res.render('pantalla2', { ...data, title: 'Pantalla de Almacén · Vista 2 · Secciones' });
+    return res.render('pantalla', { ...(await loadPantallaData(req)), title: 'Pantalla de Almacén' });
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Error al cargar la pantalla informativa alternativa');
+    return res.status(500).send('Error al cargar la pantalla informativa');
   }
 };
 

@@ -2,7 +2,7 @@
   const isSiclik = Boolean(vale.external_key) || String(vale.origen || '').toLowerCase() === 'siclik';
   const salesOrder = vale.sap_docnum || vale.numero_pedido;
 %>
-<article class="warehouse2-delivered-card">
+<article class="warehouse2-delivered-card" data-vale-id="<%= vale.id %>" data-status="<%= vale.estado %>">
   <div class="warehouse2-delivered-reference">
     <% if (isSiclik) { %>
       <small>Pedido / orden</small>

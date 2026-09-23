@@ -1,10 +1,11 @@
-const CACHE_NAME = 'chc-rebanado-app-v19.0.19';
+const CACHE_NAME = 'chc-rebanado-app-v19.0.21';
 const STATIC_FILES = [
   '/offline.html',
-  '/css/styles.css?v=19.0.19',
-  '/css/institutional.css?v=19.0.19',
+  '/css/styles.css?v=19.0.21',
+  '/css/institutional.css?v=19.0.21',
   '/js/app.js',
   '/js/pwa-install.js',
+  '/js/state-chime.js?v=19.0.21',
   '/manifest.webmanifest',
   '/icons/rebanado-digital-v2-192.png',
   '/icons/rebanado-digital-v2-512.png'

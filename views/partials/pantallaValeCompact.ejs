@@ -5,7 +5,7 @@
   const showListoTime = Boolean(vale.listo_time) && ['Listo', 'Entregado'].includes(vale.estado);
   const showDeliveredTime = Boolean(vale.entregado_time) && vale.estado === 'Entregado';
 %>
-<article class="warehouse-compact-card">
+<article class="warehouse-compact-card" data-vale-id="<%= vale.id %>" data-status="<%= vale.estado %>">
   <% if (isSiclik) { %>
     <div class="warehouse-compact-siclik-reference">
       <div>
