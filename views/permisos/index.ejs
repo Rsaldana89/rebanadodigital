@@ -60,6 +60,21 @@
   </div>
 <% } %>
 
+<% if (isAdministrator) { %>
+  <div id="respaldo-base-datos" class="content-card mb-4">
+    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+      <div>
+        <div class="page-kicker">Seguridad administrativa</div>
+        <h2 class="section-title mb-1">Respaldo de base de datos</h2>
+        <p class="section-subtitle mb-0">Descarga un archivo SQL con la estructura y los datos actuales de Rebanado Digital. El archivo contiene información sensible y debe guardarse en una ubicación segura.</p>
+      </div>
+      <a href="/admin/respaldo-base-datos" class="btn btn-primary" onclick="return confirm('Se descargará un respaldo completo de la base de datos. ¿Deseas continuar?');">
+        <i class="bi bi-database-down me-1"></i>Respaldar base de datos
+      </a>
+    </div>
+  </div>
+<% } %>
+
 <div class="content-card mb-4">
   <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
     <div>

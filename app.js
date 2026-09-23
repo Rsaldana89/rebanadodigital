@@ -62,6 +62,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const userRoutes = require('./routes/userRoutes');
 const permissionRoutes = require('./routes/permissionRoutes');
 const integrationRoutes = require('./routes/integrationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
@@ -71,6 +72,7 @@ app.use('/reportes', reportRoutes);
 app.use('/usuarios', userRoutes);
 app.use('/permisos', permissionRoutes);
 app.use('/api/integraciones/sap/rebanado', integrationRoutes);
+app.use('/admin', adminRoutes);
 
 // Ruta para pantalla informativa accesible sin login
 const { pantallaController, stateSnapshot } = require('./controllers/valeController');
