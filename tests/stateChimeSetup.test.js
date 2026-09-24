@@ -10,6 +10,8 @@ const app = fs.readFileSync('app.js', 'utf8');
 assert(chime.includes('data-state-chime-scope') || chime.includes('stateChimeScope'));
 assert(chime.includes('AudioContext'));
 assert(chime.includes('pollStates'));
+assert(chime.includes("kind: 'new-vale'"));
+assert(chime.includes('Object.prototype.hasOwnProperty.call(previous.states'));
 
 assert(chime.includes('V19.0.22: alerta de almacén más fuerte y evidente para TV'));
 assert(chime.includes('createDynamicsCompressor'));

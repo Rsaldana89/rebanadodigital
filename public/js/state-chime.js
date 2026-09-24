@@ -66,7 +66,16 @@
     Object.entries(previous.states).forEach(([id, oldStatus]) => {
       const newStatus = knownStates.get(String(id));
       if (newStatus && oldStatus && newStatus !== oldStatus) {
-        changes.push({ id: String(id), from: oldStatus, to: newStatus });
+        changes.push({ id: String(id), from: oldStatus, to: newStatus, kind: 'state-change' });
+      }
+    });
+
+    // V19.0.28: tambien avisar cuando aparece un vale que no existia
+    // en el snapshot anterior. La pantalla se recarga cada 30 s, por lo
+    // que un vale nuevo dispara la misma campanita al entrar al tablero.
+    knownStates.forEach((newStatus, id) => {
+      if (!Object.prototype.hasOwnProperty.call(previous.states, String(id))) {
+        changes.push({ id: String(id), from: null, to: newStatus, kind: 'new-vale' });
       }
     });
 
@@ -178,7 +187,7 @@
       if (!enabled) {
         if (icon) { const use = icon.querySelector('use'); if (use) use.setAttribute('href', '#icon-bell-off'); else icon.className = 'bi bi-bell-slash-fill'; }
         if (label) label.textContent = 'Sin sonido';
-        button.title = 'Activar campanita al cambiar el estado de un vale';
+        button.title = 'Activar campanita para vales nuevos o cambios de estado';
       } else if (audioBlocked) {
         if (icon) { const use = icon.querySelector('use'); if (use) use.setAttribute('href', '#icon-bell'); else icon.className = 'bi bi-bell-fill'; }
         if (label) label.textContent = 'Activar sonido';
@@ -186,7 +195,7 @@
       } else {
         if (icon) { const use = icon.querySelector('use'); if (use) use.setAttribute('href', '#icon-bell'); else icon.className = 'bi bi-bell-fill'; }
         if (label) label.textContent = 'Sonido';
-        button.title = 'Campanita activa al cambiar el estado de un vale';
+        button.title = 'Campanita activa para vales nuevos o cambios de estado';
       }
     });
   }
@@ -217,7 +226,7 @@
         if (!id || !nextStatus) return;
         const previousStatus = knownStates.get(id);
         if (previousStatus && previousStatus !== nextStatus) {
-          changes.push({ id, from: previousStatus, to: nextStatus });
+          changes.push({ id, from: previousStatus, to: nextStatus, kind: 'state-change' });
         }
         knownStates.set(id, nextStatus);
       });
