@@ -3081,6 +3081,36 @@ body.tablero-operator-body .operator-search input {
 .operator-filter-pill.is-delivered { --filter-color: #65717b; }
 .operator-filter-pill.is-cancelled { --filter-color: #a94040; }
 
+.operator-filter-divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 0.08rem 0 0.22rem;
+  background: #ddcfc3;
+}
+
+.operator-filter-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-right: 0.02rem;
+  color: #746960;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.operator-filter-caption i {
+  color: var(--chc-wine);
+  font-size: 0.76rem;
+}
+
+.operator-filter-pill.is-origin-all { --filter-color: #6d625b; }
+.operator-filter-pill.is-origin-siclik { --filter-color: #2f7767; }
+.operator-filter-pill.is-origin-manual { --filter-color: var(--chc-wine); }
+.operator-filter-pill.is-origin-other { --filter-color: #65717b; }
+
 .operator-visible-count {
   margin-left: auto;
   color: #746960;
@@ -3408,6 +3438,14 @@ body.tablero-operator-body .op-vale-operator .status-chip {
 @media (max-width: 991.98px) {
   .operator-tools-top {
     grid-template-columns: 1fr;
+  }
+
+  .operator-filter-divider {
+    width: 100%;
+    height: 0;
+    margin: 0.18rem 0 0.08rem;
+    border-top: 1px solid #eadfd3;
+    background: transparent;
   }
 
   .operator-visible-count {

@@ -81,12 +81,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchClear = document.getElementById('opsSearchClear');
   const emptyFilter = document.getElementById('opsEmptyFilter');
   const filterButtons = document.querySelectorAll('[data-filter-status]');
+  const originFilterButtons = document.querySelectorAll('[data-filter-origin]');
   const filterLabel = document.getElementById('currentFilterLabel');
   const visibleOpsCount = document.getElementById('visibleOpsCount');
+  const dateFilterForm = document.getElementById('operatorDateForm');
+  const dateStatusInput = document.getElementById('opsDateStatus');
+  const dateOriginInput = document.getElementById('opsDateOrigin');
+  const dateQueryInput = document.getElementById('opsDateQuery');
   const boardParams = new URLSearchParams(window.location.search);
   const validStatuses = ['Pendiente', 'Rebanando', 'Listo', 'Entregado', 'Cancelado'];
+  const validOrigins = ['Siclik', 'Manual', 'Otro'];
   const requestedStatus = boardParams.get('estado');
+  const requestedOrigin = boardParams.get('origen');
   let currentStatus = validStatuses.includes(requestedStatus) ? requestedStatus : 'Todos';
+  let currentOrigin = validOrigins.includes(requestedOrigin) ? requestedOrigin : 'Todos';
 
   if (searchInput && boardParams.get('q')) {
     searchInput.value = boardParams.get('q');
@@ -97,9 +105,27 @@ document.addEventListener('DOMContentLoaded', () => {
     searchClear.classList.toggle('d-none', !(searchInput?.value || '').trim());
   }
 
-  function applyOpsFilter(statusFromButton) {
+  function syncDateFilterFields() {
+    const query = (searchInput?.value || '').trim();
+
+    if (dateStatusInput) {
+      dateStatusInput.value = currentStatus === 'Todos' ? '' : currentStatus;
+      dateStatusInput.disabled = currentStatus === 'Todos';
+    }
+    if (dateOriginInput) {
+      dateOriginInput.value = currentOrigin === 'Todos' ? '' : currentOrigin;
+      dateOriginInput.disabled = currentOrigin === 'Todos';
+    }
+    if (dateQueryInput) {
+      dateQueryInput.value = query;
+      dateQueryInput.disabled = !query;
+    }
+  }
+
+  function applyOpsFilter(statusFromButton, originFromButton) {
     if (!opsList) return;
     if (statusFromButton) currentStatus = statusFromButton;
+    if (originFromButton) currentOrigin = originFromButton;
 
     const query = (searchInput?.value || '').trim().toLowerCase();
     const cards = Array.from(opsList.querySelectorAll('[data-vale-id]'));
@@ -107,10 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cards.forEach(card => {
       const status = card.dataset.status || '';
+      const origin = card.dataset.origin || 'Otro';
       const search = card.dataset.search || '';
       const statusOk = currentStatus === 'Todos' || status === currentStatus;
+      const originOk = currentOrigin === 'Todos' || origin === currentOrigin;
       const searchOk = !query || search.includes(query);
-      const show = statusOk && searchOk;
+      const show = statusOk && originOk && searchOk;
       card.hidden = !show;
       card.classList.toggle('d-none', !show);
       card.setAttribute('aria-hidden', show ? 'false' : 'true');
@@ -120,7 +148,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (emptyFilter) {
       emptyFilter.classList.toggle('d-none', visible !== 0 || cards.length === 0);
     }
-    if (filterLabel) filterLabel.textContent = currentStatus;
+    if (filterLabel) {
+      const labels = [];
+      if (currentStatus !== 'Todos') labels.push(currentStatus);
+      if (currentOrigin !== 'Todos') labels.push(currentOrigin === 'Manual' ? 'Manuales' : currentOrigin === 'Otro' ? 'Otros' : 'Siclik');
+      filterLabel.textContent = labels.length ? labels.join(' · ') : 'Todos';
+    }
     if (visibleOpsCount) visibleOpsCount.textContent = visible;
 
     filterButtons.forEach(btn => {
@@ -129,7 +162,14 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
     });
 
+    originFilterButtons.forEach(btn => {
+      const selected = btn.dataset.filterOrigin === currentOrigin;
+      btn.classList.toggle('active', selected);
+      btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+
     syncSearchClear();
+    syncDateFilterFields();
   }
 
   function buildBoardReturnUrl(focusId) {
@@ -139,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (selectedDate) boardUrl.searchParams.set('fecha', selectedDate);
     if (currentStatus !== 'Todos') boardUrl.searchParams.set('estado', currentStatus);
+    if (currentOrigin !== 'Todos') boardUrl.searchParams.set('origen', currentOrigin);
     if (query) boardUrl.searchParams.set('q', query);
     boardUrl.searchParams.set('focus', String(focusId));
     boardUrl.hash = `vale-${focusId}`;
@@ -149,6 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
   filterButtons.forEach(btn => {
     btn.addEventListener('click', () => applyOpsFilter(btn.dataset.filterStatus));
   });
+
+  originFilterButtons.forEach(btn => {
+    btn.addEventListener('click', () => applyOpsFilter(null, btn.dataset.filterOrigin));
+  });
+
+  if (dateFilterForm) {
+    dateFilterForm.addEventListener('submit', syncDateFilterFields);
+  }
 
   if (searchInput) {
     searchInput.addEventListener('input', () => applyOpsFilter());
@@ -186,17 +235,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const focusId = boardParams.get('focus') || hashFocus;
     const focusCard = focusId ? document.querySelector(`[data-vale-id="${CSS.escape(String(focusId))}"]`) : null;
 
-    applyOpsFilter(currentStatus);
+    applyOpsFilter(currentStatus, currentOrigin);
 
     if (focusCard) {
-      // Si el vale cambió de estado o dejó de coincidir con la búsqueda,
+      // Si el vale cambió de estado, origen o dejó de coincidir con la búsqueda,
       // se prioriza mostrarlo para no perder el contexto operativo.
       if (focusCard.hidden || focusCard.classList.contains('d-none')) {
         const activeQuery = (searchInput?.value || '').trim().toLowerCase();
         const focusMatchesSearch = !activeQuery || (focusCard.dataset.search || '').includes(activeQuery);
         currentStatus = focusCard.dataset.status || 'Todos';
+        currentOrigin = focusCard.dataset.origin || 'Todos';
         if (!focusMatchesSearch && searchInput) searchInput.value = '';
-        applyOpsFilter(currentStatus);
+        applyOpsFilter(currentStatus, currentOrigin);
       }
 
       window.requestAnimationFrame(() => {

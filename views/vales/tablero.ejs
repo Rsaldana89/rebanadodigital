@@ -29,6 +29,17 @@
   };
   const estadosOrden = ['Pendiente','Rebanando','Listo','Entregado','Cancelado'];
   const allVales = estadosOrden.flatMap(est => (estados[est] || []));
+  const origenFiltroVale = vale => {
+    const origen = String(vale.origen || '').trim().toLocaleLowerCase('es-MX');
+    if (vale.external_key || origen === 'siclik') return 'Siclik';
+    if (origen === 'manual') return 'Manual';
+    return 'Otro';
+  };
+  const origenCounts = allVales.reduce((acc, vale) => {
+    const origen = origenFiltroVale(vale);
+    acc[origen] = (acc[origen] || 0) + 1;
+    return acc;
+  }, { Siclik: 0, Manual: 0, Otro: 0 });
   const activos = (estados.Pendiente.length || 0) + (estados.Rebanando.length || 0) + (estados.Listo.length || 0);
   const returnUrl = `/vales/tablero?fecha=${encodeURIComponent(filtroFecha)}`;
 %>
@@ -82,8 +93,11 @@
 
 <section class="operator-tools" aria-label="Filtros del tablero">
   <div class="operator-tools-top">
-    <form method="get" action="/vales/tablero" class="operator-date-form">
+    <form method="get" action="/vales/tablero" class="operator-date-form" id="operatorDateForm">
       <label for="fecha" class="visually-hidden">Fecha de entrega</label>
+      <input type="hidden" name="estado" id="opsDateStatus" value="" disabled>
+      <input type="hidden" name="origen" id="opsDateOrigin" value="" disabled>
+      <input type="hidden" name="q" id="opsDateQuery" value="" disabled>
       <span class="operator-control-label"><i class="bi bi-calendar-event"></i>Entrega</span>
       <div class="delivery-calendar" data-delivery-calendar data-selected-date="<%= filtroFecha %>">
         <input type="hidden" id="fecha" name="fecha" value="<%= filtroFecha %>">
@@ -112,7 +126,7 @@
     </div>
   </div>
 
-  <div class="operator-filter-row" role="group" aria-label="Filtrar vales por estado">
+  <div class="operator-filter-row" role="group" aria-label="Filtrar vales por estado y origen">
     <button class="operator-filter-pill is-all active" type="button" data-filter-status="Todos" aria-pressed="true">
       <span>Todos</span><strong><%= allVales.length %></strong>
     </button>
@@ -121,6 +135,24 @@
         <i class="bi <%= info.icon %>"></i><span><%= est %></span><strong><%= estados[est].length %></strong>
       </button>
     <% }) %>
+
+    <span class="operator-filter-divider" aria-hidden="true"></span>
+    <span class="operator-filter-caption"><i class="bi bi-funnel"></i>Origen</span>
+    <button class="operator-filter-pill is-origin-all active" type="button" data-filter-origin="Todos" aria-pressed="true">
+      <span>Todos</span><strong><%= allVales.length %></strong>
+    </button>
+    <button class="operator-filter-pill is-origin-siclik" type="button" data-filter-origin="Siclik" aria-pressed="false">
+      <i class="bi bi-cloud-arrow-down-fill"></i><span>Siclik</span><strong><%= origenCounts.Siclik %></strong>
+    </button>
+    <button class="operator-filter-pill is-origin-manual" type="button" data-filter-origin="Manual" aria-pressed="false">
+      <i class="bi bi-pencil-square"></i><span>Manuales</span><strong><%= origenCounts.Manual %></strong>
+    </button>
+    <% if (origenCounts.Otro > 0) { %>
+      <button class="operator-filter-pill is-origin-other" type="button" data-filter-origin="Otro" aria-pressed="false">
+        <i class="bi bi-file-earmark-arrow-up"></i><span>Otros</span><strong><%= origenCounts.Otro %></strong>
+      </button>
+    <% } %>
+
     <span class="operator-visible-count"><strong id="visibleOpsCount"><%= allVales.length %></strong> visibles · <span id="currentFilterLabel">Todos</span></span>
   </div>
 </section>
@@ -136,6 +168,7 @@
   <% allVales.forEach(function(vale){
     const e = estadoInfo[vale.estado] || estadoInfo.Pendiente;
     const p = prioridadInfo[vale.prioridad] || prioridadInfo.Normal;
+    const origenFiltro = origenFiltroVale(vale);
     const entregaDisplay = vale.entrega_display || '';
     const atrasoTexto = vale.days_late === 1 ? '1 día tarde' : `${vale.days_late} días tarde`;
     const searchText = `${vale.folio} ${vale.numero_pedido || ''} ${vale.cliente} ${vale.lugar_entrega || ''} ${vale.productos_busqueda || ''} ${vale.prioridad} ${vale.estado} ${entregaDisplay} ${vale.is_overdue ? 'atrasado retraso' : ''}`.toLowerCase();
@@ -152,6 +185,7 @@
       class="simple-vale-card op-vale-<%= e.cls %> <%= vale.is_overdue ? 'op-vale-overdue' : '' %>"
       data-vale-id="<%= vale.id %>"
       data-status="<%= vale.estado %>"
+      data-origin="<%= origenFiltro %>"
       data-search="<%= searchText %>"
       tabindex="-1">
 
