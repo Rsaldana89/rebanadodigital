@@ -5,7 +5,7 @@
     <div class="col-lg-8">
       <div class="page-kicker">Cierre sencillo</div>
       <h1 class="page-title">Cierre de Rebanado</h1>
-      <p class="page-subtitle mb-0">El rebanado de los vales se calcula automáticamente. Captura únicamente lo que queda y la merma.</p>
+      <p class="page-subtitle mb-0">El rebanado del día se calcula automáticamente. Captura únicamente el saldo rebanado disponible y la merma.</p>
     </div>
     <div class="col-lg-4"><div class="header-actions justify-content-lg-end"><a href="/inventario" class="btn btn-soft"><i class="bi bi-arrow-left me-1"></i>Ver inventario</a></div></div>
   </div>
@@ -19,10 +19,10 @@
 
 <form method="post" action="/inventario/cierre" class="close-form">
   <input type="hidden" name="fecha" value="<%= date %>">
-  <div class="close-help-strip"><i class="bi bi-info-circle-fill"></i><span><strong>Rebanado para vales</strong> es sólo historial. <strong>Rebanado que queda</strong> sí forma parte del inventario disponible.</span></div>
+  <div class="close-help-strip"><i class="bi bi-info-circle-fill"></i><span><strong>Rebanado durante el día</strong> es sólo historial. <strong>Saldo rebanado disponible</strong> sí forma parte del inventario disponible.</span></div>
   <div class="table-responsive inventory-table-shell">
     <table class="table close-table align-middle">
-      <thead><tr><th>SKU / Producto</th><th>Rebanado para vales</th><th>Rebanado que queda</th><th>Merma del proceso</th><th>Nota</th></tr></thead>
+      <thead><tr><th>SKU / Producto</th><th>Rebanado durante el día</th><th>Saldo rebanado disponible</th><th>Merma del proceso</th><th>Nota</th></tr></thead>
       <tbody>
         <% products.forEach(item => { const relevant = Number(item.rebanado_vales) > 0 || Number(item.saldo_rebanado_queda) > 0; %>
           <tr class="<%= relevant ? 'is-relevant' : '' %>">

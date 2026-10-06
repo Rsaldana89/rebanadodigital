@@ -9233,3 +9233,66 @@ body.tv-warehouse2-body .warehouse-sync-tv-state {
     font-size: 9.5px;
   }
 }
+
+
+/* =========================================================
+   V19.0.30 · Etiquetas más claras en inventario y menú estable en tablet
+   - Mantiene el menú de tres puntos visible a la derecha en tablet
+   - Permite que el panel de acciones se despliegue sin recortarse
+   ========================================================= */
+body.tablero-simple-body .simple-vale-card,
+body.tablero-dark-body.tablero-operator-body.tablero-simple-body .op-vale-card.op-vale-operator.simple-vale-card {
+  overflow: visible !important;
+}
+
+body.tablero-simple-body .simple-products-section {
+  overflow: hidden;
+}
+
+body.tablero-simple-body .simple-vale-actions,
+body.tablero-dark-body.tablero-operator-body.tablero-simple-body .op-vale-card.op-vale-operator.simple-vale-card .simple-vale-actions {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 54px;
+  align-items: stretch;
+  gap: 0.75rem;
+  overflow: visible !important;
+}
+
+body.tablero-simple-body .simple-main-actions {
+  min-width: 0 !important;
+  flex: initial !important;
+}
+
+body.tablero-simple-body .simple-more-menu,
+body.tablero-simple-body .simple-more-placeholder {
+  justify-self: end;
+  align-self: stretch;
+}
+
+body.tablero-simple-body .simple-more-menu .operator-more-panel {
+  right: 0;
+  left: auto;
+  bottom: calc(100% + 0.45rem);
+  width: min(220px, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  z-index: 120;
+}
+
+@media (max-width: 860px) {
+  body.tablero-simple-body .simple-vale-actions {
+    grid-template-columns: minmax(0, 1fr) 54px !important;
+    gap: 0.6rem;
+  }
+
+  body.tablero-simple-body .simple-main-actions {
+    grid-template-columns: 1fr !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 620px) {
+  body.tablero-simple-body .simple-vale-actions {
+    grid-template-columns: minmax(0, 1fr) 54px !important;
+    padding-inline: 0.8rem;
+  }
+}

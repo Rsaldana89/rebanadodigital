@@ -257,7 +257,7 @@ async function applyMovement(connection, movement) {
   const nextSliced = Math.round((existence.sliced + deltaSliced) * 100) / 100;
 
   if (nextSliced < -EPSILON) {
-    throw new Error(`El SKU ${sku} no tiene suficiente producto rebanado que queda.`);
+    throw new Error(`El SKU ${sku} no tiene suficiente saldo rebanado disponible.`);
   }
 
   await connection.query(
@@ -442,9 +442,9 @@ async function adjustStock({ sku, targetUnsliced, targetSliced, observations, us
     const operationDate = String(date || '').trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(operationDate)) throw new Error('La fecha del ajuste no es válida.');
 
-    if (String(targetSliced ?? '').trim() === '') throw new Error('Rebanado que queda es obligatorio.');
+    if (String(targetSliced ?? '').trim() === '') throw new Error('El saldo rebanado disponible es obligatorio.');
     const nextUnsliced = inventoryNumber(targetUnsliced, 'Sin rebanar');
-    const nextSliced = nonNegativeNumber(targetSliced, 'Rebanado que queda');
+    const nextSliced = nonNegativeNumber(targetSliced, 'Saldo rebanado disponible');
     const reason = String(observations || '').replace(/\s+/g, ' ').trim();
     if (reason.length < 5) throw new Error('Escribe un motivo de al menos 5 caracteres para auditar el ajuste.');
 
@@ -497,7 +497,7 @@ async function saveClose({ date, observations, details, userId }) {
 
     for (const detail of details) {
       const sku = normalizeSku(detail.sku);
-      const targetSliced = nonNegativeNumber(detail.rebanadoQueda, 'Rebanado que queda');
+      const targetSliced = nonNegativeNumber(detail.rebanadoQueda, 'Saldo rebanado disponible');
       const waste = nonNegativeNumber(detail.merma, 'Merma');
       await ensureCatalogProduct(connection, { sku, producto: detail.producto, origen: 'Manual', createdBy: userId });
       const existence = await lockExistence(connection, sku);
